@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795442170764,
+  "lastUpdate": 1795531082103,
   "repoUrl": "https://github.com/the-cascade-protocol/cascade-bridge-rs",
   "entries": {
     "Bridge performance": [
@@ -20648,6 +20648,4798 @@ window.BENCHMARK_DATA = {
             "name": "fhir-r4/boot/instantiate-wasm",
             "value": 0.001032,
             "range": "0.000871-0.001237",
+            "unit": "s",
+            "extra": "Seconds to start the compiled code, which runs its start-up work."
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "jayostis",
+            "username": "jayostis",
+            "email": "jayostis@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "a0f59bd8e8cafef9e44d6d61972b7149efdc4cb5",
+          "message": "Merge pull request #156 from the-cascade-protocol/chore/org-addresses\n\nchore(org): addresses name the-cascade-protocol, not the personal account",
+          "timestamp": "2026-11-21T21:48:09Z",
+          "url": "https://github.com/the-cascade-protocol/cascade-bridge-rs/commit/a0f59bd8e8cafef9e44d6d61972b7149efdc4cb5"
+        },
+        "date": 1795531081618,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "ccda-entries-x10/convert/first",
+            "value": 0.395839,
+            "range": "0.385208-0.396187",
+            "unit": "s",
+            "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. The C-CDA medications-and-results example with its entries repeated 10 times, as one document. sha256 77454794ba3cf02cf329e249f7a4a1874ca58cd0761d4f5622163ea9e85efa0e, 138124 bytes"
+          },
+          {
+            "name": "ccda-entries-x10/convert/second",
+            "value": 0.209641,
+            "range": "0.2083-0.21004",
+            "unit": "s",
+            "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+          },
+          {
+            "name": "ccda-entries-x10/convert/profiled",
+            "value": 0.433409,
+            "range": "0.433409-0.433409",
+            "unit": "s",
+            "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+          },
+          {
+            "name": "ccda-entries-x10/wasm-memory/first",
+            "value": 52625408,
+            "range": "52625408-52625408",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the first convert is done."
+          },
+          {
+            "name": "ccda-entries-x10/wasm-memory/second",
+            "value": 52625408,
+            "range": "52625408-52625408",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the second convert is done."
+          },
+          {
+            "name": "ccda-entries-x10/rss",
+            "value": 349913088,
+            "range": "338997248-354820096",
+            "unit": "By",
+            "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+          },
+          {
+            "name": "ccda-entries-x10/records",
+            "value": 1,
+            "unit": "{count}",
+            "extra": "Source records the Bridge found in the document and converted. The C-CDA medications-and-results example with its entries repeated 10 times, as one document."
+          },
+          {
+            "name": "ccda-entries-x10/triples",
+            "value": 1926,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph."
+          },
+          {
+            "name": "ccda-entries-x10/findings",
+            "value": 93,
+            "unit": "{count}",
+            "extra": "Findings the conversion wrote."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/document-table.rq",
+            "value": 0.090291,
+            "range": "0.090291-0.090291",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/allergy.rq",
+            "value": 0.000343,
+            "range": "0.000343-0.000343",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/condition.rq",
+            "value": 0.000342,
+            "range": "0.000342-0.000342",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/document-organizations.rq",
+            "value": 0.001144,
+            "range": "0.001144-0.001144",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/immunization.rq",
+            "value": 0.000683,
+            "range": "0.000683-0.000683",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/medication.rq",
+            "value": 0.01143,
+            "range": "0.01143-0.01143",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/note-or-document.rq",
+            "value": 0.001851,
+            "range": "0.001851-0.001851",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/patient.rq",
+            "value": 0.000273,
+            "range": "0.000273-0.000273",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/procedure.rq",
+            "value": 0.000661,
+            "range": "0.000661-0.000661",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/record.rq",
+            "value": 0.005436,
+            "range": "0.005436-0.005436",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/report.rq",
+            "value": 0.003841,
+            "range": "0.003841-0.003841",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/result-identifiers.rq",
+            "value": 0.002109,
+            "range": "0.002109-0.002109",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/result-quantities.rq",
+            "value": 0.004963,
+            "range": "0.004963-0.004963",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/result.rq",
+            "value": 0.018009,
+            "range": "0.018009-0.018009",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/allergy-findings.rq",
+            "value": 0.000255,
+            "range": "0.000255-0.000255",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/condition-findings.rq",
+            "value": 0.000389,
+            "range": "0.000389-0.000389",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/document-findings.rq",
+            "value": 0.00034,
+            "range": "0.00034-0.00034",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/entry-findings.rq",
+            "value": 0.001476,
+            "range": "0.001476-0.001476",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/entry-statement-findings.rq",
+            "value": 0.002482,
+            "range": "0.002482-0.002482",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/medication-findings.rq",
+            "value": 0.001456,
+            "range": "0.001456-0.001456",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/name-findings.rq",
+            "value": 0.000619,
+            "range": "0.000619-0.000619",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/narrative-findings.rq",
+            "value": 0.001782,
+            "range": "0.001782-0.001782",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/organization-findings.rq",
+            "value": 0.00035,
+            "range": "0.00035-0.00035",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/patient-findings.rq",
+            "value": 0.000065,
+            "range": "0.000065-0.000065",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/reference-findings.rq",
+            "value": 0.001931,
+            "range": "0.001931-0.001931",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/report-and-note-findings.rq",
+            "value": 0.000671,
+            "range": "0.000671-0.000671",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/result-findings.rq",
+            "value": 0.010702,
+            "range": "0.010702-0.010702",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/section-findings.rq",
+            "value": 0.000616,
+            "range": "0.000616-0.000616",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/query-time/detect.rq",
+            "value": 0.012985,
+            "range": "0.012985-0.012985",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x10/stage/document-table",
+            "value": 0.093416,
+            "range": "0.093416-0.093416",
+            "unit": "s",
+            "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+          },
+          {
+            "name": "ccda-entries-x10/stage/lift",
+            "value": 0.047298,
+            "range": "0.047298-0.047298",
+            "unit": "s",
+            "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+          },
+          {
+            "name": "ccda-entries-x10/stage/source-validation",
+            "value": 0.02188,
+            "range": "0.02188-0.02188",
+            "unit": "s",
+            "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+          },
+          {
+            "name": "ccda-entries-x10/stage/accounting",
+            "value": 0.001049,
+            "range": "0.001049-0.001049",
+            "unit": "s",
+            "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+          },
+          {
+            "name": "ccda-entries-x10/stage/dataset",
+            "value": 0.000056,
+            "range": "0.000056-0.000056",
+            "unit": "s",
+            "extra": "Putting the facts about a record into the store its queries run over."
+          },
+          {
+            "name": "ccda-entries-x10/stage/index",
+            "value": 0.018908,
+            "range": "0.018908-0.018908",
+            "unit": "s",
+            "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+          },
+          {
+            "name": "ccda-entries-x10/stage/mapping",
+            "value": 0.05164,
+            "range": "0.05164-0.05164",
+            "unit": "s",
+            "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+          },
+          {
+            "name": "ccda-entries-x10/stage/records",
+            "value": 0.023402,
+            "range": "0.023402-0.023402",
+            "unit": "s",
+            "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+          },
+          {
+            "name": "ccda-entries-x10/stage/output-validation",
+            "value": 0.091932,
+            "range": "0.091932-0.091932",
+            "unit": "s",
+            "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+          },
+          {
+            "name": "ccda-entries-x10/stage/findings",
+            "value": 0.026079,
+            "range": "0.026079-0.026079",
+            "unit": "s",
+            "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+          },
+          {
+            "name": "ccda-entries-x10/stage/unresolved-addresses",
+            "value": 0.021482,
+            "range": "0.021482-0.021482",
+            "unit": "s",
+            "extra": "Finding the references to records the document does not hold, which keep their computed names."
+          },
+          {
+            "name": "ccda-entries-x10/stage/detect",
+            "value": 0.013032,
+            "range": "0.013032-0.013032",
+            "unit": "s",
+            "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+          },
+          {
+            "name": "ccda-entries-x10/stage/summary",
+            "value": 0.000789,
+            "range": "0.000789-0.000789",
+            "unit": "s",
+            "extra": "Counting the graph's distinct triples and the findings once every record is done."
+          },
+          {
+            "name": "ccda-entries-x10/stage/serialising",
+            "value": 0.005514,
+            "range": "0.005514-0.005514",
+            "unit": "s",
+            "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+          },
+          {
+            "name": "ccda-entries-x10/stage/unaccounted",
+            "value": 0.016931,
+            "range": "0.016931-0.016931",
+            "unit": "s",
+            "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+          },
+          {
+            "name": "ccda-entries-x10/output/graph",
+            "value": 1926,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes. sha256 ad5fa27c4fe8b29ebed8c8892c3bf3df74f202365f5e14dca5a7981d130dfc16"
+          },
+          {
+            "name": "ccda-entries-x10/output/findings",
+            "value": 1210,
+            "unit": "{count}",
+            "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes. sha256 95da111564c5677296616ba1bec9f3340f1788949bbde806f616a5ca56b4ba0a"
+          },
+          {
+            "name": "ccda-entries-x50/convert/first",
+            "value": 1.362237,
+            "range": "1.358556-1.36584",
+            "unit": "s",
+            "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. The C-CDA medications-and-results example with its entries repeated 50 times, as one document. sha256 74d7ceb7fbc39145ce2f7d8c2aca5f71848dc80ced2ebbdf76ed795b43ba7f62, 667684 bytes"
+          },
+          {
+            "name": "ccda-entries-x50/convert/second",
+            "value": 1.078704,
+            "range": "1.070171-1.079017",
+            "unit": "s",
+            "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+          },
+          {
+            "name": "ccda-entries-x50/convert/profiled",
+            "value": 1.351493,
+            "range": "1.351493-1.351493",
+            "unit": "s",
+            "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+          },
+          {
+            "name": "ccda-entries-x50/wasm-memory/first",
+            "value": 136511488,
+            "range": "136511488-136511488",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the first convert is done."
+          },
+          {
+            "name": "ccda-entries-x50/wasm-memory/second",
+            "value": 136511488,
+            "range": "136511488-136511488",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the second convert is done."
+          },
+          {
+            "name": "ccda-entries-x50/rss",
+            "value": 435818496,
+            "range": "392806400-442195968",
+            "unit": "By",
+            "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+          },
+          {
+            "name": "ccda-entries-x50/records",
+            "value": 1,
+            "unit": "{count}",
+            "extra": "Source records the Bridge found in the document and converted. The C-CDA medications-and-results example with its entries repeated 50 times, as one document."
+          },
+          {
+            "name": "ccda-entries-x50/triples",
+            "value": 9126,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph."
+          },
+          {
+            "name": "ccda-entries-x50/findings",
+            "value": 453,
+            "unit": "{count}",
+            "extra": "Findings the conversion wrote."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/document-table.rq",
+            "value": 0.257572,
+            "range": "0.257572-0.257572",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/allergy.rq",
+            "value": 0.000828,
+            "range": "0.000828-0.000828",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/condition.rq",
+            "value": 0.000684,
+            "range": "0.000684-0.000684",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/document-organizations.rq",
+            "value": 0.001088,
+            "range": "0.001088-0.001088",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/immunization.rq",
+            "value": 0.00174,
+            "range": "0.00174-0.00174",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/medication.rq",
+            "value": 0.025633,
+            "range": "0.025633-0.025633",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/note-or-document.rq",
+            "value": 0.006517,
+            "range": "0.006517-0.006517",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/patient.rq",
+            "value": 0.000414,
+            "range": "0.000414-0.000414",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/procedure.rq",
+            "value": 0.001773,
+            "range": "0.001773-0.001773",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/record.rq",
+            "value": 0.015813,
+            "range": "0.015813-0.015813",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/report.rq",
+            "value": 0.009945,
+            "range": "0.009945-0.009945",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/result-identifiers.rq",
+            "value": 0.006446,
+            "range": "0.006446-0.006446",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/result-quantities.rq",
+            "value": 0.015335,
+            "range": "0.015335-0.015335",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/result.rq",
+            "value": 0.048588,
+            "range": "0.048588-0.048588",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/allergy-findings.rq",
+            "value": 0.001017,
+            "range": "0.001017-0.001017",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/condition-findings.rq",
+            "value": 0.00214,
+            "range": "0.00214-0.00214",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/document-findings.rq",
+            "value": 0.000926,
+            "range": "0.000926-0.000926",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/entry-findings.rq",
+            "value": 0.00619,
+            "range": "0.00619-0.00619",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/entry-statement-findings.rq",
+            "value": 0.010283,
+            "range": "0.010283-0.010283",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/medication-findings.rq",
+            "value": 0.011572,
+            "range": "0.011572-0.011572",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/name-findings.rq",
+            "value": 0.003264,
+            "range": "0.003264-0.003264",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/narrative-findings.rq",
+            "value": 0.003413,
+            "range": "0.003413-0.003413",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/organization-findings.rq",
+            "value": 0.000848,
+            "range": "0.000848-0.000848",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/patient-findings.rq",
+            "value": 0.00013,
+            "range": "0.00013-0.00013",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/reference-findings.rq",
+            "value": 0.00961,
+            "range": "0.00961-0.00961",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/report-and-note-findings.rq",
+            "value": 0.003461,
+            "range": "0.003461-0.003461",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/result-findings.rq",
+            "value": 0.050668,
+            "range": "0.050668-0.050668",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/section-findings.rq",
+            "value": 0.00149,
+            "range": "0.00149-0.00149",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/query-time/detect.rq",
+            "value": 0.00502,
+            "range": "0.00502-0.00502",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-entries-x50/stage/document-table",
+            "value": 0.265595,
+            "range": "0.265595-0.265595",
+            "unit": "s",
+            "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+          },
+          {
+            "name": "ccda-entries-x50/stage/lift",
+            "value": 0.158422,
+            "range": "0.158422-0.158422",
+            "unit": "s",
+            "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+          },
+          {
+            "name": "ccda-entries-x50/stage/source-validation",
+            "value": 0.072035,
+            "range": "0.072035-0.072035",
+            "unit": "s",
+            "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+          },
+          {
+            "name": "ccda-entries-x50/stage/accounting",
+            "value": 0.000775,
+            "range": "0.000775-0.000775",
+            "unit": "s",
+            "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+          },
+          {
+            "name": "ccda-entries-x50/stage/dataset",
+            "value": 0.000051,
+            "range": "0.000051-0.000051",
+            "unit": "s",
+            "extra": "Putting the facts about a record into the store its queries run over."
+          },
+          {
+            "name": "ccda-entries-x50/stage/index",
+            "value": 0.04779,
+            "range": "0.04779-0.04779",
+            "unit": "s",
+            "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+          },
+          {
+            "name": "ccda-entries-x50/stage/mapping",
+            "value": 0.136426,
+            "range": "0.136426-0.136426",
+            "unit": "s",
+            "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+          },
+          {
+            "name": "ccda-entries-x50/stage/records",
+            "value": 0.225835,
+            "range": "0.225835-0.225835",
+            "unit": "s",
+            "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+          },
+          {
+            "name": "ccda-entries-x50/stage/output-validation",
+            "value": 0.218393,
+            "range": "0.218393-0.218393",
+            "unit": "s",
+            "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+          },
+          {
+            "name": "ccda-entries-x50/stage/findings",
+            "value": 0.111178,
+            "range": "0.111178-0.111178",
+            "unit": "s",
+            "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+          },
+          {
+            "name": "ccda-entries-x50/stage/unresolved-addresses",
+            "value": 0.044454,
+            "range": "0.044454-0.044454",
+            "unit": "s",
+            "extra": "Finding the references to records the document does not hold, which keep their computed names."
+          },
+          {
+            "name": "ccda-entries-x50/stage/detect",
+            "value": 0.005055,
+            "range": "0.005055-0.005055",
+            "unit": "s",
+            "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+          },
+          {
+            "name": "ccda-entries-x50/stage/summary",
+            "value": 0.002054,
+            "range": "0.002054-0.002054",
+            "unit": "s",
+            "extra": "Counting the graph's distinct triples and the findings once every record is done."
+          },
+          {
+            "name": "ccda-entries-x50/stage/serialising",
+            "value": 0.020591,
+            "range": "0.020591-0.020591",
+            "unit": "s",
+            "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+          },
+          {
+            "name": "ccda-entries-x50/stage/unaccounted",
+            "value": 0.042836,
+            "range": "0.042836-0.042836",
+            "unit": "s",
+            "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+          },
+          {
+            "name": "ccda-entries-x50/output/graph",
+            "value": 9126,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes. sha256 139d803f26e008902033b2b0e3393b1c53073557b209e9222053dbf3e93d0bfc"
+          },
+          {
+            "name": "ccda-entries-x50/output/findings",
+            "value": 5890,
+            "unit": "{count}",
+            "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes. sha256 ade58a19db77babdcde6b85475e8f4b509473641fe2efeb3c993ffc1f4807c6c"
+          },
+          {
+            "name": "ccda-synthea-10y/convert/first",
+            "value": 3.027488,
+            "range": "3.015468-3.029364",
+            "unit": "s",
+            "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. Ten years of one Synthea person as a single C-CDA document. sha256 643c55e2e3db4e52974cdf202b7a9a2f0f1bcf72e47a64414e014ae8c1ccd361, 1226024 bytes"
+          },
+          {
+            "name": "ccda-synthea-10y/convert/second",
+            "value": 2.62415,
+            "range": "2.617171-2.676606",
+            "unit": "s",
+            "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+          },
+          {
+            "name": "ccda-synthea-10y/convert/profiled",
+            "value": 2.974658,
+            "range": "2.974658-2.974658",
+            "unit": "s",
+            "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+          },
+          {
+            "name": "ccda-synthea-10y/wasm-memory/first",
+            "value": 237174784,
+            "range": "237174784-237174784",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the first convert is done."
+          },
+          {
+            "name": "ccda-synthea-10y/wasm-memory/second",
+            "value": 237174784,
+            "range": "237174784-237174784",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the second convert is done."
+          },
+          {
+            "name": "ccda-synthea-10y/rss",
+            "value": 494759936,
+            "range": "471056384-552357888",
+            "unit": "By",
+            "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+          },
+          {
+            "name": "ccda-synthea-10y/records",
+            "value": 1,
+            "unit": "{count}",
+            "extra": "Source records the Bridge found in the document and converted. Ten years of one Synthea person as a single C-CDA document."
+          },
+          {
+            "name": "ccda-synthea-10y/triples",
+            "value": 21772,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph."
+          },
+          {
+            "name": "ccda-synthea-10y/findings",
+            "value": 1234,
+            "unit": "{count}",
+            "extra": "Findings the conversion wrote."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/document-table.rq",
+            "value": 0.465657,
+            "range": "0.465657-0.465657",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/allergy.rq",
+            "value": 0.006424,
+            "range": "0.006424-0.006424",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/condition.rq",
+            "value": 0.012086,
+            "range": "0.012086-0.012086",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/document-organizations.rq",
+            "value": 0.000819,
+            "range": "0.000819-0.000819",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/immunization.rq",
+            "value": 0.006683,
+            "range": "0.006683-0.006683",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/medication.rq",
+            "value": 0.019386,
+            "range": "0.019386-0.019386",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/note-or-document.rq",
+            "value": 0.005996,
+            "range": "0.005996-0.005996",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/patient.rq",
+            "value": 0.000363,
+            "range": "0.000363-0.000363",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/procedure.rq",
+            "value": 0.013791,
+            "range": "0.013791-0.013791",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/record.rq",
+            "value": 0.03028,
+            "range": "0.03028-0.03028",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/report.rq",
+            "value": 0.012629,
+            "range": "0.012629-0.012629",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/result-identifiers.rq",
+            "value": 0.01454,
+            "range": "0.01454-0.01454",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/result-quantities.rq",
+            "value": 0.026864,
+            "range": "0.026864-0.026864",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/result.rq",
+            "value": 0.117134,
+            "range": "0.117134-0.117134",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/allergy-findings.rq",
+            "value": 0.005179,
+            "range": "0.005179-0.005179",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/condition-findings.rq",
+            "value": 0.005305,
+            "range": "0.005305-0.005305",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/document-findings.rq",
+            "value": 0.001628,
+            "range": "0.001628-0.001628",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/entry-findings.rq",
+            "value": 0.010401,
+            "range": "0.010401-0.010401",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/entry-statement-findings.rq",
+            "value": 0.012165,
+            "range": "0.012165-0.012165",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/medication-findings.rq",
+            "value": 0.005871,
+            "range": "0.005871-0.005871",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/name-findings.rq",
+            "value": 0.015276,
+            "range": "0.015276-0.015276",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/narrative-findings.rq",
+            "value": 0.046588,
+            "range": "0.046588-0.046588",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/organization-findings.rq",
+            "value": 0.000487,
+            "range": "0.000487-0.000487",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/patient-findings.rq",
+            "value": 0.000223,
+            "range": "0.000223-0.000223",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/reference-findings.rq",
+            "value": 0.020563,
+            "range": "0.020563-0.020563",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/report-and-note-findings.rq",
+            "value": 0.005693,
+            "range": "0.005693-0.005693",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/result-findings.rq",
+            "value": 0.114336,
+            "range": "0.114336-0.114336",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/section-findings.rq",
+            "value": 0.003109,
+            "range": "0.003109-0.003109",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/query-time/detect.rq",
+            "value": 0.005034,
+            "range": "0.005034-0.005034",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "ccda-synthea-10y/stage/document-table",
+            "value": 0.48495,
+            "range": "0.48495-0.48495",
+            "unit": "s",
+            "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+          },
+          {
+            "name": "ccda-synthea-10y/stage/lift",
+            "value": 0.310785,
+            "range": "0.310785-0.310785",
+            "unit": "s",
+            "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+          },
+          {
+            "name": "ccda-synthea-10y/stage/source-validation",
+            "value": 0.103764,
+            "range": "0.103764-0.103764",
+            "unit": "s",
+            "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+          },
+          {
+            "name": "ccda-synthea-10y/stage/accounting",
+            "value": 0.001761,
+            "range": "0.001761-0.001761",
+            "unit": "s",
+            "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+          },
+          {
+            "name": "ccda-synthea-10y/stage/dataset",
+            "value": 0.00006,
+            "range": "0.00006-0.00006",
+            "unit": "s",
+            "extra": "Putting the facts about a record into the store its queries run over."
+          },
+          {
+            "name": "ccda-synthea-10y/stage/index",
+            "value": 0.103183,
+            "range": "0.103183-0.103183",
+            "unit": "s",
+            "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+          },
+          {
+            "name": "ccda-synthea-10y/stage/mapping",
+            "value": 0.268926,
+            "range": "0.268926-0.268926",
+            "unit": "s",
+            "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+          },
+          {
+            "name": "ccda-synthea-10y/stage/records",
+            "value": 0.753539,
+            "range": "0.753539-0.753539",
+            "unit": "s",
+            "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+          },
+          {
+            "name": "ccda-synthea-10y/stage/output-validation",
+            "value": 0.460395,
+            "range": "0.460395-0.460395",
+            "unit": "s",
+            "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+          },
+          {
+            "name": "ccda-synthea-10y/stage/findings",
+            "value": 0.262917,
+            "range": "0.262917-0.262917",
+            "unit": "s",
+            "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+          },
+          {
+            "name": "ccda-synthea-10y/stage/unresolved-addresses",
+            "value": 0.105487,
+            "range": "0.105487-0.105487",
+            "unit": "s",
+            "extra": "Finding the references to records the document does not hold, which keep their computed names."
+          },
+          {
+            "name": "ccda-synthea-10y/stage/detect",
+            "value": 0.005089,
+            "range": "0.005089-0.005089",
+            "unit": "s",
+            "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+          },
+          {
+            "name": "ccda-synthea-10y/stage/summary",
+            "value": 0.004673,
+            "range": "0.004673-0.004673",
+            "unit": "s",
+            "extra": "Counting the graph's distinct triples and the findings once every record is done."
+          },
+          {
+            "name": "ccda-synthea-10y/stage/serialising",
+            "value": 0.048989,
+            "range": "0.048989-0.048989",
+            "unit": "s",
+            "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+          },
+          {
+            "name": "ccda-synthea-10y/stage/unaccounted",
+            "value": 0.060138,
+            "range": "0.060138-0.060138",
+            "unit": "s",
+            "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+          },
+          {
+            "name": "ccda-synthea-10y/output/graph",
+            "value": 21772,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes. sha256 4c682c9d7746d30c8e5fd69e73f2e02378d0d2906267d583be3e5c817fd47817"
+          },
+          {
+            "name": "ccda-synthea-10y/output/findings",
+            "value": 16083,
+            "unit": "{count}",
+            "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes. sha256 65c70b4b78caf2e112089b8b759422c88c7e53903bf481200f38011bb40dcb8c"
+          },
+          {
+            "name": "ccda/load",
+            "value": 0.694949,
+            "range": "0.665013-0.726428",
+            "unit": "s",
+            "extra": "Seconds to read the adapter's and the vocabulary's files, describe the adapter and prepare it, with the engine already started."
+          },
+          {
+            "name": "ccda/load/read-files",
+            "value": 0.005565,
+            "range": "0.005422-0.006618",
+            "unit": "s",
+            "extra": "Seconds of the load spent reading files from disk."
+          },
+          {
+            "name": "ccda/load/prepare",
+            "value": 0.689201,
+            "range": "0.659128-0.720765",
+            "unit": "s",
+            "extra": "Seconds of the load spent describing the adapter and preparing it: parsing and compiling its queries, schemas and shapes."
+          },
+          {
+            "name": "ccda/boot/read-wasm",
+            "value": 0.003472,
+            "range": "0.003348-0.003927",
+            "unit": "s",
+            "extra": "Seconds to read the engine's compiled code from disk."
+          },
+          {
+            "name": "ccda/boot/compile-wasm",
+            "value": 0.016811,
+            "range": "0.016434-0.025804",
+            "unit": "s",
+            "extra": "Seconds to turn the engine's compiled code into something the machine can run."
+          },
+          {
+            "name": "ccda/boot/instantiate-wasm",
+            "value": 0.001161,
+            "range": "0.001084-0.004708",
+            "unit": "s",
+            "extra": "Seconds to start the compiled code, which runs its start-up work."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/convert/first",
+            "value": 6.2308,
+            "range": "6.177181-6.243532",
+            "unit": "s",
+            "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. A pull of 3,000 lab results in one FHIR R4 searchset Bundle. sha256 69b4daac45fd32449b8c290be9a7551566b537a6171218e8125169e94ca5882b, 2760035 bytes"
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/convert/second",
+            "value": 5.938732,
+            "range": "5.857988-5.95641",
+            "unit": "s",
+            "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/convert/profiled",
+            "value": 6.294796,
+            "range": "6.294796-6.294796",
+            "unit": "s",
+            "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/wasm-memory/first",
+            "value": 136511488,
+            "range": "136511488-136511488",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the first convert is done."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/wasm-memory/second",
+            "value": 136511488,
+            "range": "136511488-136511488",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the second convert is done."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/rss",
+            "value": 415617024,
+            "range": "375787520-428789760",
+            "unit": "By",
+            "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/records",
+            "value": 3004,
+            "unit": "{count}",
+            "extra": "Source records the Bridge found in the document and converted. A pull of 3,000 lab results in one FHIR R4 searchset Bundle."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/triples",
+            "value": 63025,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/findings",
+            "value": 3006,
+            "unit": "{count}",
+            "extra": "Findings the conversion wrote."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/fallbacks",
+            "value": 0,
+            "unit": "{count}",
+            "extra": "Record executions the general evaluator answered because a query was not compiled or a compiled plan gave up. The detect query, which runs once, is not counted."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/coding-system-table.rq",
+            "value": 0.059417,
+            "range": "0.059417-0.059417",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/document-table.rq",
+            "value": 0.008752,
+            "range": "0.008752-0.008752",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/lab-result-table.rq",
+            "value": 0.017301,
+            "range": "0.017301-0.017301",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/medication-table.rq",
+            "value": 0.009376,
+            "range": "0.009376-0.009376",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/note-or-document-table.rq",
+            "value": 0.004692,
+            "range": "0.004692-0.004692",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/organization-table.rq",
+            "value": 0.016405,
+            "range": "0.016405-0.016405",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/variant-interpretation-table.rq",
+            "value": 0.006591,
+            "range": "0.006591-0.006591",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/variant-table.rq",
+            "value": 0.007062,
+            "range": "0.007062-0.007062",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/absent-reasons.rq",
+            "value": 0.064453,
+            "range": "0.064453-0.064453",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/allergy-intolerance.rq",
+            "value": 0.009403,
+            "range": "0.009403-0.009403",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/attachments.rq",
+            "value": 0.011737,
+            "range": "0.011737-0.011737",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/condition.rq",
+            "value": 0.00916,
+            "range": "0.00916-0.00916",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/immunization.rq",
+            "value": 0.007704,
+            "range": "0.007704-0.007704",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/lab-result-codes.rq",
+            "value": 0.09985,
+            "range": "0.09985-0.09985",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/lab-result-identifiers.rq",
+            "value": 0.022309,
+            "range": "0.022309-0.022309",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/lab-result-performer.rq",
+            "value": 0.00427,
+            "range": "0.00427-0.00427",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/lab-result-quantities.rq",
+            "value": 0.114141,
+            "range": "0.114141-0.114141",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/lab-result.rq",
+            "value": 0.116082,
+            "range": "0.116082-0.116082",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/medication-dispense-prescription.rq",
+            "value": 0.010908,
+            "range": "0.010908-0.010908",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/medication-dispense.rq",
+            "value": 0.007103,
+            "range": "0.007103-0.007103",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/medication-supply-and-dosages.rq",
+            "value": 0.00886,
+            "range": "0.00886-0.00886",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/medication.rq",
+            "value": 0.008906,
+            "range": "0.008906-0.008906",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/narrative-text.rq",
+            "value": 0.030402,
+            "range": "0.030402-0.030402",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/note-or-document.rq",
+            "value": 0.007674,
+            "range": "0.007674-0.007674",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/organization-from-server.rq",
+            "value": 0.005094,
+            "range": "0.005094-0.005094",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/organization.rq",
+            "value": 0.011471,
+            "range": "0.011471-0.011471",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/patient.rq",
+            "value": 0.007954,
+            "range": "0.007954-0.007954",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/procedure.rq",
+            "value": 0.007015,
+            "range": "0.007015-0.007015",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/record.rq",
+            "value": 0.26725,
+            "range": "0.26725-0.26725",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/report-and-note-performer.rq",
+            "value": 0.00367,
+            "range": "0.00367-0.00367",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/report-results.rq",
+            "value": 0.010081,
+            "range": "0.010081-0.010081",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/report.rq",
+            "value": 0.007587,
+            "range": "0.007587-0.007587",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/variant-interpretation.rq",
+            "value": 0.010315,
+            "range": "0.010315-0.010315",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/variant.rq",
+            "value": 0.008806,
+            "range": "0.008806-0.008806",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/absent-reason-findings.rq",
+            "value": 0.03748,
+            "range": "0.03748-0.03748",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/category-text-findings.rq",
+            "value": 0.01155,
+            "range": "0.01155-0.01155",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/code-findings.rq",
+            "value": 0.007949,
+            "range": "0.007949-0.007949",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/date-findings.rq",
+            "value": 0.040684,
+            "range": "0.040684-0.040684",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/document-version-findings.rq",
+            "value": 0.00124,
+            "range": "0.00124-0.00124",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/lab-result-findings.rq",
+            "value": 0.076767,
+            "range": "0.076767-0.076767",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/medication-dispense-findings.rq",
+            "value": 0.008544,
+            "range": "0.008544-0.008544",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/medication-dispense-prescription-findings.rq",
+            "value": 0.009329,
+            "range": "0.009329-0.009329",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/medication-findings.rq",
+            "value": 0.066972,
+            "range": "0.066972-0.066972",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/narrative-findings.rq",
+            "value": 0.006936,
+            "range": "0.006936-0.006936",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/observation-component-findings.rq",
+            "value": 0.010506,
+            "range": "0.010506-0.010506",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/observation-findings.rq",
+            "value": 0.064655,
+            "range": "0.064655-0.064655",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/organization-findings.rq",
+            "value": 0.008224,
+            "range": "0.008224-0.008224",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/patient-findings.rq",
+            "value": 0.007655,
+            "range": "0.007655-0.007655",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/patient-reference-findings.rq",
+            "value": 0.056088,
+            "range": "0.056088-0.056088",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/recorded-date-findings.rq",
+            "value": 0.008553,
+            "range": "0.008553-0.008553",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/reference-display-findings.rq",
+            "value": 0.03107,
+            "range": "0.03107-0.03107",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/reference-without-server-findings.rq",
+            "value": 0.037821,
+            "range": "0.037821-0.037821",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/repeated-id-findings.rq",
+            "value": 0.024067,
+            "range": "0.024067-0.024067",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/report-and-note-findings.rq",
+            "value": 0.011575,
+            "range": "0.011575-0.011575",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/report-result-findings.rq",
+            "value": 0.010179,
+            "range": "0.010179-0.010179",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/resource-type-findings.rq",
+            "value": 0.009568,
+            "range": "0.009568-0.009568",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/variant-findings.rq",
+            "value": 0.017752,
+            "range": "0.017752-0.017752",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/variant-interpretation-findings.rq",
+            "value": 0.010771,
+            "range": "0.010771-0.010771",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/query-time/detect.rq",
+            "value": 0.00705,
+            "range": "0.00705-0.00705",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/document-table",
+            "value": 0.166816,
+            "range": "0.166816-0.166816",
+            "unit": "s",
+            "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/lift",
+            "value": 0.347839,
+            "range": "0.347839-0.347839",
+            "unit": "s",
+            "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/source-validation",
+            "value": 0.889298,
+            "range": "0.889298-0.889298",
+            "unit": "s",
+            "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/accounting",
+            "value": 0.0189,
+            "range": "0.0189-0.0189",
+            "unit": "s",
+            "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/dataset",
+            "value": 0.009912,
+            "range": "0.009912-0.009912",
+            "unit": "s",
+            "extra": "Putting the facts about a record into the store its queries run over."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/index",
+            "value": 0.187008,
+            "range": "0.187008-0.187008",
+            "unit": "s",
+            "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/mapping",
+            "value": 0.902613,
+            "range": "0.902613-0.902613",
+            "unit": "s",
+            "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/records",
+            "value": 0.220777,
+            "range": "0.220777-0.220777",
+            "unit": "s",
+            "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/output-validation",
+            "value": 2.464361,
+            "range": "2.464361-2.464361",
+            "unit": "s",
+            "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/findings",
+            "value": 0.755062,
+            "range": "0.755062-0.755062",
+            "unit": "s",
+            "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/unresolved-addresses",
+            "value": 0.037603,
+            "range": "0.037603-0.037603",
+            "unit": "s",
+            "extra": "Finding the references to records the document does not hold, which keep their computed names."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/detect",
+            "value": 0.007154,
+            "range": "0.007154-0.007154",
+            "unit": "s",
+            "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/summary",
+            "value": 0.010617,
+            "range": "0.010617-0.010617",
+            "unit": "s",
+            "extra": "Counting the graph's distinct triples and the findings once every record is done."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/serialising",
+            "value": 0.110708,
+            "range": "0.110708-0.110708",
+            "unit": "s",
+            "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/stage/unaccounted",
+            "value": 0.166129,
+            "range": "0.166129-0.166129",
+            "unit": "s",
+            "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/output/graph",
+            "value": 63025,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes. sha256 37ddd3ff45eedcca686486482a5dd0ea90120d791c04352fb96a41e20d5fe7ac"
+          },
+          {
+            "name": "fhir-r4-lab-pull-3000/output/findings",
+            "value": 45090,
+            "unit": "{count}",
+            "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes. sha256 b882dcb20e82c494692121aa741018d60fa8b958d52919c0a6eca58735b69721"
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/convert/first",
+            "value": 1.923724,
+            "range": "1.918753-1.948398",
+            "unit": "s",
+            "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. The trimmed ten-year Synthea record of the demo hospitals, as a FHIR R4 Bundle. sha256 2703dc1e7e920fa1e45d16c58f8338ef13b3cc1916ee40ffa461112d54dce5de, 1098812 bytes"
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/convert/second",
+            "value": 1.718074,
+            "range": "1.71702-1.72253",
+            "unit": "s",
+            "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/convert/profiled",
+            "value": 1.962222,
+            "range": "1.962222-1.962222",
+            "unit": "s",
+            "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/wasm-memory/first",
+            "value": 86179840,
+            "range": "69402624-86179840",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the first convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/wasm-memory/second",
+            "value": 86179840,
+            "range": "86179840-86179840",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the second convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/rss",
+            "value": 361562112,
+            "range": "353341440-386899968",
+            "unit": "By",
+            "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/records",
+            "value": 647,
+            "unit": "{count}",
+            "extra": "Source records the Bridge found in the document and converted. The trimmed ten-year Synthea record of the demo hospitals, as a FHIR R4 Bundle."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/triples",
+            "value": 12654,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/findings",
+            "value": 2256,
+            "unit": "{count}",
+            "extra": "Findings the conversion wrote."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/coding-system-table.rq",
+            "value": 0.019009,
+            "range": "0.019009-0.019009",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/document-table.rq",
+            "value": 0.003001,
+            "range": "0.003001-0.003001",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/lab-result-table.rq",
+            "value": 0.00424,
+            "range": "0.00424-0.00424",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/medication-table.rq",
+            "value": 0.002815,
+            "range": "0.002815-0.002815",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/note-or-document-table.rq",
+            "value": 0.001444,
+            "range": "0.001444-0.001444",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/organization-table.rq",
+            "value": 0.004322,
+            "range": "0.004322-0.004322",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/variant-interpretation-table.rq",
+            "value": 0.001861,
+            "range": "0.001861-0.001861",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/variant-table.rq",
+            "value": 0.002003,
+            "range": "0.002003-0.002003",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/absent-reasons.rq",
+            "value": 0.015896,
+            "range": "0.015896-0.015896",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/allergy-intolerance.rq",
+            "value": 0.002449,
+            "range": "0.002449-0.002449",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/attachments.rq",
+            "value": 0.002603,
+            "range": "0.002603-0.002603",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/condition.rq",
+            "value": 0.006166,
+            "range": "0.006166-0.006166",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/immunization.rq",
+            "value": 0.001972,
+            "range": "0.001972-0.001972",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/lab-result-codes.rq",
+            "value": 0.014685,
+            "range": "0.014685-0.014685",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/lab-result-identifiers.rq",
+            "value": 0.003859,
+            "range": "0.003859-0.003859",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/lab-result-performer.rq",
+            "value": 0.000845,
+            "range": "0.000845-0.000845",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/lab-result-quantities.rq",
+            "value": 0.01523,
+            "range": "0.01523-0.01523",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/lab-result.rq",
+            "value": 0.018569,
+            "range": "0.018569-0.018569",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/medication-dispense-prescription.rq",
+            "value": 0.002443,
+            "range": "0.002443-0.002443",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/medication-dispense.rq",
+            "value": 0.001597,
+            "range": "0.001597-0.001597",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/medication-supply-and-dosages.rq",
+            "value": 0.007286,
+            "range": "0.007286-0.007286",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/medication.rq",
+            "value": 0.007099,
+            "range": "0.007099-0.007099",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/narrative-text.rq",
+            "value": 0.007745,
+            "range": "0.007745-0.007745",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/note-or-document.rq",
+            "value": 0.001779,
+            "range": "0.001779-0.001779",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/organization-from-server.rq",
+            "value": 0.001138,
+            "range": "0.001138-0.001138",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/organization.rq",
+            "value": 0.002648,
+            "range": "0.002648-0.002648",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/patient.rq",
+            "value": 0.002032,
+            "range": "0.002032-0.002032",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/procedure.rq",
+            "value": 0.004071,
+            "range": "0.004071-0.004071",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/record.rq",
+            "value": 0.060592,
+            "range": "0.060592-0.060592",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/report-and-note-performer.rq",
+            "value": 0.000874,
+            "range": "0.000874-0.000874",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/report-results.rq",
+            "value": 0.002325,
+            "range": "0.002325-0.002325",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/report.rq",
+            "value": 0.001657,
+            "range": "0.001657-0.001657",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/variant-interpretation.rq",
+            "value": 0.002133,
+            "range": "0.002133-0.002133",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/variant.rq",
+            "value": 0.001854,
+            "range": "0.001854-0.001854",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/absent-reason-findings.rq",
+            "value": 0.010251,
+            "range": "0.010251-0.010251",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/category-text-findings.rq",
+            "value": 0.002947,
+            "range": "0.002947-0.002947",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/code-findings.rq",
+            "value": 0.002512,
+            "range": "0.002512-0.002512",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/date-findings.rq",
+            "value": 0.011974,
+            "range": "0.011974-0.011974",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/document-version-findings.rq",
+            "value": 0.000304,
+            "range": "0.000304-0.000304",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/lab-result-findings.rq",
+            "value": 0.016166,
+            "range": "0.016166-0.016166",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/medication-dispense-findings.rq",
+            "value": 0.001836,
+            "range": "0.001836-0.001836",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/medication-dispense-prescription-findings.rq",
+            "value": 0.00207,
+            "range": "0.00207-0.00207",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/medication-findings.rq",
+            "value": 0.021216,
+            "range": "0.021216-0.021216",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/narrative-findings.rq",
+            "value": 0.001597,
+            "range": "0.001597-0.001597",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/observation-component-findings.rq",
+            "value": 0.002349,
+            "range": "0.002349-0.002349",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/observation-findings.rq",
+            "value": 0.010446,
+            "range": "0.010446-0.010446",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/organization-findings.rq",
+            "value": 0.001644,
+            "range": "0.001644-0.001644",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/patient-findings.rq",
+            "value": 0.001587,
+            "range": "0.001587-0.001587",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/patient-reference-findings.rq",
+            "value": 0.012146,
+            "range": "0.012146-0.012146",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/recorded-date-findings.rq",
+            "value": 0.002071,
+            "range": "0.002071-0.002071",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/reference-display-findings.rq",
+            "value": 0.006865,
+            "range": "0.006865-0.006865",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/reference-without-server-findings.rq",
+            "value": 0.007484,
+            "range": "0.007484-0.007484",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/repeated-id-findings.rq",
+            "value": 0.004651,
+            "range": "0.004651-0.004651",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/report-and-note-findings.rq",
+            "value": 0.00244,
+            "range": "0.00244-0.00244",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/report-result-findings.rq",
+            "value": 0.002233,
+            "range": "0.002233-0.002233",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/resource-type-findings.rq",
+            "value": 0.002256,
+            "range": "0.002256-0.002256",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/variant-findings.rq",
+            "value": 0.003367,
+            "range": "0.003367-0.003367",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/variant-interpretation-findings.rq",
+            "value": 0.002134,
+            "range": "0.002134-0.002134",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/query-time/detect.rq",
+            "value": 0.006929,
+            "range": "0.006929-0.006929",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/document-table",
+            "value": 0.051097,
+            "range": "0.051097-0.051097",
+            "unit": "s",
+            "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/lift",
+            "value": 0.112399,
+            "range": "0.112399-0.112399",
+            "unit": "s",
+            "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/source-validation",
+            "value": 0.253317,
+            "range": "0.253317-0.253317",
+            "unit": "s",
+            "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/accounting",
+            "value": 0.020556,
+            "range": "0.020556-0.020556",
+            "unit": "s",
+            "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/dataset",
+            "value": 0.002628,
+            "range": "0.002628-0.002628",
+            "unit": "s",
+            "extra": "Putting the facts about a record into the store its queries run over."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/index",
+            "value": 0.05815,
+            "range": "0.05815-0.05815",
+            "unit": "s",
+            "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/mapping",
+            "value": 0.19663,
+            "range": "0.19663-0.19663",
+            "unit": "s",
+            "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/records",
+            "value": 0.410908,
+            "range": "0.410908-0.410908",
+            "unit": "s",
+            "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/output-validation",
+            "value": 0.564256,
+            "range": "0.564256-0.564256",
+            "unit": "s",
+            "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/findings",
+            "value": 0.178472,
+            "range": "0.178472-0.178472",
+            "unit": "s",
+            "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/unresolved-addresses",
+            "value": 0.010024,
+            "range": "0.010024-0.010024",
+            "unit": "s",
+            "extra": "Finding the references to records the document does not hold, which keep their computed names."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/detect",
+            "value": 0.006989,
+            "range": "0.006989-0.006989",
+            "unit": "s",
+            "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/summary",
+            "value": 0.003883,
+            "range": "0.003883-0.003883",
+            "unit": "s",
+            "extra": "Counting the graph's distinct triples and the findings once every record is done."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/serialising",
+            "value": 0.041378,
+            "range": "0.041378-0.041378",
+            "unit": "s",
+            "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/stage/unaccounted",
+            "value": 0.051535,
+            "range": "0.051535-0.051535",
+            "unit": "s",
+            "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/output/graph",
+            "value": 12654,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes. sha256 7cc449ffbde5128e52fafcf8acfb64362df9b08f54ac053668923208f8175856"
+          },
+          {
+            "name": "fhir-r4-synthea-10y-trimmed/output/findings",
+            "value": 33875,
+            "unit": "{count}",
+            "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes. sha256 d537a811bedd885d56ef2486e522f7087e751130f23262dcfd5a6a287d47e7de"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/convert/first",
+            "value": 47.249171,
+            "range": "46.958791-47.415626",
+            "unit": "s",
+            "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. The lifetime Synthea record of one person, Xochitl Corkery, a 51 MB FHIR R4 Bundle of 16,833 entries. With the records of Dona Okuneva and Cole Gaylord it is also one pod of 42,784 entries; the three are unrelated people and Xochitl's is 39% of the pod, so the step from this input to the pod is not independent data. sha256 f20b86408066ece2d25a7b02d380b7652f22d16df9dab613a0c73c9969b17da8, 51227791 bytes"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/convert/second",
+            "value": 45.398347,
+            "range": "45.124722-45.792975",
+            "unit": "s",
+            "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/convert/profiled",
+            "value": 47.879285,
+            "range": "47.879285-47.879285",
+            "unit": "s",
+            "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/wasm-memory/first",
+            "value": 2518876160,
+            "range": "2518876160-2518876160",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the first convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/wasm-memory/second",
+            "value": 2518876160,
+            "range": "2518876160-2518876160",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the second convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/rss",
+            "value": 3362340864,
+            "range": "3329060864-3364110336",
+            "unit": "By",
+            "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/records",
+            "value": 16833,
+            "unit": "{count}",
+            "extra": "Source records the Bridge found in the document and converted. The lifetime Synthea record of one person, Xochitl Corkery, a 51 MB FHIR R4 Bundle of 16,833 entries. With the records of Dona Okuneva and Cole Gaylord it is also one pod of 42,784 entries; the three are unrelated people and Xochitl's is 39% of the pod, so the step from this input to the pod is not independent data."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/triples",
+            "value": 184332,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/findings",
+            "value": 267199,
+            "unit": "{count}",
+            "extra": "Findings the conversion wrote."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/coding-system-table.rq",
+            "value": 0.463982,
+            "range": "0.463982-0.463982",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/document-table.rq",
+            "value": 0.045308,
+            "range": "0.045308-0.045308",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/lab-result-table.rq",
+            "value": 0.052749,
+            "range": "0.052749-0.052749",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/medication-table.rq",
+            "value": 0.068315,
+            "range": "0.068315-0.068315",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/note-or-document-table.rq",
+            "value": 0.029494,
+            "range": "0.029494-0.029494",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/organization-table.rq",
+            "value": 0.073151,
+            "range": "0.073151-0.073151",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/variant-interpretation-table.rq",
+            "value": 0.029112,
+            "range": "0.029112-0.029112",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/variant-table.rq",
+            "value": 0.02874,
+            "range": "0.02874-0.02874",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/absent-reasons.rq",
+            "value": 0.425362,
+            "range": "0.425362-0.425362",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/allergy-intolerance.rq",
+            "value": 0.061293,
+            "range": "0.061293-0.061293",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/attachments.rq",
+            "value": 0.102185,
+            "range": "0.102185-0.102185",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/condition.rq",
+            "value": 0.071832,
+            "range": "0.071832-0.071832",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/immunization.rq",
+            "value": 0.053349,
+            "range": "0.053349-0.053349",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/lab-result-codes.rq",
+            "value": 0.182051,
+            "range": "0.182051-0.182051",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/lab-result-identifiers.rq",
+            "value": 0.068041,
+            "range": "0.068041-0.068041",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/lab-result-performer.rq",
+            "value": 0.019486,
+            "range": "0.019486-0.019486",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/lab-result-quantities.rq",
+            "value": 0.16555,
+            "range": "0.16555-0.16555",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/lab-result.rq",
+            "value": 0.209481,
+            "range": "0.209481-0.209481",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/medication-dispense-prescription.rq",
+            "value": 0.062917,
+            "range": "0.062917-0.062917",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/medication-dispense.rq",
+            "value": 0.040893,
+            "range": "0.040893-0.040893",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/medication-supply-and-dosages.rq",
+            "value": 0.067848,
+            "range": "0.067848-0.067848",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/medication.rq",
+            "value": 0.110916,
+            "range": "0.110916-0.110916",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/narrative-text.rq",
+            "value": 0.380958,
+            "range": "0.380958-0.380958",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/note-or-document.rq",
+            "value": 0.122969,
+            "range": "0.122969-0.122969",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/organization-from-server.rq",
+            "value": 0.028887,
+            "range": "0.028887-0.028887",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/organization.rq",
+            "value": 0.06958,
+            "range": "0.06958-0.06958",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/patient.rq",
+            "value": 0.04403,
+            "range": "0.04403-0.04403",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/procedure.rq",
+            "value": 0.124676,
+            "range": "0.124676-0.124676",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/record.rq",
+            "value": 1.024672,
+            "range": "1.024672-1.024672",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/report-and-note-performer.rq",
+            "value": 0.020757,
+            "range": "0.020757-0.020757",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/report-results.rq",
+            "value": 0.162054,
+            "range": "0.162054-0.162054",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/report.rq",
+            "value": 0.162674,
+            "range": "0.162674-0.162674",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/variant-interpretation.rq",
+            "value": 0.053845,
+            "range": "0.053845-0.053845",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/variant.rq",
+            "value": 0.046994,
+            "range": "0.046994-0.046994",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/absent-reason-findings.rq",
+            "value": 0.182246,
+            "range": "0.182246-0.182246",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/category-text-findings.rq",
+            "value": 0.07433,
+            "range": "0.07433-0.07433",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/code-findings.rq",
+            "value": 0.08162,
+            "range": "0.08162-0.08162",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/date-findings.rq",
+            "value": 0.15916,
+            "range": "0.15916-0.15916",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/document-version-findings.rq",
+            "value": 0.007155,
+            "range": "0.007155-0.007155",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/lab-result-findings.rq",
+            "value": 0.267608,
+            "range": "0.267608-0.267608",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/medication-dispense-findings.rq",
+            "value": 0.044788,
+            "range": "0.044788-0.044788",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/medication-dispense-prescription-findings.rq",
+            "value": 0.053089,
+            "range": "0.053089-0.053089",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/medication-findings.rq",
+            "value": 0.630868,
+            "range": "0.630868-0.630868",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/narrative-findings.rq",
+            "value": 0.044987,
+            "range": "0.044987-0.044987",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/observation-component-findings.rq",
+            "value": 0.080516,
+            "range": "0.080516-0.080516",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/observation-findings.rq",
+            "value": 0.180444,
+            "range": "0.180444-0.180444",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/organization-findings.rq",
+            "value": 0.043047,
+            "range": "0.043047-0.043047",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/patient-findings.rq",
+            "value": 0.043005,
+            "range": "0.043005-0.043005",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/patient-reference-findings.rq",
+            "value": 0.174931,
+            "range": "0.174931-0.174931",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/recorded-date-findings.rq",
+            "value": 0.04896,
+            "range": "0.04896-0.04896",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/reference-display-findings.rq",
+            "value": 0.186148,
+            "range": "0.186148-0.186148",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/reference-without-server-findings.rq",
+            "value": 0.08041,
+            "range": "0.08041-0.08041",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/repeated-id-findings.rq",
+            "value": 0.087664,
+            "range": "0.087664-0.087664",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/report-and-note-findings.rq",
+            "value": 0.105075,
+            "range": "0.105075-0.105075",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/report-result-findings.rq",
+            "value": 0.088425,
+            "range": "0.088425-0.088425",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/resource-type-findings.rq",
+            "value": 0.736725,
+            "range": "0.736725-0.736725",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/variant-findings.rq",
+            "value": 0.075483,
+            "range": "0.075483-0.075483",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/variant-interpretation-findings.rq",
+            "value": 0.054309,
+            "range": "0.054309-0.054309",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/query-time/detect.rq",
+            "value": 0.007054,
+            "range": "0.007054-0.007054",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/document-table",
+            "value": 1.152648,
+            "range": "1.152648-1.152648",
+            "unit": "s",
+            "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/lift",
+            "value": 3.982465,
+            "range": "3.982465-3.982465",
+            "unit": "s",
+            "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/source-validation",
+            "value": 7.252181,
+            "range": "7.252181-7.252181",
+            "unit": "s",
+            "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/accounting",
+            "value": 2.00426,
+            "range": "2.00426-2.00426",
+            "unit": "s",
+            "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/dataset",
+            "value": 0.059845,
+            "range": "0.059845-0.059845",
+            "unit": "s",
+            "extra": "Putting the facts about a record into the store its queries run over."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/index",
+            "value": 1.935131,
+            "range": "1.935131-1.935131",
+            "unit": "s",
+            "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/mapping",
+            "value": 4.035367,
+            "range": "4.035367-4.035367",
+            "unit": "s",
+            "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/records",
+            "value": 0.773685,
+            "range": "0.773685-0.773685",
+            "unit": "s",
+            "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/output-validation",
+            "value": 12.227823,
+            "range": "12.227823-12.227823",
+            "unit": "s",
+            "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/findings",
+            "value": 4.538526,
+            "range": "4.538526-4.538526",
+            "unit": "s",
+            "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/unresolved-addresses",
+            "value": 0.27668,
+            "range": "0.27668-0.27668",
+            "unit": "s",
+            "extra": "Finding the references to records the document does not hold, which keep their computed names."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/detect",
+            "value": 0.007198,
+            "range": "0.007198-0.007198",
+            "unit": "s",
+            "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/summary",
+            "value": 0.11568,
+            "range": "0.11568-0.11568",
+            "unit": "s",
+            "extra": "Counting the graph's distinct triples and the findings once every record is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/serialising",
+            "value": 6.66566,
+            "range": "6.66566-6.66566",
+            "unit": "s",
+            "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/stage/unaccounted",
+            "value": 2.852136,
+            "range": "2.852136-2.852136",
+            "unit": "s",
+            "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/output/graph",
+            "value": 184332,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes. sha256 7a293b50f329e9697119ef46a49e0e55365198126021106ead2739fd58656a51"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime/output/findings",
+            "value": 4050084,
+            "unit": "{count}",
+            "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes. sha256 ff18a1907da595ae57df30a0e8d2e3562de67ab8261c8799e7e8b02259945069"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/convert/first",
+            "value": 11.528629,
+            "range": "11.378763-11.558281",
+            "unit": "s",
+            "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. The lifetime Synthea record of Justa Moore, a 15 MB FHIR R4 Bundle of 3,987 entries. sha256 da8b599d1bafbc500fd74a1aded71f6a426dde36edc25b0fd86856595e9ad292, 14900379 bytes"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/convert/second",
+            "value": 10.829816,
+            "range": "10.723478-11.012896",
+            "unit": "s",
+            "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/convert/profiled",
+            "value": 11.788968,
+            "range": "11.788968-11.788968",
+            "unit": "s",
+            "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/wasm-memory/first",
+            "value": 639827968,
+            "range": "639827968-639827968",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the first convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/wasm-memory/second",
+            "value": 639827968,
+            "range": "639827968-639827968",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the second convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/rss",
+            "value": 954703872,
+            "range": "941576192-1039126528",
+            "unit": "By",
+            "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/records",
+            "value": 3987,
+            "unit": "{count}",
+            "extra": "Source records the Bridge found in the document and converted. The lifetime Synthea record of Justa Moore, a 15 MB FHIR R4 Bundle of 3,987 entries."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/triples",
+            "value": 41528,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/findings",
+            "value": 68397,
+            "unit": "{count}",
+            "extra": "Findings the conversion wrote."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/coding-system-table.rq",
+            "value": 0.155189,
+            "range": "0.155189-0.155189",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/document-table.rq",
+            "value": 0.012105,
+            "range": "0.012105-0.012105",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/lab-result-table.rq",
+            "value": 0.012755,
+            "range": "0.012755-0.012755",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/medication-table.rq",
+            "value": 0.015251,
+            "range": "0.015251-0.015251",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/note-or-document-table.rq",
+            "value": 0.007963,
+            "range": "0.007963-0.007963",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/organization-table.rq",
+            "value": 0.018155,
+            "range": "0.018155-0.018155",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/variant-interpretation-table.rq",
+            "value": 0.007283,
+            "range": "0.007283-0.007283",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/variant-table.rq",
+            "value": 0.007149,
+            "range": "0.007149-0.007149",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/absent-reasons.rq",
+            "value": 0.106001,
+            "range": "0.106001-0.106001",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/allergy-intolerance.rq",
+            "value": 0.014643,
+            "range": "0.014643-0.014643",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/attachments.rq",
+            "value": 0.028069,
+            "range": "0.028069-0.028069",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/condition.rq",
+            "value": 0.02282,
+            "range": "0.02282-0.02282",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/immunization.rq",
+            "value": 0.015811,
+            "range": "0.015811-0.015811",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/lab-result-codes.rq",
+            "value": 0.020085,
+            "range": "0.020085-0.020085",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/lab-result-identifiers.rq",
+            "value": 0.012784,
+            "range": "0.012784-0.012784",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/lab-result-performer.rq",
+            "value": 0.004514,
+            "range": "0.004514-0.004514",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/lab-result-quantities.rq",
+            "value": 0.020964,
+            "range": "0.020964-0.020964",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/lab-result.rq",
+            "value": 0.022188,
+            "range": "0.022188-0.022188",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/medication-dispense-prescription.rq",
+            "value": 0.014578,
+            "range": "0.014578-0.014578",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/medication-dispense.rq",
+            "value": 0.00995,
+            "range": "0.00995-0.00995",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/medication-supply-and-dosages.rq",
+            "value": 0.013761,
+            "range": "0.013761-0.013761",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/medication.rq",
+            "value": 0.014859,
+            "range": "0.014859-0.014859",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/narrative-text.rq",
+            "value": 0.096387,
+            "range": "0.096387-0.096387",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/note-or-document.rq",
+            "value": 0.038292,
+            "range": "0.038292-0.038292",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/organization-from-server.rq",
+            "value": 0.006927,
+            "range": "0.006927-0.006927",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/organization.rq",
+            "value": 0.016907,
+            "range": "0.016907-0.016907",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/patient.rq",
+            "value": 0.010972,
+            "range": "0.010972-0.010972",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/procedure.rq",
+            "value": 0.06058,
+            "range": "0.06058-0.06058",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/record.rq",
+            "value": 0.230123,
+            "range": "0.230123-0.230123",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/report-and-note-performer.rq",
+            "value": 0.004958,
+            "range": "0.004958-0.004958",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/report-results.rq",
+            "value": 0.022862,
+            "range": "0.022862-0.022862",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/report.rq",
+            "value": 0.04884,
+            "range": "0.04884-0.04884",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/variant-interpretation.rq",
+            "value": 0.012626,
+            "range": "0.012626-0.012626",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/variant.rq",
+            "value": 0.011121,
+            "range": "0.011121-0.011121",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/absent-reason-findings.rq",
+            "value": 0.043516,
+            "range": "0.043516-0.043516",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/category-text-findings.rq",
+            "value": 0.018706,
+            "range": "0.018706-0.018706",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/code-findings.rq",
+            "value": 0.026105,
+            "range": "0.026105-0.026105",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/date-findings.rq",
+            "value": 0.035685,
+            "range": "0.035685-0.035685",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/document-version-findings.rq",
+            "value": 0.002345,
+            "range": "0.002345-0.002345",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/lab-result-findings.rq",
+            "value": 0.026709,
+            "range": "0.026709-0.026709",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/medication-dispense-findings.rq",
+            "value": 0.010534,
+            "range": "0.010534-0.010534",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/medication-dispense-prescription-findings.rq",
+            "value": 0.012431,
+            "range": "0.012431-0.012431",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/medication-findings.rq",
+            "value": 0.144792,
+            "range": "0.144792-0.144792",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/narrative-findings.rq",
+            "value": 0.010765,
+            "range": "0.010765-0.010765",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/observation-component-findings.rq",
+            "value": 0.025015,
+            "range": "0.025015-0.025015",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/observation-findings.rq",
+            "value": 0.031484,
+            "range": "0.031484-0.031484",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/organization-findings.rq",
+            "value": 0.01022,
+            "range": "0.01022-0.01022",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/patient-findings.rq",
+            "value": 0.010554,
+            "range": "0.010554-0.010554",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/patient-reference-findings.rq",
+            "value": 0.04119,
+            "range": "0.04119-0.04119",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/recorded-date-findings.rq",
+            "value": 0.012304,
+            "range": "0.012304-0.012304",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/reference-display-findings.rq",
+            "value": 0.046878,
+            "range": "0.046878-0.046878",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/reference-without-server-findings.rq",
+            "value": 0.019859,
+            "range": "0.019859-0.019859",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/repeated-id-findings.rq",
+            "value": 0.019386,
+            "range": "0.019386-0.019386",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/report-and-note-findings.rq",
+            "value": 0.030875,
+            "range": "0.030875-0.030875",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/report-result-findings.rq",
+            "value": 0.017372,
+            "range": "0.017372-0.017372",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/resource-type-findings.rq",
+            "value": 0.022539,
+            "range": "0.022539-0.022539",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/variant-findings.rq",
+            "value": 0.016758,
+            "range": "0.016758-0.016758",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/variant-interpretation-findings.rq",
+            "value": 0.012714,
+            "range": "0.012714-0.012714",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/query-time/detect.rq",
+            "value": 0.007151,
+            "range": "0.007151-0.007151",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/document-table",
+            "value": 0.338258,
+            "range": "0.338258-0.338258",
+            "unit": "s",
+            "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/lift",
+            "value": 1.176027,
+            "range": "1.176027-1.176027",
+            "unit": "s",
+            "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/source-validation",
+            "value": 1.812394,
+            "range": "1.812394-1.812394",
+            "unit": "s",
+            "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/accounting",
+            "value": 0.524542,
+            "range": "0.524542-0.524542",
+            "unit": "s",
+            "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/dataset",
+            "value": 0.01514,
+            "range": "0.01514-0.01514",
+            "unit": "s",
+            "extra": "Putting the facts about a record into the store its queries run over."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/index",
+            "value": 0.53653,
+            "range": "0.53653-0.53653",
+            "unit": "s",
+            "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/mapping",
+            "value": 0.918164,
+            "range": "0.918164-0.918164",
+            "unit": "s",
+            "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/records",
+            "value": 0.172366,
+            "range": "0.172366-0.172366",
+            "unit": "s",
+            "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/output-validation",
+            "value": 3.005294,
+            "range": "3.005294-3.005294",
+            "unit": "s",
+            "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/findings",
+            "value": 0.907869,
+            "range": "0.907869-0.907869",
+            "unit": "s",
+            "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/unresolved-addresses",
+            "value": 0.087189,
+            "range": "0.087189-0.087189",
+            "unit": "s",
+            "extra": "Finding the references to records the document does not hold, which keep their computed names."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/detect",
+            "value": 0.007294,
+            "range": "0.007294-0.007294",
+            "unit": "s",
+            "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/summary",
+            "value": 0.030079,
+            "range": "0.030079-0.030079",
+            "unit": "s",
+            "extra": "Counting the graph's distinct triples and the findings once every record is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/serialising",
+            "value": 1.519144,
+            "range": "1.519144-1.519144",
+            "unit": "s",
+            "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/stage/unaccounted",
+            "value": 0.738678,
+            "range": "0.738678-0.738678",
+            "unit": "s",
+            "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/output/graph",
+            "value": 41528,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes. sha256 8e086cb7aab88e92c913f3ca926a715c879be434ff2ea8f59b3d7677a6a406a2"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-ab74ec30/output/findings",
+            "value": 1041849,
+            "unit": "{count}",
+            "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes. sha256 a7cb12348b0c775e338f31add0447d9a2145600ae8536b5e70a116ff9fd8538a"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/convert/first",
+            "value": 50.931242,
+            "range": "50.849302-51.442046",
+            "unit": "s",
+            "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. The lifetime Synthea record of Dona Okuneva, a 56 MB FHIR R4 Bundle of 19,728 entries. It is one of the three records of the pod of 42,784 entries, with Xochitl Corkery's and Cole Gaylord's; the three are unrelated people. sha256 4a4a24b9c8a052cc60465fffe5da9f34ab71101f3479ebdcc794e61e6d76d7f2, 56150281 bytes"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/convert/second",
+            "value": 49.163894,
+            "range": "48.558501-49.255191",
+            "unit": "s",
+            "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/convert/profiled",
+            "value": 51.764249,
+            "range": "51.764249-51.764249",
+            "unit": "s",
+            "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/wasm-memory/first",
+            "value": 2552430592,
+            "range": "2552430592-2552430592",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the first convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/wasm-memory/second",
+            "value": 2552430592,
+            "range": "2552430592-2552430592",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the second convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/rss",
+            "value": 3033178112,
+            "range": "3021643776-3083939840",
+            "unit": "By",
+            "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/records",
+            "value": 19728,
+            "unit": "{count}",
+            "extra": "Source records the Bridge found in the document and converted. The lifetime Synthea record of Dona Okuneva, a 56 MB FHIR R4 Bundle of 19,728 entries. It is one of the three records of the pod of 42,784 entries, with Xochitl Corkery's and Cole Gaylord's; the three are unrelated people."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/triples",
+            "value": 283762,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/findings",
+            "value": 198775,
+            "unit": "{count}",
+            "extra": "Findings the conversion wrote."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/coding-system-table.rq",
+            "value": 0.565786,
+            "range": "0.565786-0.565786",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/document-table.rq",
+            "value": 0.049697,
+            "range": "0.049697-0.049697",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/lab-result-table.rq",
+            "value": 0.071968,
+            "range": "0.071968-0.071968",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/medication-table.rq",
+            "value": 0.059386,
+            "range": "0.059386-0.059386",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/note-or-document-table.rq",
+            "value": 0.030732,
+            "range": "0.030732-0.030732",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/organization-table.rq",
+            "value": 0.083194,
+            "range": "0.083194-0.083194",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/variant-interpretation-table.rq",
+            "value": 0.034786,
+            "range": "0.034786-0.034786",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/variant-table.rq",
+            "value": 0.035393,
+            "range": "0.035393-0.035393",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/absent-reasons.rq",
+            "value": 0.474606,
+            "range": "0.474606-0.474606",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/allergy-intolerance.rq",
+            "value": 0.066015,
+            "range": "0.066015-0.066015",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/attachments.rq",
+            "value": 0.102539,
+            "range": "0.102539-0.102539",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/condition.rq",
+            "value": 0.092309,
+            "range": "0.092309-0.092309",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/immunization.rq",
+            "value": 0.058638,
+            "range": "0.058638-0.058638",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/lab-result-codes.rq",
+            "value": 0.328884,
+            "range": "0.328884-0.328884",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/lab-result-identifiers.rq",
+            "value": 0.094546,
+            "range": "0.094546-0.094546",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/lab-result-performer.rq",
+            "value": 0.023118,
+            "range": "0.023118-0.023118",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/lab-result-quantities.rq",
+            "value": 0.297354,
+            "range": "0.297354-0.297354",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/lab-result.rq",
+            "value": 0.385339,
+            "range": "0.385339-0.385339",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/medication-dispense-prescription.rq",
+            "value": 0.0724,
+            "range": "0.0724-0.0724",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/medication-dispense.rq",
+            "value": 0.046852,
+            "range": "0.046852-0.046852",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/medication-supply-and-dosages.rq",
+            "value": 0.068436,
+            "range": "0.068436-0.068436",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/medication.rq",
+            "value": 0.102087,
+            "range": "0.102087-0.102087",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/narrative-text.rq",
+            "value": 0.324794,
+            "range": "0.324794-0.324794",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/note-or-document.rq",
+            "value": 0.09532,
+            "range": "0.09532-0.09532",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/organization-from-server.rq",
+            "value": 0.03349,
+            "range": "0.03349-0.03349",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/organization.rq",
+            "value": 0.07863,
+            "range": "0.07863-0.07863",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/patient.rq",
+            "value": 0.049999,
+            "range": "0.049999-0.049999",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/procedure.rq",
+            "value": 0.141575,
+            "range": "0.141575-0.141575",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/record.rq",
+            "value": 1.552623,
+            "range": "1.552623-1.552623",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/report-and-note-performer.rq",
+            "value": 0.023834,
+            "range": "0.023834-0.023834",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/report-results.rq",
+            "value": 0.290424,
+            "range": "0.290424-0.290424",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/report.rq",
+            "value": 0.18725,
+            "range": "0.18725-0.18725",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/variant-interpretation.rq",
+            "value": 0.063513,
+            "range": "0.063513-0.063513",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/variant.rq",
+            "value": 0.055191,
+            "range": "0.055191-0.055191",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/absent-reason-findings.rq",
+            "value": 0.229349,
+            "range": "0.229349-0.229349",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/category-text-findings.rq",
+            "value": 0.082086,
+            "range": "0.082086-0.082086",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/code-findings.rq",
+            "value": 0.086681,
+            "range": "0.086681-0.086681",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/date-findings.rq",
+            "value": 0.229978,
+            "range": "0.229978-0.229978",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/document-version-findings.rq",
+            "value": 0.007727,
+            "range": "0.007727-0.007727",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/lab-result-findings.rq",
+            "value": 0.472123,
+            "range": "0.472123-0.472123",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/medication-dispense-findings.rq",
+            "value": 0.052018,
+            "range": "0.052018-0.052018",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/medication-dispense-prescription-findings.rq",
+            "value": 0.059092,
+            "range": "0.059092-0.059092",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/medication-findings.rq",
+            "value": 0.778222,
+            "range": "0.778222-0.778222",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/narrative-findings.rq",
+            "value": 0.049367,
+            "range": "0.049367-0.049367",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/observation-component-findings.rq",
+            "value": 0.154419,
+            "range": "0.154419-0.154419",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/observation-findings.rq",
+            "value": 0.302258,
+            "range": "0.302258-0.302258",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/organization-findings.rq",
+            "value": 0.050965,
+            "range": "0.050965-0.050965",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/patient-findings.rq",
+            "value": 0.049195,
+            "range": "0.049195-0.049195",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/patient-reference-findings.rq",
+            "value": 0.256171,
+            "range": "0.256171-0.256171",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/recorded-date-findings.rq",
+            "value": 0.056006,
+            "range": "0.056006-0.056006",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/reference-display-findings.rq",
+            "value": 0.234264,
+            "range": "0.234264-0.234264",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/reference-without-server-findings.rq",
+            "value": 0.098471,
+            "range": "0.098471-0.098471",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/repeated-id-findings.rq",
+            "value": 0.12677,
+            "range": "0.12677-0.12677",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/report-and-note-findings.rq",
+            "value": 0.102466,
+            "range": "0.102466-0.102466",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/report-result-findings.rq",
+            "value": 0.135941,
+            "range": "0.135941-0.135941",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/resource-type-findings.rq",
+            "value": 0.091709,
+            "range": "0.091709-0.091709",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/variant-findings.rq",
+            "value": 0.10235,
+            "range": "0.10235-0.10235",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/variant-interpretation-findings.rq",
+            "value": 0.061651,
+            "range": "0.061651-0.061651",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/query-time/detect.rq",
+            "value": 0.007091,
+            "range": "0.007091-0.007091",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/document-table",
+            "value": 1.334839,
+            "range": "1.334839-1.334839",
+            "unit": "s",
+            "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/lift",
+            "value": 4.59826,
+            "range": "4.59826-4.59826",
+            "unit": "s",
+            "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/source-validation",
+            "value": 8.130179,
+            "range": "8.130179-8.130179",
+            "unit": "s",
+            "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/accounting",
+            "value": 1.497955,
+            "range": "1.497955-1.497955",
+            "unit": "s",
+            "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/dataset",
+            "value": 0.066758,
+            "range": "0.066758-0.066758",
+            "unit": "s",
+            "extra": "Putting the facts about a record into the store its queries run over."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/index",
+            "value": 2.248719,
+            "range": "2.248719-2.248719",
+            "unit": "s",
+            "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/mapping",
+            "value": 5.294981,
+            "range": "5.294981-5.294981",
+            "unit": "s",
+            "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/records",
+            "value": 1.099458,
+            "range": "1.099458-1.099458",
+            "unit": "s",
+            "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/output-validation",
+            "value": 15.011979,
+            "range": "15.011979-15.011979",
+            "unit": "s",
+            "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/findings",
+            "value": 5.059457,
+            "range": "5.059457-5.059457",
+            "unit": "s",
+            "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/unresolved-addresses",
+            "value": 0.274956,
+            "range": "0.274956-0.274956",
+            "unit": "s",
+            "extra": "Finding the references to records the document does not hold, which keep their computed names."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/detect",
+            "value": 0.007256,
+            "range": "0.007256-0.007256",
+            "unit": "s",
+            "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/summary",
+            "value": 0.113521,
+            "range": "0.113521-0.113521",
+            "unit": "s",
+            "extra": "Counting the graph's distinct triples and the findings once every record is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/serialising",
+            "value": 4.200486,
+            "range": "4.200486-4.200486",
+            "unit": "s",
+            "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/stage/unaccounted",
+            "value": 2.825448,
+            "range": "2.825448-2.825448",
+            "unit": "s",
+            "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/output/graph",
+            "value": 283762,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes. sha256 5241acfb6f7cb6de9f7a1d1e19b5c9196c248ef9cd96d821dd26d0b158ad15b4"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-3541f47c/output/findings",
+            "value": 3011148,
+            "unit": "{count}",
+            "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes. sha256 d9f890a80fc30b79b1fa0345608967aa80eecf5b9acb2c4b52c51e090c1993a9"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/convert/first",
+            "value": 16.20235,
+            "range": "16.168322-16.265296",
+            "unit": "s",
+            "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. The lifetime Synthea record of Cole Gaylord, a 19 MB FHIR R4 Bundle of 6,223 entries. It is one of the three records of the pod of 42,784 entries, with Xochitl Corkery's and Dona Okuneva's; the three are unrelated people. sha256 843940715d3b2edbdc883697a79ebf312a7754df290d28b0cd89e228549fa678, 19009113 bytes"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/convert/second",
+            "value": 15.417315,
+            "range": "15.367669-15.517624",
+            "unit": "s",
+            "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/convert/profiled",
+            "value": 16.438339,
+            "range": "16.438339-16.438339",
+            "unit": "s",
+            "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/wasm-memory/first",
+            "value": 723714048,
+            "range": "723714048-723714048",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the first convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/wasm-memory/second",
+            "value": 723714048,
+            "range": "723714048-723714048",
+            "unit": "By",
+            "extra": "Bytes of memory the engine holds once the second convert is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/rss",
+            "value": 1055940608,
+            "range": "1043525632-1112616960",
+            "unit": "By",
+            "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/records",
+            "value": 6223,
+            "unit": "{count}",
+            "extra": "Source records the Bridge found in the document and converted. The lifetime Synthea record of Cole Gaylord, a 19 MB FHIR R4 Bundle of 6,223 entries. It is one of the three records of the pod of 42,784 entries, with Xochitl Corkery's and Dona Okuneva's; the three are unrelated people."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/triples",
+            "value": 79183,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/findings",
+            "value": 72909,
+            "unit": "{count}",
+            "extra": "Findings the conversion wrote."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/coding-system-table.rq",
+            "value": 0.20618,
+            "range": "0.20618-0.20618",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/document-table.rq",
+            "value": 0.018031,
+            "range": "0.018031-0.018031",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/lab-result-table.rq",
+            "value": 0.022195,
+            "range": "0.022195-0.022195",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/medication-table.rq",
+            "value": 0.020545,
+            "range": "0.020545-0.020545",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/note-or-document-table.rq",
+            "value": 0.010317,
+            "range": "0.010317-0.010317",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/organization-table.rq",
+            "value": 0.027129,
+            "range": "0.027129-0.027129",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/variant-interpretation-table.rq",
+            "value": 0.011146,
+            "range": "0.011146-0.011146",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/variant-table.rq",
+            "value": 0.01147,
+            "range": "0.01147-0.01147",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/absent-reasons.rq",
+            "value": 0.151231,
+            "range": "0.151231-0.151231",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/allergy-intolerance.rq",
+            "value": 0.02165,
+            "range": "0.02165-0.02165",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/attachments.rq",
+            "value": 0.033499,
+            "range": "0.033499-0.033499",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/condition.rq",
+            "value": 0.034531,
+            "range": "0.034531-0.034531",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/immunization.rq",
+            "value": 0.021805,
+            "range": "0.021805-0.021805",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/lab-result-codes.rq",
+            "value": 0.081144,
+            "range": "0.081144-0.081144",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/lab-result-identifiers.rq",
+            "value": 0.027091,
+            "range": "0.027091-0.027091",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/lab-result-performer.rq",
+            "value": 0.007251,
+            "range": "0.007251-0.007251",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/lab-result-quantities.rq",
+            "value": 0.074629,
+            "range": "0.074629-0.074629",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/lab-result.rq",
+            "value": 0.095616,
+            "range": "0.095616-0.095616",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/medication-dispense-prescription.rq",
+            "value": 0.022274,
+            "range": "0.022274-0.022274",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/medication-dispense.rq",
+            "value": 0.01452,
+            "range": "0.01452-0.01452",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/medication-supply-and-dosages.rq",
+            "value": 0.026409,
+            "range": "0.026409-0.026409",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/medication.rq",
+            "value": 0.028322,
+            "range": "0.028322-0.028322",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/narrative-text.rq",
+            "value": 0.106275,
+            "range": "0.106275-0.106275",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/note-or-document.rq",
+            "value": 0.035777,
+            "range": "0.035777-0.035777",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/organization-from-server.rq",
+            "value": 0.010619,
+            "range": "0.010619-0.010619",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/organization.rq",
+            "value": 0.025015,
+            "range": "0.025015-0.025015",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/patient.rq",
+            "value": 0.016024,
+            "range": "0.016024-0.016024",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/procedure.rq",
+            "value": 0.047316,
+            "range": "0.047316-0.047316",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/record.rq",
+            "value": 0.44939,
+            "range": "0.44939-0.44939",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/report-and-note-performer.rq",
+            "value": 0.007564,
+            "range": "0.007564-0.007564",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/report-results.rq",
+            "value": 0.076357,
+            "range": "0.076357-0.076357",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/report.rq",
+            "value": 0.059685,
+            "range": "0.059685-0.059685",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/variant-interpretation.rq",
+            "value": 0.019852,
+            "range": "0.019852-0.019852",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/variant.rq",
+            "value": 0.017029,
+            "range": "0.017029-0.017029",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/absent-reason-findings.rq",
+            "value": 0.067892,
+            "range": "0.067892-0.067892",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/category-text-findings.rq",
+            "value": 0.026043,
+            "range": "0.026043-0.026043",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/code-findings.rq",
+            "value": 0.028396,
+            "range": "0.028396-0.028396",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/date-findings.rq",
+            "value": 0.066971,
+            "range": "0.066971-0.066971",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/document-version-findings.rq",
+            "value": 0.003288,
+            "range": "0.003288-0.003288",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/lab-result-findings.rq",
+            "value": 0.116291,
+            "range": "0.116291-0.116291",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/medication-dispense-findings.rq",
+            "value": 0.016004,
+            "range": "0.016004-0.016004",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/medication-dispense-prescription-findings.rq",
+            "value": 0.018847,
+            "range": "0.018847-0.018847",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/medication-findings.rq",
+            "value": 0.239232,
+            "range": "0.239232-0.239232",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/narrative-findings.rq",
+            "value": 0.015859,
+            "range": "0.015859-0.015859",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/observation-component-findings.rq",
+            "value": 0.049653,
+            "range": "0.049653-0.049653",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/observation-findings.rq",
+            "value": 0.082754,
+            "range": "0.082754-0.082754",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/organization-findings.rq",
+            "value": 0.016109,
+            "range": "0.016109-0.016109",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/patient-findings.rq",
+            "value": 0.015575,
+            "range": "0.015575-0.015575",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/patient-reference-findings.rq",
+            "value": 0.074724,
+            "range": "0.074724-0.074724",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/recorded-date-findings.rq",
+            "value": 0.018385,
+            "range": "0.018385-0.018385",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/reference-display-findings.rq",
+            "value": 0.070094,
+            "range": "0.070094-0.070094",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/reference-without-server-findings.rq",
+            "value": 0.03105,
+            "range": "0.03105-0.03105",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/repeated-id-findings.rq",
+            "value": 0.035576,
+            "range": "0.035576-0.035576",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/report-and-note-findings.rq",
+            "value": 0.033926,
+            "range": "0.033926-0.033926",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/report-result-findings.rq",
+            "value": 0.03842,
+            "range": "0.03842-0.03842",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/resource-type-findings.rq",
+            "value": 0.029885,
+            "range": "0.029885-0.029885",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/variant-findings.rq",
+            "value": 0.030601,
+            "range": "0.030601-0.030601",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/variant-interpretation-findings.rq",
+            "value": 0.019445,
+            "range": "0.019445-0.019445",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/query-time/detect.rq",
+            "value": 0.007008,
+            "range": "0.007008-0.007008",
+            "unit": "s",
+            "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/document-table",
+            "value": 0.462429,
+            "range": "0.462429-0.462429",
+            "unit": "s",
+            "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/lift",
+            "value": 1.567103,
+            "range": "1.567103-1.567103",
+            "unit": "s",
+            "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/source-validation",
+            "value": 2.596169,
+            "range": "2.596169-2.596169",
+            "unit": "s",
+            "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/accounting",
+            "value": 0.541454,
+            "range": "0.541454-0.541454",
+            "unit": "s",
+            "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/dataset",
+            "value": 0.021724,
+            "range": "0.021724-0.021724",
+            "unit": "s",
+            "extra": "Putting the facts about a record into the store its queries run over."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/index",
+            "value": 0.722581,
+            "range": "0.722581-0.722581",
+            "unit": "s",
+            "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/mapping",
+            "value": 1.566882,
+            "range": "1.566882-1.566882",
+            "unit": "s",
+            "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/records",
+            "value": 0.300599,
+            "range": "0.300599-0.300599",
+            "unit": "s",
+            "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/output-validation",
+            "value": 4.550307,
+            "range": "4.550307-4.550307",
+            "unit": "s",
+            "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/findings",
+            "value": 1.532748,
+            "range": "1.532748-1.532748",
+            "unit": "s",
+            "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/unresolved-addresses",
+            "value": 0.093819,
+            "range": "0.093819-0.093819",
+            "unit": "s",
+            "extra": "Finding the references to records the document does not hold, which keep their computed names."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/detect",
+            "value": 0.00711,
+            "range": "0.00711-0.00711",
+            "unit": "s",
+            "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/summary",
+            "value": 0.037792,
+            "range": "0.037792-0.037792",
+            "unit": "s",
+            "extra": "Counting the graph's distinct triples and the findings once every record is done."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/serialising",
+            "value": 1.568253,
+            "range": "1.568253-1.568253",
+            "unit": "s",
+            "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/stage/unaccounted",
+            "value": 0.86937,
+            "range": "0.86937-0.86937",
+            "unit": "s",
+            "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/output/graph",
+            "value": 79183,
+            "unit": "{count}",
+            "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes. sha256 4a0efd931e29be8bc7f18e54577b1a79251cdec785961503cfb14c2add98830d"
+          },
+          {
+            "name": "fhir-r4-synthea-lifetime-4f159b52/output/findings",
+            "value": 1105859,
+            "unit": "{count}",
+            "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes. sha256 02fa7bd59c0fabcdf16fc0660d673e69298201cfbf1187ffefbe446446487e26"
+          },
+          {
+            "name": "fhir-r4/load",
+            "value": 0.662692,
+            "range": "0.644355-0.685049",
+            "unit": "s",
+            "extra": "Seconds to read the adapter's and the vocabulary's files, describe the adapter and prepare it, with the engine already started."
+          },
+          {
+            "name": "fhir-r4/load/read-files",
+            "value": 0.009489,
+            "range": "0.008798-0.009743",
+            "unit": "s",
+            "extra": "Seconds of the load spent reading files from disk."
+          },
+          {
+            "name": "fhir-r4/load/prepare",
+            "value": 0.653261,
+            "range": "0.635025-0.675398",
+            "unit": "s",
+            "extra": "Seconds of the load spent describing the adapter and preparing it: parsing and compiling its queries, schemas and shapes."
+          },
+          {
+            "name": "fhir-r4/boot/read-wasm",
+            "value": 0.00346,
+            "range": "0.003325-0.003898",
+            "unit": "s",
+            "extra": "Seconds to read the engine's compiled code from disk."
+          },
+          {
+            "name": "fhir-r4/boot/compile-wasm",
+            "value": 0.016696,
+            "range": "0.016368-0.01742",
+            "unit": "s",
+            "extra": "Seconds to turn the engine's compiled code into something the machine can run."
+          },
+          {
+            "name": "fhir-r4/boot/instantiate-wasm",
+            "value": 0.00119,
+            "range": "0.001023-0.001794",
             "unit": "s",
             "extra": "Seconds to start the compiled code, which runs its start-up work."
           }
