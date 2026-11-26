@@ -54,7 +54,7 @@ jobs:
           key: package-tools-fast-${{ hashFiles(format('{0}/Cargo.lock', github.event.repository.name), format('{0}/package/build.sh', github.event.repository.name)) }}
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
       - run: sh package/build.sh --fast
         working-directory: ${{ github.event.repository.name }}
       # rdf-canonize, which hosts/node/bench.mjs digests each output with.

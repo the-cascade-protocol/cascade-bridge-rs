@@ -124,7 +124,7 @@ jobs:
       - if: matrix.memory
         uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
       # The shipped profile, as a release carries it.
       - if: matrix.memory
         run: sh package/build.sh

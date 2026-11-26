@@ -26,8 +26,8 @@ test("the package's sources are what package/sources.mjs prints", () => {
   assert.equal(sources, printed);
 });
 
-test("the package needs Node 22 or later", () => {
-  assert.equal(manifest().engines?.node, ">=22");
+test("the package needs Node 24 or later", () => {
+  assert.equal(manifest().engines?.node, ">=24");
 });
 
 test("the package's exports have the types, node and default conditions", () => {
