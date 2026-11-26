@@ -46,7 +46,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 24
       # Decided before the toolchain and the caches, which only a build needs. Every way a reuse can
       # fail falls through to a build, and none of them fails the job.
       - id: decide

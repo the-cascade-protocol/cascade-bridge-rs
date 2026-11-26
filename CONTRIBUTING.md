@@ -9,7 +9,7 @@ Report a security problem privately, by email to contact@cascadeprotocol.org, ne
 
 ## Set up
 
-You need git, Node.js 22 or newer, and Rust through `rustup`. [`rust-toolchain.toml`](rust-toolchain.toml) pins the Rust
+You need git, Node.js 24 or newer, and Rust through `rustup`. [`rust-toolchain.toml`](rust-toolchain.toml) pins the Rust
 version with its `rustfmt` and `clippy` components, and `rustup` installs them the first time you run `cargo`. Add the
 WebAssembly target for the package build and the wasm lint:
 
