@@ -28,8 +28,9 @@ const accepted: boolean = loaded.accepts(document);
 const conversion: Conversion = loaded.convert(document, { findings: true, census: true });
 const graph: Uint8Array = conversion.graph;
 const findings: Uint8Array | undefined = conversion.findings;
+const owed: string[] = loaded.unmet(document, { executor: "compiled" });
 loaded.free();
-void [accepted, graph, findings];
+void [accepted, graph, findings, owed];
 
 const measured: Adapter = Adapter.loadForMeasurement(adapter, vocabulary, ["findings", "shapes"]);
 const loading: StageTime[] = measured.loadStages();
@@ -41,7 +42,8 @@ void [loading, skippedForMeasurement, stages];
 
 const report: TestReport = test(adapter, vocabulary);
 const earl: Uint8Array = report.earl;
-void earl;
+const unmet: string[][] = report.entries.map((entry) => entry.unmet);
+void [earl, unmet];
 
 try {
   Adapter.load(adapter);

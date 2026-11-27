@@ -1,3 +1,7 @@
+use oxigraph::io::{RdfFormat, RdfParser};
+use oxigraph::model::Quad;
+use oxigraph::sparql::{QueryResults, SparqlEvaluator};
+use oxigraph::store::Store;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -30,6 +34,84 @@ mod passing_the_specifications_adapters {
     #[ignore = "reads a checkout of the-cascade-protocol/cascade-bridge-spec beside this one"]
     fn passes_every_entry_of_the_synthetic_json_adapter_that_a_bridge_can_judge() {
         passes_every_entry_of("synthetic-json-adapter");
+    }
+}
+
+/// Failing the entries the specification's adapter lists as failing · cascade-bridge test
+///
+/// One of the specification's adapters names, on each entry a Bridge must fail, the check that
+/// fails it. The report of `test` is judged by the specification's own query, which finds each
+/// entry reported otherwise than its manifest lists.
+mod failing_the_entries_the_specification_lists {
+    use super::*;
+
+    /// reports each entry of the synthetic adapter with failing entries as its manifest lists
+    #[test]
+    #[ignore = "reads a checkout of the-cascade-protocol/cascade-bridge-spec beside this one"]
+    fn reports_each_entry_of_the_synthetic_adapter_with_failing_entries_as_its_manifest_lists() {
+        let specification = specification();
+        let adapter = specification.join("fixtures/synthetic-json-adapter-with-failing-entries");
+        let report = std::env::temp_dir().join(format!(
+            "cascade-bridge-failing-entries-{}.earl.ttl",
+            std::process::id()
+        ));
+        let run = Command::new(env!("CARGO_BIN_EXE_cascade-bridge"))
+            .arg("test")
+            .arg(&adapter)
+            .arg("--vocabularies")
+            .arg(specification.join("fixtures/synthetic-vocabularies"))
+            .arg("--earl")
+            .arg(&report)
+            .output()
+            .expect("run the command");
+        let printed = format!(
+            "{}{}",
+            String::from_utf8_lossy(&run.stdout),
+            String::from_utf8_lossy(&run.stderr)
+        );
+        let store = Store::new().expect("a store");
+        for (file, base) in [
+            (
+                adapter.join("fixtures/manifest.ttl"),
+                "https://example.org/adapter/fixtures/manifest.ttl",
+            ),
+            (report.clone(), "https://example.org/report.ttl"),
+        ] {
+            let bytes = std::fs::read(&file)
+                .unwrap_or_else(|e| panic!("{}: {e}\n{printed}", file.display()));
+            let quads: Vec<Quad> = RdfParser::from_format(RdfFormat::Turtle)
+                .with_base_iri(base)
+                .expect("a base")
+                .for_slice(&bytes)
+                .collect::<Result<_, _>>()
+                .unwrap_or_else(|e| panic!("{}: {e}", file.display()));
+            store.extend(quads).expect("loaded");
+        }
+        let _ = std::fs::remove_file(&report);
+        let judge = std::fs::read_to_string(
+            specification.join("engine/faults-of-a-report-against-expected-outcomes.rq"),
+        )
+        .expect("the specification's judge");
+        let QueryResults::Solutions(solutions) = SparqlEvaluator::new()
+            .parse_query(&judge)
+            .expect("the judge parses")
+            .on_store(&store)
+            .execute()
+            .expect("the judge runs")
+        else {
+            panic!("the judge is a SELECT");
+        };
+        let faults: Vec<String> = solutions
+            .map(|solution| {
+                let solution = solution.expect("a row");
+                solution
+                    .get("fault")
+                    .map(ToString::to_string)
+                    .unwrap_or_default()
+            })
+            .collect();
+        assert_eq!(faults, Vec::<String>::new(), "{printed}");
+        assert_eq!(run.status.code(), Some(1), "{printed}");
     }
 }
 

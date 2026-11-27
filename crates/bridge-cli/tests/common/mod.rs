@@ -85,6 +85,46 @@ pub fn copied_to(from: &Path, to: &Path) {
     }
 }
 
+/// The tiny adapter copied to `to`, each item a record whose version arrives with its id
+/// and holds no title, which its accounting says is carried as the item's `ex:title`.
+pub fn owing_a_title(to: &Path) {
+    copied_to(&tiny(), to);
+    std::fs::write(
+        to.join("mapping/item.rq"),
+        "PREFIX fx:     <http://sparql.xyz/facade-x/ns/>
+PREFIX xyz:    <http://sparql.xyz/facade-x/data/>
+PREFIX prov:   <http://www.w3.org/ns/prov#>
+PREFIX pav:    <http://purl.org/pav/>
+PREFIX bridge: <https://ns.cascadeprotocol.org/bridge/v1-draft#>
+PREFIX ex:     <urn:example:catalog#>
+CONSTRUCT {
+  ?s a ex:Item .
+  ?v prov:specializationOf ?s .
+  [] bridge:arrivedAs ?v ; pav:version ?id .
+}
+WHERE {
+  ?item a fx:root, xyz:item ; xyz:id ?id .
+  BIND(IRI(CONCAT(\"urn:example:item:\", ?id)) AS ?s)
+  BIND(IRI(CONCAT(\"urn:example:draft:\", ?id)) AS ?v)
+}
+",
+    )
+    .expect("the mapping");
+    let accounting = to.join("vocab/catalog-accounting.ttl");
+    let text = std::fs::read_to_string(&accounting).expect("the accounting");
+    let entry = "bridge:sourcePath \"/item/title\" ;\n   bridge:verdict bridge:carried .";
+    assert_eq!(text.matches(entry).count(), 1, "the entry for /item/title");
+    std::fs::write(
+        &accounting,
+        text.replace(
+            entry,
+            "bridge:sourcePath \"/item/title\" ;\n   bridge:verdict bridge:carried ;\n   \
+             bridge:carriedAs [ bridge:inRecordClass ex:Item ; bridge:asProperty ex:title ] .",
+        ),
+    )
+    .expect("the accounting");
+}
+
 pub fn outcomes(report: &Path) -> BTreeMap<String, String> {
     let quads: Vec<_> = RdfParser::from_format(RdfFormat::Turtle)
         .for_slice(&std::fs::read(report).expect("the written report"))

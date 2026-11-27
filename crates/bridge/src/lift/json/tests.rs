@@ -57,6 +57,7 @@ mod reading_a_json_document_as_records {
             };
             let paths = Paths::Kept {
                 valued: HashSet::from(["/status".to_owned()]),
+                carried: HashSet::new(),
             };
             let text = r#"{"id": "r", "status": ["a", "B", "B"], "ext": [{"u": 1}, {"u": 2}], "gone": null, "a/b": []}"#;
             let records = records(text, &reading, paths);

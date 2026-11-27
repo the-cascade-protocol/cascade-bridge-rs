@@ -1,0 +1,43 @@
+name: lints
+
+# For a builder with no Rust toolchain: `gh workflow run lints.yml -f branch=<branch>` checks one
+# branch's format and lints in a couple of minutes, without waiting on its tests.
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: the branch to check
+        required: true
+
+concurrency:
+  group: lints-${{ inputs.branch }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Named as test's job, so rust-cache restores the build that job saves on main.
+  test:
+    name: format and lints of ${{ inputs.branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.branch }}
+          persist-credentials: false
+      - run: |
+          rustup toolchain install --profile minimal
+          channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup default "$channel"
+          rustup toolchain list | cut -d' ' -f1 | grep -v "^$channel-" | xargs -r -n1 rustup toolchain uninstall
+      - run: rustup target add wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: false
+      - run: cargo fmt --all --check
+        if: ${{ !cancelled() }}
+      - run: cargo clippy --locked --all-targets -- -D warnings
+        if: ${{ !cancelled() }}
+      - run: cargo clippy --locked -p cascade-bridge-wasm --target wasm32-unknown-unknown -- -D warnings
+        if: ${{ !cancelled() }}

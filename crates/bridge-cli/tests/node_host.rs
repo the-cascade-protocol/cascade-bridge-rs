@@ -5,8 +5,8 @@ mod common;
 use cascade_bridge::oxrdf::Quad;
 use cascade_bridge::oxrdfio::RdfFormat;
 use common::{
-    canonical, canonical_lines, copied_to, map_of, names, outcomes, read_at_its_own_iri, results,
-    scratch, tiny, vocabularies, BASE, MAX_LENGTH,
+    canonical, canonical_lines, copied_to, map_of, names, outcomes, owing_a_title,
+    read_at_its_own_iri, results, scratch, tiny, vocabularies, BASE, MAX_LENGTH,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -386,6 +386,87 @@ mod running_the_commands_on_node {
             let expected = outcomes(&native_report);
             assert!(!expected.is_empty(), "the native command reported entries");
             assert_eq!(outcomes(&node_report), expected);
+        }
+    }
+
+    /// given a conversion that does not write what the accounting says it carries
+    mod given_a_conversion_that_does_not_write_what_the_accounting_says_it_carries {
+        use super::*;
+
+        /// fails the entry on both hosts
+        #[test]
+        fn fails_the_entry_on_both_hosts() {
+            let scratch = scratch();
+            let adapter = scratch.path().join("tiny-adapter");
+            owing_a_title(&adapter);
+            let adapter = adapter.to_string_lossy().into_owned();
+            let vocabularies = vocabularies().to_string_lossy().into_owned();
+            for (host, run) in [("native", native as fn(&[&str]) -> Output), ("node", node)] {
+                let report = scratch.path().join(format!("{host}.earl.ttl"));
+                let ran = run(&[
+                    "test",
+                    &adapter,
+                    "--vocabularies",
+                    &vocabularies,
+                    "--earl",
+                    &report.to_string_lossy(),
+                ]);
+                assert_eq!(
+                    ran.status.code(),
+                    Some(1),
+                    "{host}: {}",
+                    String::from_utf8_lossy(&ran.stderr)
+                );
+                let outcome = outcomes(&report)
+                    .into_iter()
+                    .find(|(test, _)| test.ends_with("#input-only"))
+                    .map(|(_, outcome)| outcome);
+                assert_eq!(
+                    outcome.as_deref(),
+                    Some("http://www.w3.org/ns/earl#failed"),
+                    "{host}: {}",
+                    String::from_utf8_lossy(&ran.stdout)
+                );
+            }
+        }
+
+        /// with `--owed`, lists on both hosts what is owed and not met, for `test` and for
+        /// `convert`
+        #[test]
+        fn with_owed_lists_on_both_hosts_what_is_owed_and_not_met() {
+            let scratch = scratch();
+            let adapter = scratch.path().join("tiny-adapter");
+            owing_a_title(&adapter);
+            let document = adapter.join("fixtures/in/two.xml");
+            let document = document.to_string_lossy().into_owned();
+            let adapter = adapter.to_string_lossy().into_owned();
+            let vocabularies = vocabularies().to_string_lossy().into_owned();
+            let owed = |ran: &Output| -> Vec<String> {
+                String::from_utf8_lossy(&ran.stdout)
+                    .lines()
+                    .filter(|line| line.starts_with("Owed ") || line.starts_with("  /"))
+                    .map(str::to_owned)
+                    .collect()
+            };
+            let (adapter, vocabularies) = (adapter.as_str(), vocabularies.as_str());
+            for arguments in [
+                vec!["test", adapter, "--vocabularies", vocabularies, "--owed"],
+                vec!["convert", adapter, document.as_str(), "--owed"],
+            ] {
+                let (on_native, on_node) = (native(&arguments), node(&arguments));
+                assert_eq!(
+                    on_node.status.code(),
+                    on_native.status.code(),
+                    "{arguments:?}: {}",
+                    String::from_utf8_lossy(&on_node.stderr)
+                );
+                assert!(
+                    !owed(&on_native).is_empty(),
+                    "{arguments:?}: {}",
+                    String::from_utf8_lossy(&on_native.stdout)
+                );
+                assert_eq!(owed(&on_node), owed(&on_native), "{arguments:?}");
+            }
         }
     }
 

@@ -549,6 +549,18 @@ impl Respelling for Spelled<'_> {
             .collect();
         Respelled { findings, missed }
     }
+
+    fn spelled(&self, address: &str) -> std::result::Result<String, String> {
+        let Some(tree) = self.tree() else {
+            return Err("lies in a document no XPath can follow".to_owned());
+        };
+        let node = followed(tree, &self.parsed, DOCUMENT, address);
+        let node = node.map_err(|missed| missed.to_string())?;
+        match tree.spell_absolute(node) {
+            Some(spelled) => Ok(spelled),
+            None => Err("selects the document, not a node in it".to_owned()),
+        }
+    }
 }
 
 /// Each selector node's new spelling, and each address that selected other than one node.

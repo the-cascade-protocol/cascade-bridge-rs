@@ -5,10 +5,11 @@ use crate::terms::{
     BRIDGE_DOCUMENT_SCHEMA, BRIDGE_DOCUMENT_TABLE_QUERY, BRIDGE_DOC_ROOT_ELEMENT_NAME,
     BRIDGE_DOC_ROOT_MEMBER_NAME, BRIDGE_DOC_ROOT_MEMBER_VALUE, BRIDGE_ELEMENT_NAME_BREAKING_TEXT,
     BRIDGE_ELEMENT_NAME_OF_EACH_RECORD, BRIDGE_ENVELOPE, BRIDGE_FINDINGS_QUERY, BRIDGE_GAP_SCHEME,
-    BRIDGE_JSON_PATH_OF_EACH_RECORD, BRIDGE_MAPPING, BRIDGE_REQUIRES_PROFILE,
-    BRIDGE_SOURCE_ACCOUNTING, BRIDGE_SOURCE_MEDIA_TYPE, BRIDGE_SOURCE_SCHEMA, BRIDGE_TABLE,
-    BRIDGE_TEST_MANIFEST, BRIDGE_VOCABULARY_FILE, RDF_FIRST, RDF_NIL, RDF_REST, RDF_TYPE,
-    SCHEMA_ABOUT, SCHEMA_IDENTIFIER, SCHEMA_NAME, SCHEMA_VERSION,
+    BRIDGE_JSON_PATH_OF_EACH_RECORD, BRIDGE_MAPPING,
+    BRIDGE_PATH_OF_CONTAINED_CONTENT_BELOW_CONTENT, BRIDGE_PATH_OF_CONTENT_IN_RECORD,
+    BRIDGE_REQUIRES_PROFILE, BRIDGE_SOURCE_ACCOUNTING, BRIDGE_SOURCE_MEDIA_TYPE,
+    BRIDGE_SOURCE_SCHEMA, BRIDGE_TABLE, BRIDGE_TEST_MANIFEST, BRIDGE_VOCABULARY_FILE, RDF_FIRST,
+    RDF_NIL, RDF_REST, RDF_TYPE, SCHEMA_ABOUT, SCHEMA_IDENTIFIER, SCHEMA_NAME, SCHEMA_VERSION,
 };
 use oxrdf::{Graph, NamedNode, NamedOrBlankNode, Term, Triple};
 use oxrdfio::{JsonLdProfile, JsonLdProfileSet, LoadedDocument, RdfFormat, RdfParser};
@@ -42,6 +43,8 @@ pub(crate) struct Envelope {
     pub(crate) doc_root_member_name: Option<String>,
     pub(crate) doc_root_member_value: Option<String>,
     pub(crate) json_path_of_each_record: Option<String>,
+    pub(crate) path_of_content_in_record: Option<String>,
+    pub(crate) path_of_contained_content_below_content: Option<String>,
     pub(crate) document_schema: Option<String>,
     pub(crate) source_schema: Option<String>,
 }
@@ -249,6 +252,12 @@ fn crate_read(metadata: &[u8], root: &str) -> Result<Adapter> {
             doc_root_member_name: one(&graph, &s, BRIDGE_DOC_ROOT_MEMBER_NAME)?,
             doc_root_member_value: one(&graph, &s, BRIDGE_DOC_ROOT_MEMBER_VALUE)?,
             json_path_of_each_record: one(&graph, &s, BRIDGE_JSON_PATH_OF_EACH_RECORD)?,
+            path_of_content_in_record: one(&graph, &s, BRIDGE_PATH_OF_CONTENT_IN_RECORD)?,
+            path_of_contained_content_below_content: one(
+                &graph,
+                &s,
+                BRIDGE_PATH_OF_CONTAINED_CONTENT_BELOW_CONTENT,
+            )?,
             document_schema: one(&graph, &s, BRIDGE_DOCUMENT_SCHEMA)?,
             source_schema: one(&graph, &s, BRIDGE_SOURCE_SCHEMA)?,
             iri,

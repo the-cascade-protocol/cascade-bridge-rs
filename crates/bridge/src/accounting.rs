@@ -2,18 +2,24 @@ use crate::annotation::{self, Record};
 use crate::decode::XML_SPACE;
 use crate::error::{Error, Result};
 use crate::lift::{Paths, Unit, Valued};
-use crate::load::{instances, objects, subjects, turtle, Prefixes};
+use crate::load::{as_subject, instances, objects, subjects, turtle, Prefixes};
 use crate::resolver::Resolver;
 use crate::run::Asked;
 use crate::terms::{
-    BRIDGE_CARRIED_IN_PART, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP,
-    BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY, BRIDGE_SOURCE_LACKS_REQUIRED,
-    BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, SH_INFO, SH_RESULT_SEVERITY,
-    SH_VIOLATION, SH_WARNING, SKOS_BROADER, SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
+    BRIDGE_AS_PROPERTY, BRIDGE_CARRIED, BRIDGE_CARRIED_AS, BRIDGE_CARRIED_IN_PART,
+    BRIDGE_ELEMENT_NOT_CARRIED, BRIDGE_IN_RECORD_CLASS, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP,
+    BRIDGE_NAMES_GAP, BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY,
+    BRIDGE_SOURCE_LACKS_REQUIRED, BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT,
+    SH_INFO, SH_RESULT_SEVERITY, SH_VIOLATION, SH_WARNING, SKOS_BROADER, SKOS_CONCEPT_SCHEME,
+    SKOS_NOTATION,
 };
 use oxigraph::model::{NamedOrBlankNode, Quad, Term};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
+
+mod owed;
+
+pub(crate) use owed::Unmet;
 
 struct Entry {
     path: String,
@@ -22,6 +28,22 @@ struct Entry {
     /// The concept map a value is looked up in; `miss` is the gap for a value it lacks.
     map: Option<String>,
     miss: Option<String>,
+    carries: Vec<Carry>,
+}
+
+/// One `bridge:carriedAs`.
+#[derive(Clone)]
+struct Carry {
+    class: String,
+    property: String,
+}
+
+/// What an entry that says its path is carried says a record written from it holds:
+/// one of `carries`, or else a finding naming one of `gaps`.
+#[derive(Default)]
+struct Owed {
+    carries: Vec<Carry>,
+    gaps: Vec<String>,
 }
 
 #[derive(Default)]
@@ -57,6 +79,9 @@ pub(crate) struct Accounting {
     paths: HashSet<String>,
     reported: HashMap<String, Vec<Reported>>,
     lookups: HashMap<String, Vec<Lookup>>,
+    owed: HashMap<String, Owed>,
+    /// Each gap the adapter declares of `bridge:elementNotCarried`.
+    not_carried_whole: HashSet<String>,
 }
 
 impl Accounting {
@@ -68,9 +93,15 @@ impl Accounting {
         Self::of(entries(resolver, iri)?, scheme, iri, resolver)
     }
 
-    pub(crate) fn paths(&self) -> Paths {
+    /// `owing` keeps where each occurrence of a carried path stands, which only
+    /// `Accounting::unmet` reads.
+    pub(crate) fn paths(&self, owing: bool) -> Paths {
         Paths::Kept {
             valued: self.lookups.keys().cloned().collect(),
+            carried: match owing {
+                true => self.owed.keys().cloned().collect(),
+                false => HashSet::new(),
+            },
         }
     }
 
@@ -84,7 +115,19 @@ impl Accounting {
         let mut reported: HashMap<String, Vec<Reported>> = HashMap::new();
         let mut lookups: HashMap<String, Vec<Lookup>> = HashMap::new();
         let mut maps: HashMap<String, Arc<HashSet<String>>> = HashMap::new();
+        let mut owed: HashMap<String, Owed> = HashMap::new();
         for entry in entries {
+            let carrying = matches!(
+                entry.verdict.as_deref(),
+                Some(BRIDGE_CARRIED | BRIDGE_CARRIED_IN_PART)
+            );
+            if carrying && !entry.carries.is_empty() {
+                let owing = owed.entry(entry.path.clone()).or_default();
+                owing.carries.extend(entry.carries.iter().cloned());
+                owing
+                    .gaps
+                    .extend(entry.gap.iter().chain(entry.miss.iter()).cloned());
+            }
             if let (Some(verdict), Some(gap)) = (&entry.verdict, &entry.gap) {
                 if NAMES_A_GAP.contains(&verdict.as_str()) {
                     let declared = scheme.get(gap.as_str()).ok_or_else(|| {
@@ -179,6 +222,12 @@ impl Accounting {
             paths,
             reported,
             lookups,
+            owed,
+            not_carried_whole: scheme
+                .iter()
+                .filter(|(_, gap)| gap.kind.as_deref() == Some(BRIDGE_ELEMENT_NOT_CARRIED))
+                .map(|(concept, _)| concept.clone())
+                .collect(),
         })
     }
 
@@ -278,7 +327,26 @@ fn entries(resolver: &dyn Resolver, iri: &str) -> Result<Vec<Entry>> {
             let said = |predicate: &str, name: &str| {
                 declared(&objects(&graph, &s, predicate)?, iri, path, name)
             };
+            let mut carries = Vec::new();
+            for carried in objects(&graph, &s, BRIDGE_CARRIED_AS)? {
+                let Some(node) = as_subject(&carried) else {
+                    return Err(Error::adapter(format!(
+                        "{iri}: the entry for {path} declares the bridge:carriedAs {carried}, \
+                         which is no node"
+                    )));
+                };
+                let of = |predicate: &str, name: &str| {
+                    declared(&objects(&graph, &node, predicate)?, iri, path, name)
+                };
+                if let (Some(class), Some(property)) = (
+                    of(BRIDGE_IN_RECORD_CLASS, "bridge:inRecordClass")?,
+                    of(BRIDGE_AS_PROPERTY, "bridge:asProperty")?,
+                ) {
+                    carries.push(Carry { class, property });
+                }
+            }
             entries.push(Entry {
+                carries,
                 verdict: said(BRIDGE_VERDICT, "verdict")?,
                 gap: said(BRIDGE_NAMES_GAP, "gap")?,
                 map: said(BRIDGE_LOOKUP_IN, "bridge:lookupIn")?,

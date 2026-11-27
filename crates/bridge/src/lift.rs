@@ -22,9 +22,20 @@ pub(crate) struct Valued {
     pub(crate) count: usize,
 }
 
+/// One occurrence of a path in `carried`, each one apart: `within` as an occurrence's,
+/// an attribute's ending in its own step. `empty` where it holds nothing but whitespace.
+pub(crate) struct Standing {
+    pub(crate) path: String,
+    pub(crate) within: Option<String>,
+    pub(crate) empty: bool,
+}
+
 #[derive(Clone, PartialEq, Eq)]
 pub(crate) enum Paths {
-    Kept { valued: HashSet<String> },
+    Kept {
+        valued: HashSet<String>,
+        carried: HashSet<String>,
+    },
     Dropped,
 }
 
@@ -36,6 +47,7 @@ pub(crate) struct Unit {
     selector: String,
     occurrences: Vec<Occurrence>,
     values: Vec<Valued>,
+    standings: Vec<Standing>,
 }
 
 impl Unit {
@@ -49,6 +61,10 @@ impl Unit {
 
     pub(crate) fn values(&self) -> &[Valued] {
         &self.values
+    }
+
+    pub(crate) fn standings(&self) -> &[Standing] {
+        &self.standings
     }
 }
 

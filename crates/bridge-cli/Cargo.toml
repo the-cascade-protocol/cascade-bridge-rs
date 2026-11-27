@@ -16,6 +16,7 @@ oxiri = "=0.2.11"
 serde_json = "=1.0.151"
 
 [dev-dependencies]
+oxigraph = { version = "=0.5.11", default-features = false, features = ["rdf-12"] }
 tempfile = "=3.27.0"
 
 [[test]]

@@ -142,6 +142,10 @@ pub(crate) trait Addresses {
 /// Spells alike two addresses that select one node of the whole document.
 pub(crate) trait Respelling {
     fn respelled(&self, findings: Vec<Quad>) -> Respelled;
+
+    /// The address as this Bridge spells it, where it selects one node of the whole document;
+    /// otherwise what it selects instead.
+    fn spelled(&self, address: &str) -> std::result::Result<String, String>;
 }
 
 pub(crate) struct Respelled {

@@ -5,9 +5,11 @@ import { basename, dirname, join } from "node:path";
 import { Adapter, describe, test } from "../../package/dist/node.js";
 import { at, complete, fileIri, Folder, iriOf, KINDS, METADATA, Refusal } from "./host.mjs";
 
-const USAGE = `usage: cascade-bridge test <adapter-dir> [--vocabularies <directory>] [--earl <out.ttl>] [--datasets]
-       cascade-bridge convert <adapter-dir> <document> [--envelope <iri>] [--facts <file>] [--vocabularies <directory>] [--out <file>] [--findings <file>] [--format turtle|ntriples]
-       cascade-bridge library <calls file> <results directory>`;
+const USAGE = `usage: cascade-bridge test <adapter-dir> [--vocabularies <directory>] [--earl <out.ttl>] [--datasets] [--owed]
+       cascade-bridge convert <adapter-dir> <document> [--envelope <iri>] [--facts <file>] [--vocabularies <directory>] [--out <file>] [--findings <file>] [--format turtle|ntriples] [--owed]
+       cascade-bridge library <calls file> <results directory>
+
+--owed lists each occurrence of a path the accounting says is carried that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.`;
 
 const FAILING = ["failed", "inapplicable"];
 
@@ -41,6 +43,7 @@ function parse(argv) {
       if (flag === "--vocabularies") parsed.vocabularies = next();
       else if (flag === "--earl") parsed.earl = next();
       else if (flag === "--datasets") parsed.datasets = true;
+      else if (flag === "--owed") parsed.owed = true;
       else return undefined;
     }
     return parsed;
@@ -54,6 +57,7 @@ function parse(argv) {
       else if (flag === "--vocabularies") parsed.vocabularies = next();
       else if (flag === "--out") parsed.out = next();
       else if (flag === "--findings") parsed.findings = next();
+      else if (flag === "--owed") parsed.owed = true;
       else if (flag === "--format") {
         parsed.format = next();
         if (!["turtle", "ntriples"].includes(parsed.format)) return undefined;
@@ -216,6 +220,12 @@ function runTest(parsed) {
   for (const entry of report.entries) {
     said += `  ${entry.outcome.padEnd(12)} ${entry.name.padEnd(width)}  ${entry.seconds.toFixed(2).padStart(6)} s  ${entry.description}\n`;
   }
+  if (parsed.owed) {
+    said += "\n";
+    for (const entry of report.entries) {
+      for (const line of entry.unmet) said += `Owed     ${entry.name}  ${line}\n`;
+    }
+  }
   said += `\n${tally(report.entries.map(({ outcome }) => outcome))}\n`;
   process.stdout.write(said);
   if (parsed.earl !== undefined) {
@@ -247,6 +257,12 @@ function runConvert(parsed) {
             iri: iriOf(parsed.facts),
             bytes: at(parsed.facts, () => new Uint8Array(readFileSync(parsed.facts))),
           };
+    if (parsed.owed) {
+      const unmet = adapter.unmet({ iri, bytes, envelope, facts });
+      const lines = unmet.map((line) => `  ${line}\n`).join("");
+      process.stdout.write(`Owed     ${iri}  ${unmet.length} unmet\n${lines}`);
+      return 0;
+    }
     const conversion = adapter.convert(
       { iri, bytes, envelope, facts },
       {

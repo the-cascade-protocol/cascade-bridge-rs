@@ -1,5 +1,6 @@
 use crate::error::Result;
 use crate::harness::EntryResult;
+use crate::terms::BRIDGE_FAILED_CHECK;
 use oxrdf::vocab::{rdf, xsd};
 use oxrdf::{BlankNode, GraphName, Literal, NamedNode, NamedOrBlankNode, Quad, Term};
 use oxrdfio::{RdfFormat, RdfSerializer};
@@ -106,6 +107,13 @@ pub(crate) fn earl_report_at(
             iri(DCT, "description")?,
             Literal::new_simple_literal(&result.description).into(),
         );
+        if let Some(check) = result.failed_check() {
+            triple(
+                r.clone(),
+                NamedNode::new(BRIDGE_FAILED_CHECK)?,
+                NamedNode::new(check)?.into(),
+            );
+        }
         triple(r, iri(DCT, "date")?, when.clone().into());
     }
 

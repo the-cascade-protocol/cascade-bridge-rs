@@ -273,6 +273,18 @@ impl Loaded {
         self.conversion(run, options.asked())
     }
 
+    /// Each occurrence of a path the accounting says is carried that a conversion of the
+    /// document owes and neither writes nor reports: what `test` fails an entry for.
+    pub fn unmet(&self, document: &Document<'_>, options: ConvertOptions) -> Result<Vec<String>> {
+        let run = run::convert_with(
+            &self.prepared,
+            source(document),
+            &Profile::new(options.executor, false, options.budgets),
+            Asked::ALL,
+        )?;
+        Ok(run.unmet.iter().map(ToString::to_string).collect())
+    }
+
     pub fn convert_profiled(
         &self,
         document: &Document<'_>,
@@ -406,6 +418,7 @@ impl ConvertOptions {
         Asked {
             findings: self.findings,
             census: self.census,
+            owed: false,
         }
     }
 }
@@ -422,6 +435,9 @@ pub struct TestEntry {
     pub name: String,
     pub outcome: Outcome,
     pub description: String,
+    /// Each occurrence of a path the accounting says is carried that the entry's conversions
+    /// owed and did not meet, in full; the description samples them.
+    pub unmet: Vec<String>,
     pub elapsed: Duration,
 }
 
@@ -468,6 +484,7 @@ pub fn test(
                 name: result.name,
                 outcome: result.outcome,
                 description: result.description,
+                unmet: result.unmet,
                 elapsed: result.elapsed,
             })
             .collect(),
