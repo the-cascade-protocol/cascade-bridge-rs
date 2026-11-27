@@ -134,7 +134,6 @@ describe("a crate on disk", () => {
         ],
       }),
       root,
-      shaped: new Set(["crates/a/tests/cli.rs", "crates/a/tests/missing.rs"]),
     };
   });
 
@@ -146,11 +145,10 @@ describe("a crate on disk", () => {
 
   describe("merged(reports, options)", () => {
     it("finds a case below `mod tests` in the file beside its module, and names each level below `tests`", () => {
-      const { xml, unplaced } = merged(
+      const { xml } = merged(
         [report("nextest-run", suite("crate-a", passing("crate-a", "naming::tests::naming_a_record::when_it_has_a_pipe::escapes_the_pipe")))],
         options,
       );
-      assert.deepEqual(unplaced, []);
       assert.deepEqual(propertiesOf(xml, "naming::tests::naming_a_record::when_it_has_a_pipe::escapes_the_pipe"), [
         ["file", "crates/a/src/naming/tests.rs"],
         ["line", "21"],
@@ -221,8 +219,8 @@ describe("a crate on disk", () => {
       assert.match(xml, /^<\?xml[^>]*\?>\n<testsuites name="nextest-run" tests="6" failures="2" errors="0" time="1.000">/);
     });
 
-    it("leaves a case of a file the spec does not list as it was written, and names one of a listed file it cannot find", () => {
-      const { xml, unplaced } = merged(
+    it("leaves a case it cannot find in the source as it was written", () => {
+      const { xml } = merged(
         [
           report(
             "nextest-run",
@@ -235,18 +233,10 @@ describe("a crate on disk", () => {
         ],
         options,
       );
-      assert.deepEqual(unplaced, ["crate-a::cli converting_a_document::with_no_out::is_gone", "crate-a::cli no_such_module::leaf"]);
       assert.deepEqual(propertiesOf(xml, "is_not_in_the_source"), []);
+      assert.deepEqual(propertiesOf(xml, "converting_a_document::with_no_out::is_gone"), []);
+      assert.deepEqual(propertiesOf(xml, "no_such_module::leaf"), []);
       assert.deepEqual(propertiesOf(xml, "has_no_binary"), []);
-    });
-
-    it("names a case its scan cannot place when its module path falls under any shaped file, a library's included", () => {
-      const shaped = { ...options, shaped: new Set(["crates/a/src/naming/tests.rs"]) };
-      const { unplaced } = merged(
-        [report("nextest-run", suite("crate-a", passing("crate-a", "naming::tests::made_by_a_macro") + passing("crate-a", "naming::tests::naming_a_record::when_it_has_a_pipe::keeps_the_base")))],
-        shaped,
-      );
-      assert.deepEqual(unplaced, ["crate-a naming::tests::made_by_a_macro"]);
     });
 
     it("keeps the doc of an item across a plain comment and a multi-line attribute, and reads four slashes as no doc", () => {
@@ -268,11 +258,10 @@ describe("a crate on disk", () => {
     });
 
     it("does not end a module at a `}` that a string or raw string holds at the module's indent", () => {
-      const { xml, unplaced } = merged(
+      const { xml } = merged(
         [report("nextest-run", suite("crate-a::odd", passing("crate-a::odd", "holds_strings::after_the_strings")))],
-        { ...options, shaped: new Set(["crates/a/tests/odd.rs"]) },
+        options,
       );
-      assert.deepEqual(unplaced, []);
       assert.deepEqual(propertiesOf(xml, "holds_strings::after_the_strings").slice(1, 2), [["line", "27"]]);
     });
 
