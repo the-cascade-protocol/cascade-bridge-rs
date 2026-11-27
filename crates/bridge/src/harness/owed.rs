@@ -34,23 +34,23 @@ WHERE {{
 
 const TITLE_WRITTEN: &str = "OPTIONAL { ?item ?slot ?t . ?t a xyz:title ; rdf:_1 ?title . }";
 
-/// An item's box, a record of its own standing at the box.
-fn boxes() -> String {
+/// An item's shelf, a record of its own standing at the shelf.
+fn shelves() -> String {
     format!(
         "{PREFIXES}PREFIX ex: <urn:example:catalog#>
 CONSTRUCT {{
-  ?b a ex:Box .
+  ?b a ex:Shelf .
   ?bv prov:specializationOf ?b .
   [] bridge:arrivedAs ?bv ; pav:version ?id ;
     oa:hasSelector [ a oa:XPathSelector ; rdf:value ?at ] .
 }}
 WHERE {{
-  ?item a fx:root, xyz:item ; xyz:id ?id ; ?slot ?box .
-  ?box a xyz:box .
+  ?item a fx:root, xyz:item ; xyz:id ?id ; ?slot ?shelf .
+  ?shelf a xyz:shelf .
   bridge:thisRecord bridge:selector ?record .
-  BIND(IRI(CONCAT(\"urn:example:box:\", ?id)) AS ?b)
-  BIND(IRI(CONCAT(\"urn:example:box-draft:\", ?id)) AS ?bv)
-  BIND(CONCAT(?record, \"/box[1]\") AS ?at)
+  BIND(IRI(CONCAT(\"urn:example:shelf:\", ?id)) AS ?b)
+  BIND(IRI(CONCAT(\"urn:example:shelf-draft:\", ?id)) AS ?bv)
+  BIND(CONCAT(?record, \"/shelf[1]\") AS ?at)
 }}"
     )
 }
@@ -63,8 +63,8 @@ fn accounting(title: &str) -> String {
 [] a bridge:PathEntry ; bridge:sourcePath \"/item/@id\" ; bridge:verdict bridge:carried .
 [] a bridge:PathEntry ; bridge:sourcePath \"/item/title\" ; {title} ;
   bridge:carriedAs [ bridge:inRecordClass ex:Item ; bridge:asProperty ex:title ] .
-[] a bridge:PathEntry ; bridge:sourcePath \"/item/box\" ; bridge:verdict bridge:consumed .
-[] a bridge:PathEntry ; bridge:sourcePath \"/item/box/bin\" ; bridge:verdict bridge:carried ;
+[] a bridge:PathEntry ; bridge:sourcePath \"/item/shelf\" ; bridge:verdict bridge:consumed .
+[] a bridge:PathEntry ; bridge:sourcePath \"/item/shelf/mark\" ; bridge:verdict bridge:carried ;
   bridge:carriedAs [ bridge:inRecordClass ex:Item ; bridge:asProperty ex:code ] .
 [] a bridge:PathEntry ; bridge:sourcePath \"/item/bin\" ; bridge:verdict bridge:carried ;
   bridge:carriedAs [ bridge:inRecordClass ex:Item ; bridge:asProperty ex:code ] .
@@ -91,8 +91,8 @@ const ENTRIES: [(&str, &str); 5] = [
         r#"<catalog><item id="3"><title> </title></item><item id="4"><title/></item></catalog>"#,
     ),
     (
-        "boxed",
-        r#"<catalog><item id="5"><title>Fifth</title><box><bin>7</bin></box></item></catalog>"#,
+        "shelved",
+        r#"<catalog><item id="5"><title>Fifth</title><shelf><mark>7</mark></shelf></item></catalog>"#,
     ),
 ];
 
@@ -111,7 +111,7 @@ fn catalog(title: &str, verdict: &str) -> Variant {
     );
     let mut variant = Variant::of(tiny())
         .with("mapping/item.rq", items(title))
-        .with("mapping/item-shelf.rq", boxes())
+        .with("mapping/item-shelf.rq", shelves())
         .with(ACCOUNTING, accounting(verdict));
     for (name, input) in ENTRIES {
         manifest.push_str(&format!(
@@ -195,12 +195,12 @@ mod tests {
                 );
             }
 
-            /// owes a path only to the record standing nearest it, here the box its
-            /// `bin` is in, of no class the path is carried on
+            /// owes a path only to the record standing nearest it, here the shelf its
+            /// `mark` is in, of no class the path is carried on
             #[test]
             fn owes_a_path_only_to_the_record_standing_nearest_it() {
                 let results = ran(&catalog("", CARRIED));
-                let (outcome, description) = judged(&results, "boxed");
+                let (outcome, description) = judged(&results, "shelved");
                 assert_eq!(outcome, "failed", "{description}");
                 assert!(
                     description.contains("not met at 1 occurrence(s): /item/title at"),
@@ -245,18 +245,21 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?t . ?t a xyz:title . }}"
             /// where its gap is one the path's entry names
             #[test]
             fn is_met_by_a_finding_at_the_occurrence_or_above_it_naming_the_gap_its_entry_names() {
-                // The box's bin carried on the box, its entry saying `verdict`, and a finding
-                // of `gap` addressed at `at`.
+                // The shelf's mark carried on the shelf, its entry saying `verdict`, and a
+                // finding of `gap` addressed at `at`.
                 let reported = |verdict: &str, gap: &str, at: &str| {
+                    let mark = "\"/item/shelf/mark\" ; bridge:verdict bridge:carried ;\n  \
+                                bridge:carriedAs [ bridge:inRecordClass ex:Item";
+                    let written = accounting(CARRIED);
+                    assert!(written.contains(mark), "{written}");
                     catalog(TITLE_WRITTEN, CARRIED)
                         .with(
                             ACCOUNTING,
-                            accounting(CARRIED).replacen(
-                                "\"/item/box/bin\" ; bridge:verdict bridge:carried ;\n  \
-                                 bridge:carriedAs [ bridge:inRecordClass ex:Item",
+                            written.replacen(
+                                mark,
                                 &format!(
-                                    "\"/item/box/bin\" ; {verdict} ;\n  \
-                                     bridge:carriedAs [ bridge:inRecordClass ex:Box"
+                                    "\"/item/shelf/mark\" ; {verdict} ;\n  \
+                                     bridge:carriedAs [ bridge:inRecordClass ex:Shelf"
                                 ),
                                 1,
                             ),
@@ -275,19 +278,20 @@ CONSTRUCT {{
     oa:motivatedBy oa:classifying ;
     sh:resultSeverity sh:Info .
 }}
-WHERE {{ ?item a fx:root, xyz:item ; ?slot ?box . ?box a xyz:box . }}"
+WHERE {{ ?item a fx:root, xyz:item ; ?slot ?shelf . ?shelf a xyz:shelf . }}"
                             ),
                         )
                 };
                 let naming = "bridge:verdict bridge:carriedInPart ; \
                               bridge:namesGap ex:summaryLosesItsMarkup";
                 for (verdict, gap, at, expected) in [
-                    (CARRIED, "noteHasNoTerm", "box[1]/bin[1]", "cantTell"),
-                    (naming, "summaryLosesItsMarkup", "box[1]", "cantTell"),
-                    (CARRIED, "summaryLosesItsMarkup", "box[1]", "failed"),
-                    (naming, "noteHasNoTerm", "box[1]", "failed"),
+                    (CARRIED, "noteHasNoTerm", "shelf[1]/mark[1]", "cantTell"),
+                    (naming, "summaryLosesItsMarkup", "shelf[1]", "cantTell"),
+                    (CARRIED, "summaryLosesItsMarkup", "shelf[1]", "failed"),
+                    (naming, "noteHasNoTerm", "shelf[1]", "failed"),
                 ] {
-                    let (outcome, description) = judged(&ran(&reported(verdict, gap, at)), "boxed");
+                    let (outcome, description) =
+                        judged(&ran(&reported(verdict, gap, at)), "shelved");
                     assert_eq!(outcome, expected, "{verdict}, {gap} at {at}: {description}");
                 }
             }
