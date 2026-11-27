@@ -3,8 +3,8 @@ mod common;
 use cascade_bridge::oxrdf::Term;
 use cascade_bridge::oxrdfio::{self, RdfFormat};
 use common::{
-    canonical, canonical_lines, copied_to, map_of, names, outcomes, quads, read_at_its_own_iri,
-    results, scratch, tiny, vocabularies, BASE, MAX_LENGTH,
+    canonical, canonical_lines, copied_to, map_of, names, outcomes, owing_a_title, quads,
+    read_at_its_own_iri, results, scratch, tiny, vocabularies, BASE, MAX_LENGTH,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::process::{Command, Stdio};
@@ -456,6 +456,41 @@ mod converting_a_document {
             let said = String::from_utf8_lossy(&run.stderr);
             assert_eq!(run.status.code(), Some(2), "{said}");
             assert!(said.contains("declares no envelope"), "{said}");
+        }
+    }
+
+    /// with `--owed`
+    mod with_owed {
+        use super::*;
+
+        /// lists each occurrence of a carried path the conversion owes and neither writes nor
+        /// reports, in place of the graph
+        #[test]
+        fn lists_each_occurrence_of_a_carried_path_the_conversion_owes_and_neither_writes_nor_reports(
+        ) {
+            let scratch = scratch();
+            let adapter = scratch.path().join("tiny-adapter");
+            owing_a_title(&adapter);
+            let document = adapter.join("fixtures/in/two.xml");
+            let run = cascade_bridge(&[
+                "convert",
+                &adapter.to_string_lossy(),
+                &document.to_string_lossy(),
+                "--owed",
+            ]);
+            succeeded(&run);
+            let said = String::from_utf8_lossy(&run.stdout);
+            let lines: Vec<&str> = said.lines().collect();
+            assert_eq!(lines.len(), 2, "{said}");
+            assert!(
+                lines[0].starts_with("Owed     ") && lines[0].ends_with("two.xml  1 unmet"),
+                "{said}"
+            );
+            assert_eq!(
+                lines[1],
+                "  /item/title at \"/catalog/item[1]/title[1]\": no urn:example:catalog#title on \
+                 its urn:example:catalog#Item is written, and no finding is about it"
+            );
         }
     }
 

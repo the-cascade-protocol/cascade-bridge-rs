@@ -530,6 +530,8 @@ mod identity;
 #[cfg(test)]
 mod manifest;
 #[cfg(test)]
+mod owed;
+#[cfg(test)]
 mod tests {
     use super::{beyond, graph_at, without_the_release};
     use crate::rdf::canonical_lines;
