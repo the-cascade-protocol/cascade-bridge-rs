@@ -1,0 +1,90 @@
+{
+  "env": {
+    "os": "Ubuntu 26.04.1 LTS",
+    "runner": "github-hosted",
+    "cpus": 4,
+    "node": "24.22.3",
+    "host": "node",
+    "profile": "wasm",
+    "cpu": "AMD EPYC 7763 64-Core Processor"
+  },
+  "commit": {
+    "cascade-bridge-adapter-ccda": "18f93d6829f10d05a859ed9611db7a38e7877d2b",
+    "cascade-vocabulary": "8f3fbea8d56bc964a8b99977c0821665096a66d2",
+    "cascade-bridge-rs": "9f04313ab62b812996d6a630131981f4b47ba5d1",
+    "cascade-bridge-adapter-fhir-r4": "3defc8cf5d89d6447fe69d9436b7a408b5cc3e13"
+  },
+  "results": [
+    {
+      "name": "ccda-entries-x10/output/graph",
+      "unit": "{count}",
+      "value": 1926,
+      "kind": "output",
+      "sha256": "ad5fa27c4fe8b29ebed8c8892c3bf3df74f202365f5e14dca5a7981d130dfc16",
+      "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes."
+    },
+    {
+      "name": "ccda-entries-x10/output/findings",
+      "unit": "{count}",
+      "value": 1210,
+      "kind": "output",
+      "sha256": "c7ee51599b189d3b7e3b558a298707a7607cb0903c01de890353d30c9d31faa9",
+      "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes."
+    },
+    {
+      "name": "ccda-entries-x50/output/graph",
+      "unit": "{count}",
+      "value": 9126,
+      "kind": "output",
+      "sha256": "139d803f26e008902033b2b0e3393b1c53073557b209e9222053dbf3e93d0bfc",
+      "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes."
+    },
+    {
+      "name": "ccda-entries-x50/output/findings",
+      "unit": "{count}",
+      "value": 5890,
+      "kind": "output",
+      "sha256": "6a2b8e2f41bde6a557a762be2ab28ef0b31b712366b19f073cbe1bcb310c26a4",
+      "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes."
+    },
+    {
+      "name": "ccda-synthea-10y/timeout/convert",
+      "unit": "s",
+      "value": 3600,
+      "kind": "output",
+      "extra": "The input did not finish in its time limit, in the phase named; the value is the limit in seconds."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/output/graph",
+      "unit": "{count}",
+      "value": 63025,
+      "kind": "output",
+      "sha256": "37ddd3ff45eedcca686486482a5dd0ea90120d791c04352fb96a41e20d5fe7ac",
+      "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/output/findings",
+      "unit": "{count}",
+      "value": 90090,
+      "kind": "output",
+      "sha256": "851b1026c63093ac92b471f425e87cc77fd94f6d38736c2dd43151cf57bdd50c",
+      "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes."
+    },
+    {
+      "name": "fhir-r4-synthea-10y-trimmed/output/graph",
+      "unit": "{count}",
+      "value": 12654,
+      "kind": "output",
+      "sha256": "7cc449ffbde5128e52fafcf8acfb64362df9b08f54ac053668923208f8175856",
+      "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes."
+    },
+    {
+      "name": "fhir-r4-synthea-10y-trimmed/output/findings",
+      "unit": "{count}",
+      "value": 40099,
+      "kind": "output",
+      "sha256": "775f456569d31fe76205b4f2cdcac436a8ae69736ae1f9c0239272c31574dc83",
+      "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes."
+    }
+  ]
+}
