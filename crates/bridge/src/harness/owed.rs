@@ -361,7 +361,10 @@ mod tests {
                         "the record selector \"/catalog/item[1]/..\" selects a node outside the \
                          unit",
                     ),
-                    ("/*", "the record selector \"/catalog/item[1]/*\" selects 2 nodes"),
+                    (
+                        "/*",
+                        "the record selector \"/catalog/item[1]/*\" selects 2 nodes",
+                    ),
                 ] {
                     let shelved =
                         catalog("", CARRIED).with("mapping/item-shelf.rq", shelves_at(step));
@@ -374,7 +377,10 @@ mod tests {
                             description.contains("cannot be checked for 1 record selector(s): "),
                             "{step}: {description}"
                         );
-                        assert!(!description.contains("occurrence(s)"), "{step}: {description}");
+                        assert!(
+                            !description.contains("occurrence(s)"),
+                            "{step}: {description}"
+                        );
                     }
                 }
             }

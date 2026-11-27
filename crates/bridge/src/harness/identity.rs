@@ -108,7 +108,11 @@ mod tests {
                 };
                 let (outcome, said) = judged_as(
                     adapter(),
-                    relation(&item(1), &conversion("output-fails-a-shape.xml", None), true),
+                    relation(
+                        &item(1),
+                        &conversion("output-fails-a-shape.xml", None),
+                        true,
+                    ),
                 );
                 assert_eq!(outcome, "passed", "{said}");
                 let (outcome, said) = judged_as(adapter(), relation(&item(1), &item(2), false));
