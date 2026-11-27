@@ -71,6 +71,28 @@ pub(crate) fn is_xml_space(s: &str) -> bool {
     s.chars().all(|c| XML_SPACE.contains(&c))
 }
 
+/// A string holds nothing where it is white space once each complete tag is taken out, as an
+/// XHTML narrative holding no visible character does.
+pub(crate) fn holds_no_text(text: &str) -> bool {
+    let mut rest = text;
+    loop {
+        let (before, after) = match rest.split_once('<') {
+            Some((before, after)) => (before, Some(after)),
+            None => (rest, None),
+        };
+        if !before.trim().is_empty() {
+            return false;
+        }
+        let Some(after) = after else {
+            return true;
+        };
+        match after.split_once('>') {
+            Some((_, beyond)) => rest = beyond,
+            None => return false,
+        }
+    }
+}
+
 pub(crate) fn normalise_line_endings(s: &str) -> Cow<'_, str> {
     if !s.contains('\r') {
         return Cow::Borrowed(s);

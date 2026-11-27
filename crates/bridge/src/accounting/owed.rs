@@ -1,5 +1,6 @@
 use super::{Accounting, Carry, Owed};
 use crate::annotation::Record;
+use crate::decode::holds_no_text;
 use crate::lift::Unit;
 use crate::load::as_subject;
 use crate::syntax::Respelling;
@@ -238,8 +239,9 @@ struct Written<'a> {
     classes: HashMap<NamedOrBlankNode, Vec<&'a str>>,
     /// Each record with the address one of its arrivals was selected at, as written.
     selected: Vec<(NamedOrBlankNode, &'a str)>,
-    /// Each property written on a record, its versions, their arrivals, or a node they
-    /// point at that is no record, version or arrival of its own.
+    /// Each property written with a value that is not empty, on a record, its versions,
+    /// their arrivals, or a node they point at that is no record, version or arrival of
+    /// its own.
     carried: HashMap<NamedOrBlankNode, HashSet<&'a str>>,
 }
 
@@ -325,6 +327,9 @@ impl<'a> Written<'a> {
         }
         let mut carried: HashMap<NamedOrBlankNode, HashSet<&str>> = HashMap::new();
         for quad in produced {
+            if matches!(&quad.object, Term::Literal(value) if holds_no_text(value.value())) {
+                continue;
+            }
             for record in owners.get(&quad.subject).into_iter().flatten() {
                 carried
                     .entry(record.clone())
@@ -434,6 +439,16 @@ impl<'a> About<'a> {
                     && owed.gaps.iter().any(|gap| gap == body))
         })
     }
+}
+
+/// Whether two addresses of the document select one node, read as steps (name, namespace,
+/// position) however each is spelled.
+pub(crate) fn same_place(spelling: &dyn Respelling, one: &str, other: &str) -> bool {
+    one == other
+        || matches!(
+            (spelling.spelled(one), spelling.spelled(other)),
+            (Ok(one), Ok(other)) if steps(&one) == steps(&other)
+        )
 }
 
 /// An address's steps: split at each `/` outside a predicate's brackets.

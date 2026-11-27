@@ -1,4 +1,4 @@
-use crate::accounting::Unmet;
+use crate::accounting::{same_place, Unmet};
 use crate::annotation;
 use crate::budget::Budgets;
 use crate::compiled::Executor;
@@ -177,14 +177,17 @@ impl Entry<'_> {
         Ok((run, bytes))
     }
 
-    /// The one record a conversion names: of the version whose arrival stood at its
-    /// bridge:selector, or, where it names none, of the one version arriving at all; and
-    /// what the conversion owed by the accounting and did not meet.
+    /// The one record a conversion names: of the version whose arrival stood at the node
+    /// its bridge:selector selects, however each is spelled, or, where it names none, of the
+    /// one version arriving at all; and what the conversion owed by the accounting and did
+    /// not meet.
     fn record_named(&self, conversion: &NamedOrBlankNode) -> Result<(String, Vec<Unmet>)> {
         let graph = self.graph;
         let selector = one(graph, conversion, BRIDGE_SELECTOR)?;
-        let (run, _) = self.converted(Some(conversion))?;
+        let (run, bytes) = self.converted(Some(conversion))?;
         let unmet = run.unmet.clone();
+        let source = self.setup.syntax.decode(&bytes)?;
+        let spelling = self.setup.syntax.respelling(&source);
         let objects_of = |subject: &NamedOrBlankNode, predicate: &str| -> Vec<Term> {
             run.quads
                 .iter()
@@ -202,7 +205,11 @@ impl Entry<'_> {
             objects_of(arrival, OA_HAS_SELECTOR)
                 .iter()
                 .filter_map(as_subject)
-                .any(|node| said(&node, RDF_VALUE).contains(at))
+                .any(|node| {
+                    said(&node, RDF_VALUE)
+                        .iter()
+                        .any(|stood| same_place(spelling.as_ref(), stood, at))
+                })
         };
         let records: BTreeSet<String> = run
             .quads
@@ -408,24 +415,35 @@ impl EntryResult {
     }
 }
 
-/// What the accounting says is carried and a conversion owed and did not meet, as an
-/// entry's description says it: the first few whole, then how many more `--owed` lists;
+/// What the accounting says is carried and a conversion owed and did not meet, and each
+/// record selector that placed no record so that it could not be told, as an entry's
+/// description says it: the first few of each whole, then how many more `--owed` lists;
 /// nothing where all was met.
 fn not_met(unmet: &[Unmet]) -> String {
     const SAID: usize = 3;
-    if unmet.is_empty() {
-        return String::new();
+    let (unplaced, occurrences): (Vec<&Unmet>, Vec<&Unmet>) = unmet
+        .iter()
+        .partition(|one| matches!(one, Unmet::Unplaced { .. }));
+    let mut said = String::new();
+    for (lead, counted, these) in [
+        ("is not met at", "occurrence(s)", occurrences),
+        ("cannot be checked for", "record selector(s)", unplaced),
+    ] {
+        if these.is_empty() {
+            continue;
+        }
+        let first: Vec<String> = these.iter().take(SAID).map(|one| one.summary()).collect();
+        let more = match these.len().saturating_sub(SAID) {
+            0 => String::new(),
+            more => format!("; and {more} more: run `test` with `--owed` to list every one"),
+        };
+        said.push_str(&format!(
+            "; the accounting {lead} {} {counted}: {}{more}",
+            these.len(),
+            first.join("; ")
+        ));
     }
-    let said: Vec<String> = unmet.iter().take(SAID).map(Unmet::summary).collect();
-    let more = match unmet.len().saturating_sub(SAID) {
-        0 => String::new(),
-        more => format!("; and {more} more: run `test` with `--owed` to list every one"),
-    };
-    format!(
-        "; the accounting is not met at {} occurrence(s): {}{more}",
-        unmet.len(),
-        said.join("; ")
-    )
+    said
 }
 
 fn is_missing(error: &Error) -> bool {
