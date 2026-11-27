@@ -1,4 +1,4 @@
-use crate::accounting::{gap_scheme, Accounting};
+use crate::accounting::{gap_scheme, Accounting, ForwardMiss};
 use crate::annotation::{self, Record};
 use crate::compiled::{Dataset, Shared};
 use crate::error::{Error, ErrorKind, Explained, Result};
@@ -16,6 +16,9 @@ use crate::vocabulary::Vocabulary;
 use oxigraph::model::Quad;
 use oxrdfio::{RdfFormat, RdfParser};
 use std::collections::{HashMap, HashSet};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+// std's clock panics on wasm32-unknown-unknown, where this one asks the host.
+use web_time::Instant;
 
 struct Envelope {
     iri: String,
@@ -47,6 +50,9 @@ pub(crate) struct Prepared {
     version: Option<String>,
     pub(crate) skipped: Vec<Skip>,
     pub(crate) loading: Vec<StageTime>,
+    /// The trial: whether a convert also checks the accounting forward, and the time that took.
+    pub(crate) forward: AtomicBool,
+    pub(crate) forward_nanos: AtomicU64,
 }
 
 /// Each schema a record may be validated against, compiled once however many name it.
@@ -109,6 +115,7 @@ pub(crate) struct Conversion {
     pub(crate) findings: Vec<Quad>,
     pub(crate) units: usize,
     pub(crate) detected: Option<bool>,
+    pub(crate) forward_misses: Vec<ForwardMiss>,
 }
 
 impl Conversion {
@@ -290,6 +297,8 @@ fn prepared(
         version: adapter.version.clone(),
         skipped,
         loading: clock.times(),
+        forward: AtomicBool::new(false),
+        forward_nanos: AtomicU64::new(0),
     })
 }
 
@@ -452,6 +461,7 @@ pub(crate) fn convert_with(
         findings: Vec::new(),
         units: 0,
         detected: None,
+        forward_misses: Vec::new(),
     };
     while let Some(unit) = profile
         .during(Stage::Lift, || lift.next_unit())
@@ -461,7 +471,7 @@ pub(crate) fn convert_with(
         // A record was read, so the document root was: no envelope is needed yet.
         let document = lift.document_selector(None);
         let schema = prepared.source_schema(admitting(lift.as_ref(), &reading));
-        let (produced, findings) = unit_converted(
+        let (produced, findings, misses) = unit_converted(
             prepared,
             schema,
             source.iri,
@@ -475,6 +485,7 @@ pub(crate) fn convert_with(
         )?;
         conversion.quads.extend(produced);
         conversion.findings.extend(findings);
+        conversion.forward_misses.extend(misses);
     }
     conversion.quads.extend(arrived_in.described(
         &Release {
@@ -527,7 +538,7 @@ fn unit_converted(
     shared: &Shared,
     profile: &Profile,
     asked: Asked,
-) -> Result<(Vec<Quad>, Vec<Quad>)> {
+) -> Result<(Vec<Quad>, Vec<Quad>, Vec<ForwardMiss>)> {
     let selector = unit.selector();
     let selector_type = prepared.syntax.selector_type();
     let record = Record {
@@ -561,7 +572,7 @@ fn unit_converted(
         arrived_in.arrived(versioned, &selector, selector_type, &data)
     })?;
     if !asked.findings {
-        return Ok((produced, findings));
+        return Ok((produced, findings, Vec::new()));
     }
     if let Some(vocabulary) = &prepared.vocabulary {
         findings.extend(profile.during(Stage::OutputValidation, || {
@@ -579,7 +590,23 @@ fn unit_converted(
     })?;
     findings.extend(queried);
     findings.extend(unresolved);
-    Ok((produced, findings))
+    let misses = match prepared
+        .accounting
+        .as_ref()
+        .filter(|_| prepared.forward.load(Ordering::Relaxed))
+    {
+        Some(accounting) => {
+            let started = Instant::now();
+            let misses = accounting.forward_misses(&record, unit, &produced, &findings);
+            let nanoseconds = u64::try_from(started.elapsed().as_nanos()).unwrap_or(u64::MAX);
+            prepared
+                .forward_nanos
+                .fetch_add(nanoseconds, Ordering::Relaxed);
+            misses
+        }
+        None => Vec::new(),
+    };
+    Ok((produced, findings, misses))
 }
 
 fn validated(
@@ -794,6 +821,7 @@ mod tests {
             findings: Vec::new(),
             units: 0,
             detected: None,
+            forward_misses: Vec::new(),
         }
     }
 

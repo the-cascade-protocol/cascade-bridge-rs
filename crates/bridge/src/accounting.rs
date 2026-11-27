@@ -2,14 +2,16 @@ use crate::annotation::{self, Record};
 use crate::decode::XML_SPACE;
 use crate::error::{Error, Result};
 use crate::lift::{Paths, Unit, Valued};
-use crate::load::{instances, objects, subjects, turtle, Prefixes};
+use crate::load::{as_subject, instances, objects, subjects, turtle, Prefixes};
 use crate::resolver::Resolver;
 use crate::run::Asked;
 use crate::terms::{
-    BRIDGE_CARRIED_IN_PART, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP,
+    BRIDGE_AS_PROPERTY, BRIDGE_CARRIED, BRIDGE_CARRIED_AS, BRIDGE_CARRIED_IN_PART,
+    BRIDGE_IN_RECORD_CLASS, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP,
     BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY, BRIDGE_SOURCE_LACKS_REQUIRED,
-    BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, SH_INFO, SH_RESULT_SEVERITY,
-    SH_VIOLATION, SH_WARNING, SKOS_BROADER, SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
+    BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, OA_HAS_BODY, PROV_SPECIALIZATION_OF,
+    RDF_TYPE, SH_INFO, SH_RESULT_SEVERITY, SH_VALUE, SH_VIOLATION, SH_WARNING, SKOS_BROADER,
+    SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
 };
 use oxigraph::model::{NamedOrBlankNode, Quad, Term};
 use std::collections::{HashMap, HashSet};
@@ -22,6 +24,23 @@ struct Entry {
     /// The concept map a value is looked up in; `miss` is the gap for a value it lacks.
     map: Option<String>,
     miss: Option<String>,
+    /// Each `bridge:carriedAs` as its record class and its property.
+    carries: Vec<(String, String)>,
+}
+
+/// What an entry that carries its path says the conversion writes for it.
+#[derive(Default)]
+struct Forward {
+    carries: Vec<(String, String)>,
+    gaps: Vec<String>,
+}
+
+/// A path the accounting says is carried, found in a record that wrote none of what it
+/// carries it as and reported no gap for it.
+pub(crate) struct ForwardMiss {
+    pub(crate) record: String,
+    pub(crate) path: String,
+    pub(crate) wanted: Vec<(String, String)>,
 }
 
 #[derive(Default)]
@@ -57,6 +76,7 @@ pub(crate) struct Accounting {
     paths: HashSet<String>,
     reported: HashMap<String, Vec<Reported>>,
     lookups: HashMap<String, Vec<Lookup>>,
+    forward: HashMap<String, Forward>,
 }
 
 impl Accounting {
@@ -84,7 +104,20 @@ impl Accounting {
         let mut reported: HashMap<String, Vec<Reported>> = HashMap::new();
         let mut lookups: HashMap<String, Vec<Lookup>> = HashMap::new();
         let mut maps: HashMap<String, Arc<HashSet<String>>> = HashMap::new();
+        let mut forward: HashMap<String, Forward> = HashMap::new();
         for entry in entries {
+            if entry
+                .verdict
+                .as_deref()
+                .is_some_and(|verdict| verdict == BRIDGE_CARRIED || verdict == BRIDGE_CARRIED_IN_PART)
+                && !entry.carries.is_empty()
+            {
+                let carried = forward.entry(entry.path.clone()).or_default();
+                carried.carries.extend(entry.carries.iter().cloned());
+                carried
+                    .gaps
+                    .extend(entry.gap.iter().chain(entry.miss.iter()).cloned());
+            }
             if let (Some(verdict), Some(gap)) = (&entry.verdict, &entry.gap) {
                 if NAMES_A_GAP.contains(&verdict.as_str()) {
                     let declared = scheme.get(gap.as_str()).ok_or_else(|| {
@@ -179,7 +212,81 @@ impl Accounting {
             paths,
             reported,
             lookups,
+            forward,
         })
+    }
+
+    /// The accounting checked forward, for one record: each path it holds that the
+    /// accounting marks carried, with none of its `bridge:carriedAs` properties written
+    /// on a version of its class and no finding addressed to the path or naming one of
+    /// the entry's gaps.
+    pub(crate) fn forward_misses(
+        &self,
+        record: &Record<'_>,
+        unit: &Unit,
+        produced: &[Quad],
+        findings: &[Quad],
+    ) -> Vec<ForwardMiss> {
+        let mut misses = Vec::new();
+        if self.forward.is_empty() {
+            return misses;
+        }
+        let mut classes: HashMap<NamedOrBlankNode, Vec<&str>> = HashMap::new();
+        let mut record_of: HashMap<NamedOrBlankNode, NamedOrBlankNode> = HashMap::new();
+        for quad in produced {
+            if quad.predicate.as_str() == RDF_TYPE {
+                if let Term::NamedNode(class) = &quad.object {
+                    classes
+                        .entry(quad.subject.clone())
+                        .or_default()
+                        .push(class.as_str());
+                }
+            } else if quad.predicate.as_str() == PROV_SPECIALIZATION_OF {
+                if let Some(of) = as_subject(&quad.object) {
+                    record_of.insert(quad.subject.clone(), of);
+                }
+            }
+        }
+        let mut written: HashSet<(&str, &str)> = HashSet::new();
+        for quad in produced {
+            if let Some(of) = record_of.get(&quad.subject) {
+                for class in classes.get(of).into_iter().flatten() {
+                    written.insert((*class, quad.predicate.as_str()));
+                }
+            }
+        }
+        let mut values: HashSet<&str> = HashSet::new();
+        let mut bodies: HashSet<&str> = HashSet::new();
+        for quad in findings {
+            if quad.predicate.as_str() == SH_VALUE {
+                if let Term::Literal(value) = &quad.object {
+                    values.insert(value.value());
+                }
+            } else if quad.predicate.as_str() == OA_HAS_BODY {
+                if let Term::NamedNode(body) = &quad.object {
+                    bodies.insert(body.as_str());
+                }
+            }
+        }
+        for occurrence in unit.occurrences() {
+            let Some(forward) = self.forward.get(&occurrence.path) else {
+                continue;
+            };
+            let carried = forward
+                .carries
+                .iter()
+                .any(|(class, property)| written.contains(&(class.as_str(), property.as_str())));
+            let reported = values.contains(occurrence.path.as_str())
+                || forward.gaps.iter().any(|gap| bodies.contains(gap.as_str()));
+            if !carried && !reported {
+                misses.push(ForwardMiss {
+                    record: record.selector.to_owned(),
+                    path: occurrence.path.clone(),
+                    wanted: forward.carries.clone(),
+                });
+            }
+        }
+        misses
     }
 
     pub(crate) fn findings(
@@ -278,7 +385,29 @@ fn entries(resolver: &dyn Resolver, iri: &str) -> Result<Vec<Entry>> {
             let said = |predicate: &str, name: &str| {
                 declared(&objects(&graph, &s, predicate)?, iri, path, name)
             };
+            let mut carries = Vec::new();
+            for carried in objects(&graph, &s, BRIDGE_CARRIED_AS)? {
+                let Some(node) = as_subject(&carried) else {
+                    continue;
+                };
+                let class = declared(
+                    &objects(&graph, &node, BRIDGE_IN_RECORD_CLASS)?,
+                    iri,
+                    path,
+                    "bridge:inRecordClass",
+                )?;
+                let property = declared(
+                    &objects(&graph, &node, BRIDGE_AS_PROPERTY)?,
+                    iri,
+                    path,
+                    "bridge:asProperty",
+                )?;
+                if let (Some(class), Some(property)) = (class, property) {
+                    carries.push((class, property));
+                }
+            }
             entries.push(Entry {
+                carries,
                 verdict: said(BRIDGE_VERDICT, "verdict")?,
                 gap: said(BRIDGE_NAMES_GAP, "gap")?,
                 map: said(BRIDGE_LOOKUP_IN, "bridge:lookupIn")?,

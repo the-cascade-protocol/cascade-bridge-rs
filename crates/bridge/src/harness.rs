@@ -381,6 +381,69 @@ fn is_missing(error: &Error) -> bool {
     matches!(error.kind(), ErrorKind::Missing { .. })
 }
 
+pub(crate) struct WholeGraphEntry {
+    pub(crate) name: String,
+    pub(crate) input: String,
+    pub(crate) envelope: Option<String>,
+    pub(crate) bytes: Vec<u8>,
+    pub(crate) facts: Option<(Vec<u8>, String)>,
+}
+
+/// Each whole-graph entry of the adapter's manifest with what its action reads.
+pub(crate) fn whole_graph_entries(
+    adapter: &Adapter,
+    resolver: &dyn Resolver,
+) -> Result<Vec<WholeGraphEntry>> {
+    let manifest = adapter
+        .manifest
+        .as_deref()
+        .ok_or_else(|| Error::adapter("the adapter names no bridge:testManifest"))?;
+    let mut graph = adapter.graph.clone();
+    parse_into(
+        &mut graph,
+        &resolver.read(manifest)?,
+        manifest,
+        RdfFormat::Turtle,
+    )
+    .explained_by(ErrorKind::Adapter)?;
+    let graph = &graph;
+    let manifest = subject(manifest)?;
+    let mut found = Vec::new();
+    for entry in list(graph, objects(graph, &manifest, MF_ENTRIES)?.first())? {
+        let Some(node) = as_subject(&entry) else {
+            continue;
+        };
+        if !values(graph, &node, RDF_TYPE)?
+            .iter()
+            .any(|type_iri| type_iri == BRIDGE_ISOMORPHIC)
+        {
+            continue;
+        }
+        let name = one(graph, &node, MF_NAME)?.unwrap_or_else(|| term_value(&entry));
+        let Some(action) = objects(graph, &node, MF_ACTION)?
+            .first()
+            .and_then(as_subject)
+        else {
+            continue;
+        };
+        let input = one(graph, &action, BRIDGE_INPUT)?
+            .ok_or_else(|| Error::adapter("the entry's action names no bridge:input"))?;
+        let envelope = one(graph, &action, BRIDGE_ENVELOPE)?;
+        let facts = one(graph, &action, BRIDGE_FACTS)?
+            .map(|iri| Ok::<_, Error>((resolver.read(&iri)?, iri)))
+            .transpose()?;
+        let bytes = resolver.read(&input)?;
+        found.push(WholeGraphEntry {
+            name,
+            input,
+            envelope,
+            bytes,
+            facts,
+        });
+    }
+    Ok(found)
+}
+
 #[cfg(test)]
 pub(crate) fn run_manifest(
     adapter: &Adapter,

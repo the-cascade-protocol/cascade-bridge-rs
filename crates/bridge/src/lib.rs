@@ -26,6 +26,7 @@ mod run;
 mod shapes;
 mod syntax;
 pub mod terms;
+mod trial;
 mod validate;
 mod vocabulary;
 mod xpath;
@@ -37,6 +38,7 @@ pub use library::{
     Executor, Facts, Fallback, Files, Format, Loaded, Named, Outcome, Planned, QueryProfile,
     TestEntry, TestOptions, TestReport, NAME, VERSION,
 };
+pub use trial::trial_forward_accounting;
 pub use measure::{Skip, Stage, StageTime};
 pub use oxrdf;
 pub use oxrdfio;

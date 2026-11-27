@@ -2,7 +2,8 @@ use crate::folder::{Folder, Inputs};
 use crate::iri::file_iri;
 use cascade_bridge::{
     describe, load, load_skipping, test, Budgets, ConvertOptions, Description, Document, Executor,
-    Facts, Format, Outcome, Skip, Stage, StageTime, TestOptions, NAME, VERSION,
+    trial_forward_accounting, Facts, Format, Outcome, Skip, Stage, StageTime, TestOptions, NAME,
+    VERSION,
 };
 use std::fmt::Write as _;
 use std::io::Write as _;
@@ -75,6 +76,13 @@ enum Command {
     Convert(Convert),
     Explain(Explain),
     Library { calls: String, results: String },
+    TrialAccounting(Trial),
+}
+
+struct Trial {
+    directory: String,
+    vocabularies: Option<String>,
+    repetitions: usize,
 }
 
 fn parse(argv: impl IntoIterator<Item = String>) -> Option<Command> {
@@ -158,6 +166,21 @@ fn parse(argv: impl IntoIterator<Item = String>) -> Option<Command> {
             }
             Some(Command::Explain(arguments))
         }
+        "trial-accounting" => {
+            let mut arguments = Trial {
+                directory: argv.next()?,
+                vocabularies: None,
+                repetitions: 5,
+            };
+            while let Some(flag) = argv.next() {
+                match flag.as_str() {
+                    "--vocabularies" => arguments.vocabularies = Some(argv.next()?),
+                    "--repeat" => arguments.repetitions = argv.next()?.parse().ok()?,
+                    _ => return None,
+                }
+            }
+            Some(Command::TrialAccounting(arguments))
+        }
         "library" => {
             let command = Command::Library {
                 calls: argv.next()?,
@@ -181,6 +204,7 @@ pub fn run(argv: impl IntoIterator<Item = String>) -> u8 {
         Command::Convert(arguments) => convert(&arguments),
         Command::Explain(arguments) => explain(&arguments),
         Command::Library { calls, results } => crate::library::run(&calls, &results),
+        Command::TrialAccounting(arguments) => trial_accounting(&arguments),
     };
     ran.unwrap_or_else(|reason| {
         eprintln!("cascade-bridge: {reason}");
@@ -348,6 +372,21 @@ fn stage_report(what: &str, wall: Duration, stages: &[StageTime]) -> String {
         wall.saturating_sub(counted).as_secs_f64()
     );
     said
+}
+
+fn trial_accounting(arguments: &Trial) -> Result<u8, String> {
+    let (mut inputs, description) =
+        opened(&arguments.directory, arguments.vocabularies.as_deref())?;
+    inputs.adapter = inputs.adapter.with_every_file()?;
+    let report = inputs.complete(|adapter, vocabulary| {
+        trial_forward_accounting(adapter, vocabulary, arguments.repetitions)
+    })?;
+    out(format!(
+        "### {}\n\n{report}\n",
+        description.identifier.as_deref().unwrap_or(&description.iri)
+    )
+    .as_bytes())?;
+    Ok(0)
 }
 
 fn explain(arguments: &Explain) -> Result<u8, String> {

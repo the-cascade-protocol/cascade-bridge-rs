@@ -83,6 +83,10 @@ terms! {
     BRIDGE_LOOKUP_IN = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "lookupIn";
     BRIDGE_LOOKUP_NAMES_GAP = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "lookupNamesGap";
     BRIDGE_NO_HOME = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "noHome";
+    BRIDGE_CARRIED = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "carried";
+    BRIDGE_CARRIED_AS = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "carriedAs";
+    BRIDGE_IN_RECORD_CLASS = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "inRecordClass";
+    BRIDGE_AS_PROPERTY = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "asProperty";
     BRIDGE_CARRIED_IN_PART = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "carriedInPart";
     BRIDGE_NO_PREDICATE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "noPredicate";
     BRIDGE_SOURCE_LACKS_REQUIRED = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "sourceLacksRequired";

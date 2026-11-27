@@ -1,0 +1,74 @@
+# TRIAL, not for merge: runs the forward accounting check over every whole-graph entry of both adapters.
+name: trial-accounting
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: trial-accounting-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  trial:
+    name: trial
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: cascade-bridge-rs
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: the-cascade-protocol/cascade-bridge-adapter-fhir-r4
+          path: cascade-bridge-adapter-fhir-r4
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: the-cascade-protocol/cascade-bridge-adapter-ccda
+          path: cascade-bridge-adapter-ccda
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: the-cascade-protocol/cascade-vocabulary
+          path: cascade-vocabulary
+          persist-credentials: false
+      - run: |
+          rustup toolchain install --profile minimal
+          channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup default "$channel"
+          rustup toolchain list | cut -d' ' -f1 | grep -v "^$channel-" | xargs -r -n1 rustup toolchain uninstall
+        working-directory: cascade-bridge-rs
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: cascade-bridge-rs
+      - run: cargo build --release --locked -p cascade-bridge-cli
+        working-directory: cascade-bridge-rs
+      - name: the check over every whole-graph entry of each adapter
+        run: |
+          set -o pipefail
+          for adapter in fhir-r4 ccda; do
+            target/release/cascade-bridge trial-accounting "../cascade-bridge-adapter-$adapter" --vocabularies ../cascade-vocabulary --repeat 5 | tee "$RUNNER_TEMP/trial-$adapter.md" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
+        working-directory: cascade-bridge-rs
+      - name: the probe, a scratch fhir-r4 whose allergy mapping lacks the criticality branch
+        run: |
+          set -o pipefail
+          probe="$RUNNER_TEMP/probe/cascade-bridge-adapter-fhir-r4"
+          mkdir -p "$RUNNER_TEMP/probe"
+          cp -r ../cascade-bridge-adapter-fhir-r4 "$probe"
+          perl -0pi -e 's/  UNION\n  \{\n    \?resource xyz:criticality \?o \.\n    BIND \(cascade:allergyCriticality AS \?p\)\n  \}\n//' "$probe/in/sparql/allergy-intolerance.rq"
+          echo '### the probe: the allergy mapping with the criticality branch removed' | tee -a "$GITHUB_STEP_SUMMARY"
+          { echo '```diff'; diff -u ../cascade-bridge-adapter-fhir-r4/in/sparql/allergy-intolerance.rq "$probe/in/sparql/allergy-intolerance.rq" || true; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+          grep -c 'allergyCriticality' "$probe/in/sparql/allergy-intolerance.rq" || true
+          target/release/cascade-bridge trial-accounting "$probe" --vocabularies ../cascade-vocabulary --repeat 1 | tee "$RUNNER_TEMP/trial-probe.md" | tee -a "$GITHUB_STEP_SUMMARY"
+        working-directory: cascade-bridge-rs
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: trial-reports
+          path: ${{ runner.temp }}/trial-*.md
