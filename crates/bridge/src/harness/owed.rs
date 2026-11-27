@@ -224,6 +224,17 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?shelf . ?shelf a xyz:shelf . }}"
         )
 }
 
+/// The tiny adapter writing each item's title as a node of its own, `members` being what the
+/// mapping writes of it.
+fn titled_by_a_node(members: &str) -> Variant {
+    let titled = r#"BIND(IRI(CONCAT("urn:example:title:", ?id)) AS ?title)"#;
+    catalog(titled, CARRIED).replacing(
+        "mapping/item.rq",
+        "?v prov:specializationOf ?s ; ex:title ?title .",
+        format!("?v prov:specializationOf ?s ; ex:title ?title . {members}"),
+    )
+}
+
 mod tests {
     use super::*;
 
@@ -320,6 +331,47 @@ mod tests {
                 assert_eq!(outcome, "cantTell", "{description}");
             }
 
+            /// is not met by a property whose only value written is a node whose every member is
+            /// empty, however deep, a node that is its own member included, and owes nothing for
+            /// an occurrence that is itself empty
+            #[test]
+            fn is_not_met_by_a_property_written_only_as_a_node_of_nothing() {
+                for members in [
+                    r#"?title ex:part "" ."#,
+                    r#"?title ex:part "", " " ."#,
+                    r#"?title ex:part <urn:example:n> . <urn:example:n> ex:part " " ."#,
+                    "?title ex:part ?title .",
+                ] {
+                    let results = ran(&titled_by_a_node(members));
+                    let (outcome, description) = judged(&results, "titled");
+                    assert_eq!(outcome, "failed", "{members}: {description}");
+                    assert!(
+                        description.contains("not met at 1 occurrence(s): /item/title:"),
+                        "{members}: {description}"
+                    );
+                    let (outcome, description) = judged(&results, "blank");
+                    assert_eq!(outcome, "cantTell", "{members}: {description}");
+                }
+            }
+
+            /// is met by a property written as a node holding something: a literal with text, or
+            /// an IRI with no members, at any depth; an IRI named alone is a value
+            #[test]
+            fn is_met_by_a_property_written_as_a_node_that_holds_something() {
+                for members in [
+                    "",
+                    r#"?title ex:part "First" ."#,
+                    r#"?title ex:part "", "First" ."#,
+                    "?title ex:part <urn:example:n> .",
+                    r#"?title ex:part <urn:example:n> . <urn:example:n> ex:part "First" ."#,
+                    r#"?title ex:part ?title, "First" ."#,
+                ] {
+                    let results = ran(&titled_by_a_node(members));
+                    let (outcome, description) = judged(&results, "titled");
+                    assert_eq!(outcome, "cantTell", "{members}: {description}");
+                }
+            }
+
             /// owes nothing for a member carried as the property an empty member of the same
             /// element is carried as, which no value can then be written for
             #[test]
@@ -384,6 +436,11 @@ mod tests {
                     (
                         "/*",
                         "the record selector \"/catalog/item[1]/*\" selects 2 nodes",
+                    ),
+                    (
+                        "1 +",
+                        "the record selector \"/catalog/item[1]1 +\" is no XPath, or selects no \
+                         set of nodes",
                     ),
                 ] {
                     let shelved =
