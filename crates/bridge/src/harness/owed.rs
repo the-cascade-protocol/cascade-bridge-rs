@@ -355,11 +355,13 @@ mod tests {
             }
 
             /// is met by a property written as a node holding something: a literal with text, or
-            /// an IRI with no members, at any depth; an IRI named alone is a value
+            /// an IRI with no members, at any depth; an IRI named alone is a value; and a member
+            /// that is empty only in another syntax, as a no-break space is in JSON, is text
             #[test]
             fn is_met_by_a_property_written_as_a_node_that_holds_something() {
                 for members in [
                     "",
+                    "?title ex:part \"\u{a0}\" .",
                     r#"?title ex:part "First" ."#,
                     r#"?title ex:part "", "First" ."#,
                     "?title ex:part <urn:example:n> .",
