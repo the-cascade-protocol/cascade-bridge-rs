@@ -129,6 +129,8 @@ export interface TestEntry {
   name: string;
   outcome: "passed" | "failed" | "cantTell" | "untested" | "inapplicable";
   description: string;
+  /** Each occurrence of a path the accounting says is carried that the entry's conversions owed and did not meet, in full, as `Adapter.unmet` gives one; the description says the first few. */
+  unmet: string[];
   seconds: number;
 }
 
@@ -161,6 +163,8 @@ extern "C" {
     pub type SkipsValue;
     #[wasm_bindgen(typescript_type = "StageTime[]")]
     pub type StageTimesValue;
+    #[wasm_bindgen(typescript_type = "string[]")]
+    pub type StringsValue;
 }
 
 static FAULTED: AtomicBool = AtomicBool::new(false);
@@ -651,6 +655,29 @@ impl Adapter {
         }
         Ok(value.unchecked_into())
     }
+
+    /// Each occurrence of a path the accounting says is carried that a conversion of the
+    /// document owes and neither writes nor reports, one line each: what `test` fails an entry
+    /// for. Of `options`, only `executor` and the budgets are read.
+    pub fn unmet(
+        &self,
+        document: &DocumentValue,
+        options: Option<ConvertOptionsValue>,
+    ) -> Result<StringsValue, JsValue> {
+        guarded()?;
+        let read = DocumentRead::of(document)?;
+        let options = match options.filter(|options| !absent(options)) {
+            Some(options) => ConvertOptions {
+                executor: self::executor(&options)?,
+                budgets: self::budgets(&options)?,
+                ..ConvertOptions::default()
+            },
+            None => ConvertOptions::default(),
+        };
+        let document = read.document();
+        let unmet = self.loaded.unmet(&document, options).map_err(thrown)?;
+        Ok(strings(&unmet).unchecked_into())
+    }
 }
 
 #[wasm_bindgen]
@@ -688,6 +715,7 @@ pub fn test(
             set(&value, "name", &entry.name.as_str().into());
             set(&value, "outcome", &entry.outcome.as_str().into());
             set(&value, "description", &entry.description.as_str().into());
+            set(&value, "unmet", &strings(&entry.unmet));
             set(&value, "seconds", &entry.elapsed.as_secs_f64().into());
             value
         })

@@ -417,9 +417,13 @@ mod running_the_commands_on_node {
                     "{host}: {}",
                     String::from_utf8_lossy(&ran.stderr)
                 );
+                let outcome = outcomes(&report)
+                    .into_iter()
+                    .find(|(test, _)| test.ends_with("#input-only"))
+                    .map(|(_, outcome)| outcome);
                 assert_eq!(
-                    outcomes(&report).get("input-only").map(String::as_str),
-                    Some("failed"),
+                    outcome.as_deref(),
+                    Some("http://www.w3.org/ns/earl#failed"),
                     "{host}: {}",
                     String::from_utf8_lossy(&ran.stdout)
                 );
