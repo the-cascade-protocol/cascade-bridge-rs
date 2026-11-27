@@ -201,16 +201,24 @@ pub fn trial_forward_accounting(
         );
     }
 
-    for (kind, title) in [
-        (ForwardKind::Missed, "misses: a carried path held, none of its properties written, no finding about it"),
-        (ForwardKind::Unlisted, "unlisted: a carried path held in a unit none of whose record types the entry's carriedAs names (shown: the record types and properties it does name)"),
+    for (kind, title, listed) in [
+        (
+            ForwardKind::Missed,
+            "misses: a carried path held in a record of a class the entry carries it as, none of the entry's properties written for that class, no finding about the path",
+            true,
+        ),
+        (
+            ForwardKind::Unlisted,
+            "not owed: a carried path held in a unit that wrote no record of any class the entry carries it as (counted, not listed)",
+            false,
+        ),
     ] {
-        tabulated(&mut said, &rows, &kind, title);
+        tabulated(&mut said, &rows, &kind, title, listed);
     }
     Ok(said)
 }
 
-fn tabulated(said: &mut String, rows: &[Row], kind: &ForwardKind, title: &str) {
+fn tabulated(said: &mut String, rows: &[Row], kind: &ForwardKind, title: &str, listed: bool) {
     let missed: Vec<&Row> = rows
         .iter()
         .filter(|row| row.misses.iter().any(|miss| same(&miss.kind, kind)))
@@ -245,7 +253,7 @@ fn tabulated(said: &mut String, rows: &[Row], kind: &ForwardKind, title: &str) {
                 .push(format!("{} @{}", row.name, miss.record));
         }
     }
-    if !by_path.is_empty() {
+    if listed && !by_path.is_empty() {
         let _ = writeln!(said, "| path | carried as | units | the entries |");
         let _ = writeln!(said, "|---|---|---|---|");
         for ((path, wanted), names) in &by_path {

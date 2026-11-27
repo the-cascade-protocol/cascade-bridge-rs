@@ -316,7 +316,13 @@ impl Accounting {
                 written.insert((*class, quad.predicate.as_str()));
             }
         }
-        let mut holds: HashMap<&str, bool> = HashMap::new();
+        // A path is owed only for a class the unit wrote a record of.
+        let wrote: HashSet<&str> = record_of
+            .values()
+            .filter_map(|record| classes.get(record))
+            .flatten()
+            .copied()
+            .collect();
         let mut values: HashSet<&str> = HashSet::new();
         let mut bodies: HashSet<&str> = HashSet::new();
         for quad in findings {
@@ -334,19 +340,11 @@ impl Accounting {
             let Some(forward) = self.forward.get(&occurrence.path) else {
                 continue;
             };
-            let mut applicable: Vec<&Carry> = Vec::new();
-            for carry in &forward.carries {
-                let applies = match &carry.record_type {
-                    None => true,
-                    Some(record_type) => *holds.entry(record_type.as_str()).or_insert_with(|| {
-                        unit.text.contains(&format!("\"{record_type}\""))
-                            || unit.text.contains(&format!("'{record_type}'"))
-                    }),
-                };
-                if applies {
-                    applicable.push(carry);
-                }
-            }
+            let applicable: Vec<&Carry> = forward
+                .carries
+                .iter()
+                .filter(|carry| wrote.contains(carry.class.as_str()))
+                .collect();
             let reported = values.contains(occurrence.path.as_str())
                 || forward.gaps.iter().any(|gap| bodies.contains(gap.as_str()));
             let carried = applicable.iter().any(|carry| {
