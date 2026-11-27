@@ -625,12 +625,18 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?t . ?t a xyz:title . }}"
                         || mark_said(in_part).with("mapping/item-shelf.rq", NO_SHELF_RECORD);
                     for (variant, expected) in [
                         (unshelved(), "failed"),
-                        (reporting(unshelved(), "noteHasNoTerm", "shelf[1]"), "cantTell"),
+                        (
+                            reporting(unshelved(), "noteHasNoTerm", "shelf[1]"),
+                            "cantTell",
+                        ),
                         (
                             reporting(unshelved(), "summaryLosesItsMarkup", "shelf[1]/mark[1]"),
                             "failed",
                         ),
-                        (reporting(mark_said(in_part), "noteHasNoTerm", "shelf[1]"), "cantTell"),
+                        (
+                            reporting(mark_said(in_part), "noteHasNoTerm", "shelf[1]"),
+                            "cantTell",
+                        ),
                         (
                             reporting(mark_said(in_part), "summaryLosesItsMarkup", "shelf[1]"),
                             "cantTell",
