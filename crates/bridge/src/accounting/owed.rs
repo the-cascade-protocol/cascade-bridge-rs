@@ -63,7 +63,12 @@ impl Accounting {
         for standing in unit.standings().iter().filter(|standing| standing.empty) {
             let address = joined(record.selector, standing.within.as_deref());
             let element = parent(&address);
-            for carry in self.owed.get(&standing.path).into_iter().flat_map(|owed| &owed.carries) {
+            for carry in self
+                .owed
+                .get(&standing.path)
+                .into_iter()
+                .flat_map(|owed| &owed.carries)
+            {
                 hollow.insert((element.clone(), carry.property.as_str()));
             }
         }
@@ -88,7 +93,11 @@ impl Accounting {
                 if region(nested, place) != inside {
                     continue;
                 }
-                let shared = place.iter().zip(&at).take_while(|(one, two)| one == two).count();
+                let shared = place
+                    .iter()
+                    .zip(&at)
+                    .take_while(|(one, two)| one == two)
+                    .count();
                 let near = (shared, shared == place.len());
                 if nearest.is_empty() || near > best {
                     best = near;
@@ -295,7 +304,10 @@ impl<'a> About<'a> {
                     .get(&(OA_REFINED_BY, selector))
                     .and_then(|refinement| text.get(refinement).copied());
                 let address = joined(at, refined);
-                Some((steps(&address).into_iter().map(str::to_owned).collect(), body))
+                Some((
+                    steps(&address).into_iter().map(str::to_owned).collect(),
+                    body,
+                ))
             })
             .collect();
         Self { addressed }

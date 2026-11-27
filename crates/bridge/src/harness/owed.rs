@@ -244,8 +244,7 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?t . ?t a xyz:title . }}"
             /// is met by a finding at the occurrence whatever its gap, and by one above it only
             /// where its gap is one the path's entry names
             #[test]
-            fn is_met_by_a_finding_at_the_occurrence_or_above_it_naming_the_gap_its_entry_names(
-            ) {
+            fn is_met_by_a_finding_at_the_occurrence_or_above_it_naming_the_gap_its_entry_names() {
                 // The box's bin carried on the box, its entry saying `verdict`, and a finding
                 // of `gap` addressed at `at`.
                 let reported = |verdict: &str, gap: &str, at: &str| {
