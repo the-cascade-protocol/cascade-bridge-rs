@@ -55,7 +55,7 @@ impl Accounting {
         if written.places.is_empty() {
             return unmet;
         }
-        let about = About::of(findings, record);
+        let about = About::of(findings, record, &self.not_carried_whole);
         let nested = nested.map(steps);
         let nested = nested.as_deref();
         // A value written from several members of one element is not written where one is empty.
@@ -86,6 +86,9 @@ impl Accounting {
                 continue;
             }
             let at = steps(&address);
+            if about.drops(&at) {
+                continue;
+            }
             let inside = region(nested, &at);
             let mut nearest: Vec<&NamedOrBlankNode> = Vec::new();
             let mut best = (0, false);
@@ -267,13 +270,15 @@ impl<'a> Written<'a> {
     }
 }
 
-/// Where each of a unit's findings was addressed, as steps, and its body.
+/// Where each of a unit's findings was addressed, as steps, and its body; and where each
+/// said the element there was not carried, nor anything in it.
 struct About<'a> {
     addressed: Vec<(Vec<String>, &'a str)>,
+    dropped: Vec<Vec<String>>,
 }
 
 impl<'a> About<'a> {
-    fn of(findings: &'a [Quad], record: &Record<'_>) -> Self {
+    fn of(findings: &'a [Quad], record: &Record<'_>, not_carried_whole: &HashSet<String>) -> Self {
         let mut step: HashMap<(&str, &NamedOrBlankNode), NamedOrBlankNode> = HashMap::new();
         let mut text: HashMap<&NamedOrBlankNode, &str> = HashMap::new();
         let mut body_of: Vec<(&NamedOrBlankNode, &str)> = Vec::new();
@@ -294,7 +299,7 @@ impl<'a> About<'a> {
                 _ => {}
             }
         }
-        let addressed = body_of
+        let addressed: Vec<(Vec<String>, &str)> = body_of
             .into_iter()
             .filter_map(|(annotation, body)| {
                 let target = step.get(&(OA_HAS_TARGET, annotation))?;
@@ -310,7 +315,24 @@ impl<'a> About<'a> {
                 ))
             })
             .collect();
-        Self { addressed }
+        let dropped = addressed
+            .iter()
+            .filter(|(_, body)| not_carried_whole.contains(*body))
+            .map(|(found, _)| found.clone())
+            .collect();
+        Self { addressed, dropped }
+    }
+
+    /// Whether one said an element holding the occurrence, or the occurrence itself, was not
+    /// carried at all: the occurrence then belongs to no record.
+    fn drops(&self, at: &[&str]) -> bool {
+        self.dropped.iter().any(|found| {
+            found.len() <= at.len()
+                && found
+                    .iter()
+                    .zip(at)
+                    .all(|(one, two)| one.as_str() == *two)
+        })
     }
 
     /// Whether one was addressed at the occurrence or below it, or above it with a body

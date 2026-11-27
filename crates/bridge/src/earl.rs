@@ -107,7 +107,7 @@ pub(crate) fn earl_report_at(
             iri(DCT, "description")?,
             Literal::new_simple_literal(&result.description).into(),
         );
-        if let Some(check) = result.failed_check {
+        if let Some(check) = result.failed_check() {
             triple(
                 r.clone(),
                 NamedNode::new(BRIDGE_FAILED_CHECK)?,

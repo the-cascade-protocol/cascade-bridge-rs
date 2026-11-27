@@ -1,4 +1,4 @@
-use crate::fixtures::{tiny, tiny_json, Variant, ACCOUNTING, CRATE};
+use crate::fixtures::{tiny, tiny_json, Variant, ACCOUNTING, CRATE, GAP_SCHEME};
 use crate::harness::{run_manifest, EntryResult, RunOptions};
 use crate::load::load_adapter;
 
@@ -242,7 +242,8 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?t . ?t a xyz:title . }}"
             }
 
             /// is met by a finding at the occurrence whatever its gap, and by one above it only
-            /// where its gap is one the path's entry names
+            /// where its gap is one the path's entry names; owes nothing below a finding of a
+            /// gap of `bridge:elementNotCarried`
             #[test]
             fn is_met_by_a_finding_at_the_occurrence_or_above_it_naming_the_gap_its_entry_names() {
                 // The shelf's mark carried on the shelf, its entry saying `verdict`, and a
@@ -253,6 +254,13 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?t . ?t a xyz:title . }}"
                     let written = accounting(CARRIED);
                     assert!(written.contains(mark), "{written}");
                     catalog(TITLE_WRITTEN, CARRIED)
+                        .replacing(
+                            GAP_SCHEME,
+                            "ex:noteHasNoTerm a skos:Concept ;",
+                            "ex:shelfNotMapped a skos:Concept ;\n  skos:inScheme ex:gaps ;\n  \
+                             skos:broader bridge:elementNotCarried .\n\n\
+                             ex:noteHasNoTerm a skos:Concept ;",
+                        )
                         .with(
                             ACCOUNTING,
                             written.replacen(
@@ -289,6 +297,7 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?shelf . ?shelf a xyz:shelf . }}"
                     (naming, "summaryLosesItsMarkup", "shelf[1]", "cantTell"),
                     (CARRIED, "summaryLosesItsMarkup", "shelf[1]", "failed"),
                     (naming, "noteHasNoTerm", "shelf[1]", "failed"),
+                    (CARRIED, "shelfNotMapped", "shelf[1]", "cantTell"),
                 ] {
                     let (outcome, description) =
                         judged(&ran(&reported(verdict, gap, at)), "shelved");

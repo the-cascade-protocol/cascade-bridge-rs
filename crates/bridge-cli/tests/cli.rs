@@ -902,6 +902,27 @@ mod validating_against_the_vocabulary {
 mod running_an_adapters_tests {
     use super::*;
 
+    /// with `--owed`, lists every occurrence an entry failed for, one per line, after the entries
+    #[test]
+    fn with_owed_lists_every_occurrence_an_entry_failed_for_one_per_line_after_the_entries() {
+        let scratch = scratch();
+        let adapter = scratch.path().join("tiny-adapter");
+        owing_a_title(&adapter);
+        let run = cascade_bridge(&[
+            "test",
+            &adapter.to_string_lossy(),
+            "--vocabularies",
+            &vocabularies().to_string_lossy(),
+            "--owed",
+        ]);
+        let stdout = String::from_utf8_lossy(&run.stdout);
+        assert_eq!(run.status.code(), Some(1), "{stdout}");
+        let owed = "Owed     input-only  /item/title at \"/catalog/item[1]/title[1]\": no \
+                    urn:example:catalog#title on its urn:example:catalog#Item is written, and \
+                    no finding is about it";
+        assert!(stdout.lines().any(|line| line == owed), "{stdout}");
+    }
+
     /// prints the adapter, then this Bridge and its version, before any entry
     #[test]
     fn prints_the_adapter_then_this_bridge_and_its_version_before_any_entry() {

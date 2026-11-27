@@ -435,6 +435,9 @@ pub struct TestEntry {
     pub name: String,
     pub outcome: Outcome,
     pub description: String,
+    /// Each occurrence of a path the accounting says is carried that the entry's conversions
+    /// owed and did not meet, in full; the description samples them.
+    pub unmet: Vec<String>,
     pub elapsed: Duration,
 }
 
@@ -481,6 +484,7 @@ pub fn test(
                 name: result.name,
                 outcome: result.outcome,
                 description: result.description,
+                unmet: result.unmet,
                 elapsed: result.elapsed,
             })
             .collect(),

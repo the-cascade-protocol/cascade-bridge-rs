@@ -53,7 +53,7 @@ pub(crate) struct EntryResult {
     pub(crate) name: String,
     pub(crate) outcome: Outcome,
     pub(crate) description: String,
-    pub(crate) failed_check: Option<&'static str>,
+    pub(crate) unmet: Vec<String>,
     pub(crate) elapsed: Duration,
 }
 
@@ -268,7 +268,7 @@ impl Entry<'_> {
                 if same { "one record" } else { "two records" },
                 not_met(&unmet)
             ),
-            failed_check(&unmet),
+            unmet,
         ))
     }
 
@@ -302,7 +302,7 @@ impl Entry<'_> {
                     run.triples(),
                     run.annotations()
                 ),
-                failed_check(&unmet),
+                unmet,
             ));
         }
 
@@ -391,16 +391,20 @@ impl Entry<'_> {
         Ok((
             outcome,
             format!("{graph_text}; {findings_text}{not_met}{detect}"),
-            failed_check(&unmet),
+            unmet,
         ))
     }
 }
 
-/// An entry's outcome, what it says, and the check that failed it where one did.
-type Judged = (Outcome, String, Option<&'static str>);
+/// An entry's outcome, what it says, and each occurrence the accounting says is carried
+/// that its conversions owed and did not meet.
+type Judged = (Outcome, String, Vec<String>);
 
-fn failed_check(unmet: &[String]) -> Option<&'static str> {
-    (!unmet.is_empty()).then_some(BRIDGE_CONVERSION_WRITES_WHAT_THE_ACCOUNTING_CARRIES)
+impl EntryResult {
+    /// The check that failed the entry, where one did.
+    pub(crate) fn failed_check(&self) -> Option<&'static str> {
+        (!self.unmet.is_empty()).then_some(BRIDGE_CONVERSION_WRITES_WHAT_THE_ACCOUNTING_CARRIES)
+    }
 }
 
 /// What the accounting says is carried and a conversion owed and did not meet, as an
@@ -487,7 +491,7 @@ pub(crate) fn run_manifest_noting_fallbacks(
             Err(e) => (term_value(&entry), Some(e)),
         };
 
-        let mut failed_check = None;
+        let mut unmet = Vec::new();
         let (outcome, description) = match (&setup, &node, unnamed) {
             (None, _, _) => (
                 Outcome::Inapplicable,
@@ -543,8 +547,8 @@ pub(crate) fn run_manifest_noting_fallbacks(
                     node: node.clone(),
                 };
                 match entry.judge(&type_iri) {
-                    Ok((outcome, description, check)) => {
-                        failed_check = check;
+                    Ok((outcome, description, owed)) => {
+                        unmet = owed;
                         (outcome, description)
                     }
                     Err(e) if is_missing(&e) => return Err(e),
@@ -558,7 +562,7 @@ pub(crate) fn run_manifest_noting_fallbacks(
             name,
             outcome,
             description,
-            failed_check,
+            unmet,
             elapsed: start.elapsed(),
         });
     }

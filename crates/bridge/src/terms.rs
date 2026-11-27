@@ -95,6 +95,7 @@ terms! {
     BRIDGE_NO_PREDICATE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "noPredicate";
     BRIDGE_SOURCE_LACKS_REQUIRED = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "sourceLacksRequired";
     BRIDGE_VALUE_NOT_MAPPED = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "valueNotMapped";
+    BRIDGE_ELEMENT_NOT_CARRIED = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "elementNotCarried";
     BRIDGE_ADDRESS_NOT_ONE_NODE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "addressNotOneNode";
     BRIDGE_VERSION_NOT_KEPT = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "versionNotKept";
     BRIDGE_INPUT = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "input";

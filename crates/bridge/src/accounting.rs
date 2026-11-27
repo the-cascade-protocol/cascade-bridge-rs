@@ -7,10 +7,11 @@ use crate::resolver::Resolver;
 use crate::run::Asked;
 use crate::terms::{
     BRIDGE_AS_PROPERTY, BRIDGE_CARRIED, BRIDGE_CARRIED_AS, BRIDGE_CARRIED_IN_PART,
-    BRIDGE_IN_RECORD_CLASS, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP,
-    BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY, BRIDGE_SOURCE_LACKS_REQUIRED,
-    BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, SH_INFO, SH_RESULT_SEVERITY,
-    SH_VIOLATION, SH_WARNING, SKOS_BROADER, SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
+    BRIDGE_ELEMENT_NOT_CARRIED, BRIDGE_IN_RECORD_CLASS, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP,
+    BRIDGE_NAMES_GAP, BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY,
+    BRIDGE_SOURCE_LACKS_REQUIRED, BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT,
+    SH_INFO, SH_RESULT_SEVERITY, SH_VIOLATION, SH_WARNING, SKOS_BROADER, SKOS_CONCEPT_SCHEME,
+    SKOS_NOTATION,
 };
 use oxigraph::model::{NamedOrBlankNode, Quad, Term};
 use std::collections::{HashMap, HashSet};
@@ -79,6 +80,8 @@ pub(crate) struct Accounting {
     reported: HashMap<String, Vec<Reported>>,
     lookups: HashMap<String, Vec<Lookup>>,
     owed: HashMap<String, Owed>,
+    /// Each gap the adapter declares of `bridge:elementNotCarried`.
+    not_carried_whole: HashSet<String>,
 }
 
 impl Accounting {
@@ -220,6 +223,11 @@ impl Accounting {
             reported,
             lookups,
             owed,
+            not_carried_whole: scheme
+                .iter()
+                .filter(|(_, gap)| gap.kind.as_deref() == Some(BRIDGE_ELEMENT_NOT_CARRIED))
+                .map(|(concept, _)| concept.clone())
+                .collect(),
         })
     }
 

@@ -68,48 +68,8 @@ jobs:
         run: |
           set -o pipefail
           for adapter in fhir-r4 ccda; do
-            cascade-bridge-rs/target/release/cascade-bridge test "cascade-bridge-adapter-$adapter" --vocabularies cascade-vocabulary > "$RUNNER_TEMP/count-$adapter.txt" || true
-            {
-              echo "### $adapter: entries the check fails"
-              echo '```'
-              grep 'the accounting is not met' "$RUNNER_TEMP/count-$adapter.txt" | sed -E 's/^  failed +([^ ]+) .*the accounting is not met at ([0-9]+) occurrence\(s\): (.*)$/\1 | \2 | \3/' || true
-              echo '```'
-              tail -1 "$RUNNER_TEMP/count-$adapter.txt"
-            } | tee -a "$GITHUB_STEP_SUMMARY"
-          done
-      - name: every unmet occurrence of each entry, in full
-        run: |
-          pip install --quiet rdflib==7.6.0
-          cat > "$RUNNER_TEMP/owed.py" <<'EOF'
-          import pathlib, subprocess, sys
-          from rdflib import Graph, Namespace, RDF
-          MF = Namespace("http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#")
-          B = Namespace("https://ns.cascadeprotocol.org/bridge/v1-draft#")
-          adapter = pathlib.Path(sys.argv[1]).resolve()
-          manifest = adapter / "fixtures/manifest.ttl"
-          graph = Graph().parse(manifest, format="turtle", publicID=manifest.as_uri())
-          for entry in graph.subjects(RDF.type, None):
-              if not set(graph.objects(entry, RDF.type)) & {B.IsomorphicConversionTest, B.InputOnlyTest}:
-                  continue
-              action = graph.value(entry, MF.action)
-              name = graph.value(entry, MF.name)
-              source = graph.value(action, B.input)
-              command = ["cascade-bridge-rs/target/release/cascade-bridge", "convert", str(adapter), str(source).removeprefix("file://"), "--vocabularies", "cascade-vocabulary", "--owed"]
-              envelope = graph.value(action, B.envelope)
-              if envelope is not None:
-                  command += ["--envelope", "ro-crate-metadata.json#" + str(envelope).split("#")[1]]
-              facts = graph.value(action, B.facts)
-              if facts is not None:
-                  command += ["--facts", str(facts).removeprefix("file://")]
-              ran = subprocess.run(command, capture_output=True, text=True)
-              lines = [line for line in ran.stdout.splitlines() if line.startswith("  ")]
-              if lines or ran.returncode:
-                  print(f"## {name}" + ("" if ran.returncode == 0 else f" (exit {ran.returncode}: {ran.stderr.strip()[:300]})"))
-                  print("\n".join(lines))
-          EOF
-          for adapter in fhir-r4 ccda; do
-            python3 "$RUNNER_TEMP/owed.py" "cascade-bridge-adapter-$adapter" > "$RUNNER_TEMP/full-$adapter.txt"
-            echo "$adapter: $(grep -c '^## ' "$RUNNER_TEMP/full-$adapter.txt") entries, $(grep -c '^  ' "$RUNNER_TEMP/full-$adapter.txt") occurrences" | tee -a "$GITHUB_STEP_SUMMARY"
+            cascade-bridge-rs/target/release/cascade-bridge test "cascade-bridge-adapter-$adapter" --vocabularies cascade-vocabulary --owed > "$RUNNER_TEMP/count-$adapter.txt" || true
+            echo "$adapter: $(tail -1 "$RUNNER_TEMP/count-$adapter.txt"); $(grep -c '^Owed' "$RUNNER_TEMP/count-$adapter.txt") unmet occurrences in $(grep '^Owed' "$RUNNER_TEMP/count-$adapter.txt" | awk '{print $2}' | sort -u | wc -l) entries" | tee -a "$GITHUB_STEP_SUMMARY"
           done
       - name: the check on inputs it was not tuned on
         run: |
