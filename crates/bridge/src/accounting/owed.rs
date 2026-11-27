@@ -1,9 +1,8 @@
 use super::{Accounting, Carry, Owed};
 use crate::annotation::Record;
-use crate::decode::holds_no_text;
 use crate::lift::Unit;
 use crate::load::as_subject;
-use crate::syntax::Respelling;
+use crate::syntax::{Respelling, Syntax};
 use crate::terms::{
     BRIDGE_ARRIVED_AS, OA_HAS_BODY, OA_HAS_SELECTOR, OA_HAS_TARGET, OA_REFINED_BY,
     PROV_SPECIALIZATION_OF, RDF_TYPE, RDF_VALUE,
@@ -71,7 +70,9 @@ fn looked_for(owed: &[(String, String)]) -> String {
 
 impl Accounting {
     /// `nested` is where, in this unit, the records nested in it stand, each one step
-    /// below it; `spelling` spells an address of the document as the unit's occurrences are.
+    /// below it; `spelling` spells an address of the document as the unit's occurrences are;
+    /// a value written is empty where `syntax` would call the same text an empty occurrence.
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn unmet(
         &self,
         record: &Record<'_>,
@@ -80,12 +81,13 @@ impl Accounting {
         produced: &[Quad],
         findings: &[Quad],
         spelling: &dyn Respelling,
+        syntax: Syntax,
     ) -> Vec<Unmet> {
         let mut unmet = Vec::new();
         if self.owed.is_empty() || unit.standings().is_empty() {
             return unmet;
         }
-        let written = Written::of(produced);
+        let written = Written::of(produced, syntax);
         if written.selected.is_empty() {
             return unmet;
         }
@@ -246,7 +248,7 @@ struct Written<'a> {
 }
 
 impl<'a> Written<'a> {
-    fn of(produced: &'a [Quad]) -> Self {
+    fn of(produced: &'a [Quad], syntax: Syntax) -> Self {
         let mut classes: HashMap<NamedOrBlankNode, Vec<&str>> = HashMap::new();
         let mut record_of: HashMap<NamedOrBlankNode, NamedOrBlankNode> = HashMap::new();
         let mut version_of: HashMap<NamedOrBlankNode, NamedOrBlankNode> = HashMap::new();
@@ -327,7 +329,11 @@ impl<'a> Written<'a> {
         }
         let mut carried: HashMap<NamedOrBlankNode, HashSet<&str>> = HashMap::new();
         for quad in produced {
-            if matches!(&quad.object, Term::Literal(value) if holds_no_text(value.value())) {
+            let empty = match &quad.object {
+                Term::Literal(value) => syntax.holds_nothing(value.value()),
+                _ => false,
+            };
+            if empty {
                 continue;
             }
             for record in owners.get(&quad.subject).into_iter().flatten() {

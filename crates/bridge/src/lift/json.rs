@@ -5,9 +5,9 @@ use super::{
     admitting, member, name, store_of, triple, Admission, Occurrence, Paths, Reading, Standing,
     Unit, Valued, FX, RDF, XYZ,
 };
-use crate::decode::holds_no_text;
 use crate::error::{Error, Result};
 use crate::json::{self, Node, Value};
+use crate::syntax::Syntax;
 use oxigraph::model::{BlankNode, Literal, NamedNode, Quad, Term};
 use oxigraph::store::Store;
 use std::collections::{HashMap, HashSet};
@@ -215,7 +215,7 @@ fn census(record: &Node, valued: &HashSet<String>, carried: &HashSet<String>) ->
 
 fn holds_nothing(node: &Node) -> bool {
     match &node.value {
-        Value::String(text) => holds_no_text(text),
+        Value::String(text) => Syntax::Json.holds_nothing(text),
         Value::Object(members) => members.iter().all(|(_, member)| holds_nothing(member)),
         Value::Array(items) => items.iter().all(holds_nothing),
         Value::Null => true,
