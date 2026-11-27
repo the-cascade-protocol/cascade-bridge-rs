@@ -23,6 +23,13 @@ pub(crate) enum Unmet {
         /// Each class owed and the property looked for on it.
         owed: Vec<(String, String)>,
     },
+    /// An occurrence of a path whose entry names the gaps its adapter reports, held by no record
+    /// of a class the path is carried on, with no finding of one of `gaps` at it or above it.
+    Unreported {
+        path: String,
+        address: String,
+        gaps: Vec<String>,
+    },
     /// A record whose arrival selector places it nowhere in the unit, so that what it holds
     /// cannot be told.
     Unplaced { selector: String, selects: String },
@@ -36,6 +43,11 @@ impl fmt::Display for Unmet {
                 address,
                 owed,
             } => write!(f, "{path} at {address:?}: {}", looked_for(owed)),
+            Self::Unreported {
+                path,
+                address,
+                gaps,
+            } => write!(f, "{path} at {address:?}: {}", unreported(gaps)),
             Self::Unplaced { .. } => f.write_str(&self.summary()),
         }
     }
@@ -50,6 +62,11 @@ impl Unmet {
                 address,
                 owed,
             } => format!("{path}: {}, at {address:?}", looked_for(owed)),
+            Self::Unreported {
+                path,
+                address,
+                gaps,
+            } => format!("{path}: {}, at {address:?}", unreported(gaps)),
             Self::Unplaced { selector, selects } => format!(
                 "the record selector {selector:?} {selects}, so no occurrence can be held to the \
                  record it places"
@@ -66,6 +83,13 @@ fn looked_for(owed: &[(String, String)]) -> String {
     format!(
         "no {} is written, and no finding is about it",
         looked.join(" or ")
+    )
+}
+
+fn unreported(gaps: &[String]) -> String {
+    format!(
+        "no finding of {} is addressed at it or above it",
+        gaps.join(" or ")
     )
 }
 
@@ -89,7 +113,7 @@ impl Accounting {
             return unmet;
         }
         let written = Written::of(produced, syntax);
-        if written.selected.is_empty() {
+        if written.selected.is_empty() && !self.owes_where_nothing_is_written {
             return unmet;
         }
         let mut spelled: HashMap<&str, std::result::Result<String, String>> = HashMap::new();
@@ -212,10 +236,19 @@ impl Accounting {
                     }
                 }
             }
-            if looked.is_empty()
-                || looked
-                    .iter()
-                    .any(|(carry, holder)| written.carries(holder, &carry.property))
+            if looked.is_empty() {
+                if !owed.reported.is_empty() && !about.reports(&at, &owed.reported) {
+                    unmet.push(Unmet::Unreported {
+                        path: standing.path.clone(),
+                        address,
+                        gaps: owed.reported.clone(),
+                    });
+                }
+                continue;
+            }
+            if looked
+                .iter()
+                .any(|(carry, holder)| written.carries(holder, &carry.property))
                 || about.meets(&at, owed)
             {
                 continue;
@@ -495,6 +528,13 @@ impl<'a> About<'a> {
     /// carried at all: the occurrence then belongs to no record.
     fn drops(&self, at: &[&str]) -> bool {
         self.dropped.iter().any(|found| holds(found, at))
+    }
+
+    /// Whether one whose body is one of `gaps` was addressed at the occurrence or above it.
+    fn reports(&self, at: &[&str], gaps: &[String]) -> bool {
+        self.addressed
+            .iter()
+            .any(|(found, body)| holds(found, at) && gaps.iter().any(|gap| gap == body))
     }
 
     /// Whether one was addressed at the occurrence or below it, or above it with a body

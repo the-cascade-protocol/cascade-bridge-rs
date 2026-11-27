@@ -9,7 +9,7 @@ const USAGE = `usage: cascade-bridge test <adapter-dir> [--vocabularies <directo
        cascade-bridge convert <adapter-dir> <document> [--envelope <iri>] [--facts <file>] [--vocabularies <directory>] [--out <file>] [--findings <file>] [--format turtle|ntriples] [--owed]
        cascade-bridge library <calls file> <results directory>
 
---owed lists each occurrence of a path the accounting says is carried that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.`;
+--owed lists each occurrence of a path the accounting says is carried, or whose gap the adapter reports, that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.`;
 
 const FAILING = ["failed", "inapplicable"];
 
