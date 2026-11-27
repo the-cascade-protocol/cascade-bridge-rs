@@ -92,7 +92,19 @@ fn accounting(title: &str) -> String {
 
 const CARRIED: &str = "bridge:verdict bridge:carried";
 
-const ENTRIES: [(&str, &str); 6] = [
+const ENTRIES: [(&str, &str); 9] = [
+    (
+        "no_break_space",
+        r#"<catalog><item id="12"><title>&#160;</title></item></catalog>"#,
+    ),
+    (
+        "em_space",
+        r#"<catalog><item id="13"><title>&#8195;</title></item></catalog>"#,
+    ),
+    (
+        "escaped_markup",
+        r#"<catalog><item id="14"><title>&lt;p&gt; &lt;/p&gt;</title></item></catalog>"#,
+    ),
     (
         "hollow",
         r#"<catalog><item id="6"><title>Sixth</title><bin> </bin><tag>red</tag></item></catalog>"#,
@@ -270,15 +282,23 @@ mod tests {
                 assert_eq!(outcome, "cantTell", "{description}");
             }
 
-            /// is not met by a property whose only written value is empty, however the
-            /// emptiness is spelled, and owes nothing for an occurrence that is itself empty
+            /// is met by a title written as it stands where an XML element holds only a
+            /// character that is no XML white space, or markup written as text, since each is
+            /// an occurrence that is not empty
+            #[test]
+            fn is_met_by_a_value_written_as_it_stands_that_is_not_empty_in_the_source_syntax() {
+                let results = ran(&catalog(TITLE_WRITTEN, CARRIED));
+                for name in ["no_break_space", "em_space", "escaped_markup"] {
+                    let (outcome, description) = judged(&results, name);
+                    assert_eq!(outcome, "cantTell", "{name}: {description}");
+                }
+            }
+
+            /// is not met by a property whose only written value is empty, and owes nothing
+            /// for an occurrence that is itself empty
             #[test]
             fn is_not_met_by_a_property_written_only_as_an_empty_value() {
-                for written in [
-                    r#"BIND("" AS ?title)"#,
-                    r#"BIND(" " AS ?title)"#,
-                    r#"BIND("<p> </p>" AS ?title)"#,
-                ] {
+                for written in [r#"BIND("" AS ?title)"#, r#"BIND(" " AS ?title)"#] {
                     let results = ran(&catalog(written, CARRIED));
                     let (outcome, description) = judged(&results, "titled");
                     assert_eq!(outcome, "failed", "{written}: {description}");
@@ -603,6 +623,26 @@ WHERE {{ ?root a fx:root ; xyz:contained ?list . }}"
                     let (outcome, description) =
                         judged(&ran(&nesting_titled(CONTAINED, markup)), "nested");
                     assert_eq!(outcome, "cantTell", "{description}");
+                }
+
+                /// is not met by a title written as an empty string, a white space or markup
+                /// holding no text, where the string read is not empty
+                #[test]
+                fn is_not_met_by_a_title_written_as_nothing_where_the_string_read_is_not() {
+                    for written in ["", " ", "<p> </p>"] {
+                        let writing = format!("{CONTAINED}\n  BIND({written:?} AS ?title)");
+                        let writes = nesting_titled(&writing, "First").replacing(
+                            "mapping/item.rq",
+                            "?v prov:specializationOf ?s .",
+                            "?v prov:specializationOf ?s ; ex:title ?title .",
+                        );
+                        let (outcome, description) = judged(&ran(&writes), "nested");
+                        assert_eq!(outcome, "failed", "{written:?}: {description}");
+                        assert!(
+                            description.contains("/contained/title: no urn:example:list#title"),
+                            "{written:?}: {description}"
+                        );
+                    }
                 }
 
                 #[test]
