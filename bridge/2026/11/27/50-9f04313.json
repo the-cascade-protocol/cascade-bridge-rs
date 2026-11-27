@@ -1,0 +1,2126 @@
+{
+  "env": {
+    "os": "Ubuntu 26.04.1 LTS",
+    "runner": "github-hosted",
+    "cpus": 4,
+    "node": "24.22.3",
+    "host": "node",
+    "profile": "wasm",
+    "cpu": "AMD EPYC 7763 64-Core Processor"
+  },
+  "commit": {
+    "cascade-bridge-adapter-ccda": "18f93d6829f10d05a859ed9611db7a38e7877d2b",
+    "cascade-vocabulary": "8f3fbea8d56bc964a8b99977c0821665096a66d2",
+    "cascade-bridge-rs": "9f04313ab62b812996d6a630131981f4b47ba5d1",
+    "cascade-bridge-adapter-fhir-r4": "bbee22b86c03f5de114bf7dc13cf8e87855d116f"
+  },
+  "results": [
+    {
+      "name": "ccda-entries-x10/convert/first",
+      "unit": "s",
+      "value": 0.528165,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.519751-0.558916",
+      "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. The C-CDA medications-and-results example with its entries repeated 10 times, as one document. sha256 77454794ba3cf02cf329e249f7a4a1874ca58cd0761d4f5622163ea9e85efa0e, 138124 bytes"
+    },
+    {
+      "name": "ccda-entries-x10/convert/second",
+      "unit": "s",
+      "value": 0.295044,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.289447-0.298228",
+      "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+    },
+    {
+      "name": "ccda-entries-x10/convert/profiled",
+      "unit": "s",
+      "value": 0.619248,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.619248-0.619248",
+      "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+    },
+    {
+      "name": "ccda-entries-x10/memory.grow/first",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "cost",
+      "samples": 3,
+      "range": "0-0",
+      "extra": "How many times the engine's memory grew during the first convert."
+    },
+    {
+      "name": "ccda-entries-x10/memory.grow/second",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "cost",
+      "samples": 3,
+      "range": "0-0",
+      "extra": "How many times the engine's memory grew during the second convert."
+    },
+    {
+      "name": "ccda-entries-x10/wasm-memory/first",
+      "unit": "By",
+      "value": 52625408,
+      "kind": "cost",
+      "samples": 3,
+      "range": "52625408-52625408",
+      "extra": "Bytes of memory the engine holds once the first convert is done."
+    },
+    {
+      "name": "ccda-entries-x10/wasm-memory/second",
+      "unit": "By",
+      "value": 52625408,
+      "kind": "cost",
+      "samples": 3,
+      "range": "52625408-52625408",
+      "extra": "Bytes of memory the engine holds once the second convert is done."
+    },
+    {
+      "name": "ccda-entries-x10/rss",
+      "unit": "By",
+      "value": 261312512,
+      "kind": "clock",
+      "samples": 3,
+      "range": "254001152-265396224",
+      "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+    },
+    {
+      "name": "ccda-entries-x10/records",
+      "unit": "{count}",
+      "value": 1,
+      "kind": "output",
+      "extra": "Source records the Bridge found in the document and converted. The C-CDA medications-and-results example with its entries repeated 10 times, as one document."
+    },
+    {
+      "name": "ccda-entries-x10/triples",
+      "unit": "{count}",
+      "value": 1926,
+      "kind": "output",
+      "extra": "Distinct triples in the output graph."
+    },
+    {
+      "name": "ccda-entries-x10/findings",
+      "unit": "{count}",
+      "value": 93,
+      "kind": "output",
+      "extra": "Findings the conversion wrote."
+    },
+    {
+      "name": "ccda-entries-x10/output-bytes/graph",
+      "unit": "By",
+      "value": 200988,
+      "kind": "output",
+      "extra": "Bytes of the output graph as Turtle."
+    },
+    {
+      "name": "ccda-entries-x10/output-bytes/findings",
+      "unit": "By",
+      "value": 127094,
+      "kind": "output",
+      "extra": "Bytes of the findings as Turtle."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/document-table.rq",
+      "unit": "s",
+      "value": 0.100419,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.100419-0.100419",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/allergy.rq",
+      "unit": "s",
+      "value": 0.000423,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000423-0.000423",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/condition.rq",
+      "unit": "s",
+      "value": 0.000416,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000416-0.000416",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/document-organizations.rq",
+      "unit": "s",
+      "value": 0.001548,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.001548-0.001548",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/immunization.rq",
+      "unit": "s",
+      "value": 0.000824,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000824-0.000824",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/medication.rq",
+      "unit": "s",
+      "value": 0.020075,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.020075-0.020075",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/note-or-document.rq",
+      "unit": "s",
+      "value": 0.005423,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.005423-0.005423",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/patient.rq",
+      "unit": "s",
+      "value": 0.000347,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000347-0.000347",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/procedure.rq",
+      "unit": "s",
+      "value": 0.000854,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000854-0.000854",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/record.rq",
+      "unit": "s",
+      "value": 0.014301,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.014301-0.014301",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/report.rq",
+      "unit": "s",
+      "value": 0.005456,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.005456-0.005456",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/result-identifiers.rq",
+      "unit": "s",
+      "value": 0.001997,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.001997-0.001997",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/result-quantities.rq",
+      "unit": "s",
+      "value": 0.004549,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.004549-0.004549",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/result.rq",
+      "unit": "s",
+      "value": 0.019282,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.019282-0.019282",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/allergy-findings.rq",
+      "unit": "s",
+      "value": 0.000288,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000288-0.000288",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/concern-act-findings.rq",
+      "unit": "s",
+      "value": 0.000216,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000216-0.000216",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/condition-findings.rq",
+      "unit": "s",
+      "value": 0.000678,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000678-0.000678",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/document-findings.rq",
+      "unit": "s",
+      "value": 0.00042,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.00042-0.00042",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/entry-findings.rq",
+      "unit": "s",
+      "value": 0.002063,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.002063-0.002063",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/entry-statement-findings.rq",
+      "unit": "s",
+      "value": 0.008449,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.008449-0.008449",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/medication-findings.rq",
+      "unit": "s",
+      "value": 0.001948,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.001948-0.001948",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/name-findings.rq",
+      "unit": "s",
+      "value": 0.001063,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.001063-0.001063",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/narrative-findings.rq",
+      "unit": "s",
+      "value": 0.002181,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.002181-0.002181",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/organization-findings.rq",
+      "unit": "s",
+      "value": 0.000477,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000477-0.000477",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/patient-findings.rq",
+      "unit": "s",
+      "value": 0.000076,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000076-0.000076",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/reference-findings.rq",
+      "unit": "s",
+      "value": 0.002636,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.002636-0.002636",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/report-and-note-findings.rq",
+      "unit": "s",
+      "value": 0.000953,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000953-0.000953",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/result-findings.rq",
+      "unit": "s",
+      "value": 0.023367,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.023367-0.023367",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/section-findings.rq",
+      "unit": "s",
+      "value": 0.000661,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000661-0.000661",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-time/detect.rq",
+      "unit": "s",
+      "value": 0.011334,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011334-0.011334",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/document-table.rq",
+      "unit": "{count}",
+      "value": 824,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/allergy.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/condition.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/document-organizations.rq",
+      "unit": "{count}",
+      "value": 13,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/immunization.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/medication.rq",
+      "unit": "{count}",
+      "value": 240,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/note-or-document.rq",
+      "unit": "{count}",
+      "value": 12,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/patient.rq",
+      "unit": "{count}",
+      "value": 4,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/procedure.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/record.rq",
+      "unit": "{count}",
+      "value": 985,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/report.rq",
+      "unit": "{count}",
+      "value": 80,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/result-identifiers.rq",
+      "unit": "{count}",
+      "value": 50,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/result-quantities.rq",
+      "unit": "{count}",
+      "value": 240,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/result.rq",
+      "unit": "{count}",
+      "value": 380,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/allergy-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/concern-act-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/condition-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/document-findings.rq",
+      "unit": "{count}",
+      "value": 18,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/entry-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/entry-statement-findings.rq",
+      "unit": "{count}",
+      "value": 90,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/medication-findings.rq",
+      "unit": "{count}",
+      "value": 180,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/name-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/narrative-findings.rq",
+      "unit": "{count}",
+      "value": 18,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/organization-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/patient-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/reference-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/report-and-note-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/result-findings.rq",
+      "unit": "{count}",
+      "value": 270,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/section-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/query-rows/detect.rq",
+      "unit": "{count}",
+      "value": 1,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "ccda-entries-x10/stage/document-table",
+      "unit": "s",
+      "value": 0.102944,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.102944-0.102944",
+      "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+    },
+    {
+      "name": "ccda-entries-x10/stage/lift",
+      "unit": "s",
+      "value": 0.08498,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.08498-0.08498",
+      "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+    },
+    {
+      "name": "ccda-entries-x10/stage/source-validation",
+      "unit": "s",
+      "value": 0.036552,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.036552-0.036552",
+      "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+    },
+    {
+      "name": "ccda-entries-x10/stage/accounting",
+      "unit": "s",
+      "value": 0.001437,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.001437-0.001437",
+      "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+    },
+    {
+      "name": "ccda-entries-x10/stage/dataset",
+      "unit": "s",
+      "value": 0.000057,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.000057-0.000057",
+      "extra": "Putting the facts about a record into the store its queries run over."
+    },
+    {
+      "name": "ccda-entries-x10/stage/index",
+      "unit": "s",
+      "value": 0.027471,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.027471-0.027471",
+      "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+    },
+    {
+      "name": "ccda-entries-x10/stage/mapping",
+      "unit": "s",
+      "value": 0.076156,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.076156-0.076156",
+      "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+    },
+    {
+      "name": "ccda-entries-x10/stage/records",
+      "unit": "s",
+      "value": 0.030059,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.030059-0.030059",
+      "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+    },
+    {
+      "name": "ccda-entries-x10/stage/output-validation",
+      "unit": "s",
+      "value": 0.146758,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.146758-0.146758",
+      "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+    },
+    {
+      "name": "ccda-entries-x10/stage/findings",
+      "unit": "s",
+      "value": 0.049109,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.049109-0.049109",
+      "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+    },
+    {
+      "name": "ccda-entries-x10/stage/unresolved-addresses",
+      "unit": "s",
+      "value": 0.020287,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.020287-0.020287",
+      "extra": "Finding the references to records the document does not hold, which keep their computed names."
+    },
+    {
+      "name": "ccda-entries-x10/stage/detect",
+      "unit": "s",
+      "value": 0.011392,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011392-0.011392",
+      "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+    },
+    {
+      "name": "ccda-entries-x10/stage/summary",
+      "unit": "s",
+      "value": 0.001207,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.001207-0.001207",
+      "extra": "Counting the graph's distinct triples and the findings once every record is done."
+    },
+    {
+      "name": "ccda-entries-x10/stage/serialising",
+      "unit": "s",
+      "value": 0.011896,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011896-0.011896",
+      "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+    },
+    {
+      "name": "ccda-entries-x10/stage/unaccounted",
+      "unit": "s",
+      "value": 0.018942,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.018942-0.018942",
+      "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+    },
+    {
+      "name": "ccda-entries-x10/output/graph",
+      "unit": "{count}",
+      "value": 1926,
+      "kind": "output",
+      "sha256": "ad5fa27c4fe8b29ebed8c8892c3bf3df74f202365f5e14dca5a7981d130dfc16",
+      "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes."
+    },
+    {
+      "name": "ccda-entries-x10/output/findings",
+      "unit": "{count}",
+      "value": 1210,
+      "kind": "output",
+      "sha256": "c7ee51599b189d3b7e3b558a298707a7607cb0903c01de890353d30c9d31faa9",
+      "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes."
+    },
+    {
+      "name": "ccda/load",
+      "unit": "s",
+      "value": 0.959478,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.919726-0.982598",
+      "extra": "Seconds to read the adapter's and the vocabulary's files, describe the adapter and prepare it, with the engine already started."
+    },
+    {
+      "name": "ccda/load/read-files",
+      "unit": "s",
+      "value": 0.01139,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.006682-0.013273",
+      "extra": "Seconds of the load spent reading files from disk."
+    },
+    {
+      "name": "ccda/load/prepare",
+      "unit": "s",
+      "value": 0.952796,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.908336-0.969325",
+      "extra": "Seconds of the load spent describing the adapter and preparing it: parsing and compiling its queries, schemas and shapes."
+    },
+    {
+      "name": "ccda/load/files-read",
+      "unit": "{count}",
+      "value": 59,
+      "kind": "cost",
+      "samples": 3,
+      "range": "59-59",
+      "extra": "Files read for the load, the adapter's and the vocabulary's."
+    },
+    {
+      "name": "ccda/load/missing-files",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "cost",
+      "samples": 3,
+      "range": "0-0",
+      "extra": "Files the load needed that the adapter's description did not list, which the host read from the folder as the load asked for them."
+    },
+    {
+      "name": "ccda/boot/read-wasm",
+      "unit": "s",
+      "value": 0.007622,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.007511-0.007657",
+      "extra": "Seconds to read the engine's compiled code from disk."
+    },
+    {
+      "name": "ccda/boot/compile-wasm",
+      "unit": "s",
+      "value": 0.021282,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.021047-0.026652",
+      "extra": "Seconds to turn the engine's compiled code into something the machine can run."
+    },
+    {
+      "name": "ccda/boot/instantiate-wasm",
+      "unit": "s",
+      "value": 0.001704,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.001562-0.004865",
+      "extra": "Seconds to start the compiled code, which runs its start-up work."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/convert/first",
+      "unit": "s",
+      "value": 7.807929,
+      "kind": "clock",
+      "samples": 3,
+      "range": "7.778-7.841015",
+      "extra": "Seconds the first convert of a fresh process takes, timed without the step-by-step breakdown. A caller that opens an adapter and converts once also waits for the engine to start (the boot rows) and the adapter to load (the load rows), which this does not count. A pull of 3,000 lab results in one FHIR R4 searchset Bundle. sha256 69b4daac45fd32449b8c290be9a7551566b537a6171218e8125169e94ca5882b, 2760035 bytes"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/convert/second",
+      "unit": "s",
+      "value": 7.344753,
+      "kind": "clock",
+      "samples": 3,
+      "range": "7.322079-7.408244",
+      "extra": "Seconds a second convert of the same document takes in the same process, timed without the step-by-step breakdown: the warm cost."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/convert/profiled",
+      "unit": "s",
+      "value": 7.876961,
+      "kind": "clock",
+      "samples": 1,
+      "range": "7.876961-7.876961",
+      "extra": "Seconds of the one convert run with the step-by-step breakdown on, from which the stage and query rows are read. The breakdown makes it slower than a plain convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/memory.grow/first",
+      "unit": "{count}",
+      "value": 5,
+      "kind": "cost",
+      "samples": 3,
+      "range": "5-5",
+      "extra": "How many times the engine's memory grew during the first convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/memory.grow/second",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "cost",
+      "samples": 3,
+      "range": "0-0",
+      "extra": "How many times the engine's memory grew during the second convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/wasm-memory/first",
+      "unit": "By",
+      "value": 170065920,
+      "kind": "cost",
+      "samples": 3,
+      "range": "170065920-170065920",
+      "extra": "Bytes of memory the engine holds once the first convert is done."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/wasm-memory/second",
+      "unit": "By",
+      "value": 170065920,
+      "kind": "cost",
+      "samples": 3,
+      "range": "170065920-170065920",
+      "extra": "Bytes of memory the engine holds once the second convert is done."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/rss",
+      "unit": "By",
+      "value": 331767808,
+      "kind": "clock",
+      "samples": 3,
+      "range": "317071360-349913088",
+      "extra": "Peak memory the whole process held in RAM, in bytes: the engine's start, the adapter's load and both converts all count."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/records",
+      "unit": "{count}",
+      "value": 3004,
+      "kind": "output",
+      "extra": "Source records the Bridge found in the document and converted. A pull of 3,000 lab results in one FHIR R4 searchset Bundle."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/triples",
+      "unit": "{count}",
+      "value": 63025,
+      "kind": "output",
+      "extra": "Distinct triples in the output graph."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/findings",
+      "unit": "{count}",
+      "value": 6006,
+      "kind": "output",
+      "extra": "Findings the conversion wrote."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/output-bytes/graph",
+      "unit": "By",
+      "value": 4356620,
+      "kind": "output",
+      "extra": "Bytes of the output graph as Turtle."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/output-bytes/findings",
+      "unit": "By",
+      "value": 5714860,
+      "kind": "output",
+      "extra": "Bytes of the findings as Turtle."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/fallbacks",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Record executions the general evaluator answered because a query was not compiled or a compiled plan gave up. The detect query, which runs once, is not counted."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/coding-system-table.rq",
+      "unit": "s",
+      "value": 0.077433,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.077433-0.077433",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/document-table.rq",
+      "unit": "s",
+      "value": 0.012821,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.012821-0.012821",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/lab-result-table.rq",
+      "unit": "s",
+      "value": 0.024435,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.024435-0.024435",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/medication-table.rq",
+      "unit": "s",
+      "value": 0.013503,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.013503-0.013503",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/note-or-document-table.rq",
+      "unit": "s",
+      "value": 0.006858,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.006858-0.006858",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/organization-table.rq",
+      "unit": "s",
+      "value": 0.023422,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.023422-0.023422",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/variant-interpretation-table.rq",
+      "unit": "s",
+      "value": 0.010385,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.010385-0.010385",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/variant-table.rq",
+      "unit": "s",
+      "value": 0.011258,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011258-0.011258",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/absent-reasons.rq",
+      "unit": "s",
+      "value": 0.069419,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.069419-0.069419",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/allergy-intolerance.rq",
+      "unit": "s",
+      "value": 0.010709,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.010709-0.010709",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/attachments.rq",
+      "unit": "s",
+      "value": 0.011477,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011477-0.011477",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/condition.rq",
+      "unit": "s",
+      "value": 0.008997,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.008997-0.008997",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/immunization.rq",
+      "unit": "s",
+      "value": 0.008601,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.008601-0.008601",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/lab-result-codes.rq",
+      "unit": "s",
+      "value": 0.10978,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.10978-0.10978",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/lab-result-identifiers.rq",
+      "unit": "s",
+      "value": 0.0265,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.0265-0.0265",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/lab-result-performer.rq",
+      "unit": "s",
+      "value": 0.004018,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.004018-0.004018",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/lab-result-quantities.rq",
+      "unit": "s",
+      "value": 0.123929,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.123929-0.123929",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/lab-result.rq",
+      "unit": "s",
+      "value": 0.130522,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.130522-0.130522",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/medication-dispense-prescription.rq",
+      "unit": "s",
+      "value": 0.013663,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.013663-0.013663",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/medication-dispense.rq",
+      "unit": "s",
+      "value": 0.008278,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.008278-0.008278",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/medication-supply-and-dosages.rq",
+      "unit": "s",
+      "value": 0.010642,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.010642-0.010642",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/medication.rq",
+      "unit": "s",
+      "value": 0.009942,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.009942-0.009942",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/narrative-text.rq",
+      "unit": "s",
+      "value": 0.034909,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.034909-0.034909",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/note-or-document.rq",
+      "unit": "s",
+      "value": 0.008746,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.008746-0.008746",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/organization-from-server.rq",
+      "unit": "s",
+      "value": 0.005548,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.005548-0.005548",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/organization.rq",
+      "unit": "s",
+      "value": 0.013573,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.013573-0.013573",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/patient.rq",
+      "unit": "s",
+      "value": 0.009078,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.009078-0.009078",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/procedure.rq",
+      "unit": "s",
+      "value": 0.008143,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.008143-0.008143",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/record.rq",
+      "unit": "s",
+      "value": 0.317105,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.317105-0.317105",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/report-and-note-performer.rq",
+      "unit": "s",
+      "value": 0.004676,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.004676-0.004676",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/report-results.rq",
+      "unit": "s",
+      "value": 0.012547,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.012547-0.012547",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/report.rq",
+      "unit": "s",
+      "value": 0.008717,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.008717-0.008717",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/variant-interpretation.rq",
+      "unit": "s",
+      "value": 0.011632,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011632-0.011632",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/variant.rq",
+      "unit": "s",
+      "value": 0.010672,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.010672-0.010672",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/absent-reason-findings.rq",
+      "unit": "s",
+      "value": 0.049101,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.049101-0.049101",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/category-text-findings.rq",
+      "unit": "s",
+      "value": 0.014114,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.014114-0.014114",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/code-findings.rq",
+      "unit": "s",
+      "value": 0.00954,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.00954-0.00954",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/date-findings.rq",
+      "unit": "s",
+      "value": 0.061882,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.061882-0.061882",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/document-version-findings.rq",
+      "unit": "s",
+      "value": 0.001539,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.001539-0.001539",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/identifier-and-address-findings.rq",
+      "unit": "s",
+      "value": 0.011956,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011956-0.011956",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/lab-result-findings.rq",
+      "unit": "s",
+      "value": 0.118737,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.118737-0.118737",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/medication-dispense-findings.rq",
+      "unit": "s",
+      "value": 0.012082,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.012082-0.012082",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/medication-dispense-prescription-findings.rq",
+      "unit": "s",
+      "value": 0.011577,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011577-0.011577",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/medication-findings.rq",
+      "unit": "s",
+      "value": 0.074741,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.074741-0.074741",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/narrative-findings.rq",
+      "unit": "s",
+      "value": 0.007931,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.007931-0.007931",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/observation-component-findings.rq",
+      "unit": "s",
+      "value": 0.011669,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011669-0.011669",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/observation-findings.rq",
+      "unit": "s",
+      "value": 0.070421,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.070421-0.070421",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/organization-findings.rq",
+      "unit": "s",
+      "value": 0.009074,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.009074-0.009074",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/patient-findings.rq",
+      "unit": "s",
+      "value": 0.007786,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.007786-0.007786",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/patient-reference-findings.rq",
+      "unit": "s",
+      "value": 0.060662,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.060662-0.060662",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/recorded-date-findings.rq",
+      "unit": "s",
+      "value": 0.010634,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.010634-0.010634",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/reference-display-findings.rq",
+      "unit": "s",
+      "value": 0.040079,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.040079-0.040079",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/reference-without-server-findings.rq",
+      "unit": "s",
+      "value": 0.042651,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.042651-0.042651",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/repeated-id-findings.rq",
+      "unit": "s",
+      "value": 0.027552,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.027552-0.027552",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/report-and-note-findings.rq",
+      "unit": "s",
+      "value": 0.013038,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.013038-0.013038",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/report-result-findings.rq",
+      "unit": "s",
+      "value": 0.01404,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.01404-0.01404",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/resource-type-findings.rq",
+      "unit": "s",
+      "value": 0.010983,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.010983-0.010983",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/variant-findings.rq",
+      "unit": "s",
+      "value": 0.022729,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.022729-0.022729",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/variant-interpretation-findings.rq",
+      "unit": "s",
+      "value": 0.012191,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.012191-0.012191",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-time/detect.rq",
+      "unit": "s",
+      "value": 0.009938,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.009938-0.009938",
+      "extra": "Seconds one of the adapter's queries took, summed over every record it ran on, in the profiled convert."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/coding-system-table.rq",
+      "unit": "{count}",
+      "value": 18006,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/document-table.rq",
+      "unit": "{count}",
+      "value": 12014,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/lab-result-table.rq",
+      "unit": "{count}",
+      "value": 3000,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/medication-table.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/note-or-document-table.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/organization-table.rq",
+      "unit": "{count}",
+      "value": 48,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/variant-interpretation-table.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/variant-table.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/absent-reasons.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/allergy-intolerance.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/attachments.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/condition.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/immunization.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/lab-result-codes.rq",
+      "unit": "{count}",
+      "value": 3000,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/lab-result-identifiers.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/lab-result-performer.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/lab-result-quantities.rq",
+      "unit": "{count}",
+      "value": 15000,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/lab-result.rq",
+      "unit": "{count}",
+      "value": 12000,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/medication-dispense-prescription.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/medication-dispense.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/medication-supply-and-dosages.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/medication.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/narrative-text.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/note-or-document.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/organization-from-server.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/organization.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/patient.rq",
+      "unit": "{count}",
+      "value": 3,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/procedure.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/record.rq",
+      "unit": "{count}",
+      "value": 12003,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/report-and-note-performer.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/report-results.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/report.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/variant-interpretation.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/variant.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/absent-reason-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/category-text-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/code-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/date-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/document-version-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/identifier-and-address-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/lab-result-findings.rq",
+      "unit": "{count}",
+      "value": 30000,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/medication-dispense-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/medication-dispense-prescription-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/medication-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/narrative-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/observation-component-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/observation-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/organization-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/patient-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/patient-reference-findings.rq",
+      "unit": "{count}",
+      "value": 10,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/recorded-date-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/reference-display-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/reference-without-server-findings.rq",
+      "unit": "{count}",
+      "value": 30000,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/repeated-id-findings.rq",
+      "unit": "{count}",
+      "value": 20,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/report-and-note-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/report-result-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/resource-type-findings.rq",
+      "unit": "{count}",
+      "value": 30,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/variant-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/variant-interpretation-findings.rq",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 3004"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/query-rows/detect.rq",
+      "unit": "{count}",
+      "value": 1,
+      "kind": "output",
+      "extra": "Rows one of the adapter's queries returned, summed over every record it ran on. executions: 1"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/document-table",
+      "unit": "s",
+      "value": 0.228222,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.228222-0.228222",
+      "extra": "Running the adapter's document-table query on every record of the document, to link a record to any other record, in the document or not. (Specification stage: link records.)"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/lift",
+      "unit": "s",
+      "value": 0.444344,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.444344-0.444344",
+      "extra": "Reading the source document into the triples the adapter's queries can ask about, one record at a time. (Specification stage: read and chunk.)"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/source-validation",
+      "unit": "s",
+      "value": 1.012347,
+      "kind": "clock",
+      "samples": 1,
+      "range": "1.012347-1.012347",
+      "extra": "Checking each source record, and the document as a whole where the adapter gives a document schema, against the adapter's schema (XSD or JSON Schema). A failure is a finding, never a refusal. (Specification stage: check, validate.)"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/accounting",
+      "unit": "s",
+      "value": 0.01552,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.01552-0.01552",
+      "extra": "Working out, against the adapter's accounting file, what became of each part of each source record."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/dataset",
+      "unit": "s",
+      "value": 0.011424,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.011424-0.011424",
+      "extra": "Putting the facts about a record into the store its queries run over."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/index",
+      "unit": "s",
+      "value": 0.234735,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.234735-0.234735",
+      "extra": "Building the lookup structure that compiled queries read, from a record's triples. A query the general evaluator answers needs none."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/mapping",
+      "unit": "s",
+      "value": 1.029614,
+      "kind": "clock",
+      "samples": 1,
+      "range": "1.029614-1.029614",
+      "extra": "Running the adapter's mapping queries on each record, without the time of building their lookup structure. (Specification stage: transform.)"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/records",
+      "unit": "s",
+      "value": 0.25338,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.25338-0.25338",
+      "extra": "Turning what the mapping produced into each record's graph: naming its versions, keeping one where the mapping wrote several, and writing their arrivals. (Specification stage: name versions, write arrivals.)"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/output-validation",
+      "unit": "s",
+      "value": 3.108103,
+      "kind": "clock",
+      "samples": 1,
+      "range": "3.108103-3.108103",
+      "extra": "Checking each record's output against the vocabulary's SHACL shapes."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/findings",
+      "unit": "s",
+      "value": 0.995758,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.995758-0.995758",
+      "extra": "Running the adapter's findings queries to find what the source record got wrong or left out. (Specification stage: findings.)"
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/unresolved-addresses",
+      "unit": "s",
+      "value": 0.046843,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.046843-0.046843",
+      "extra": "Finding the references to records the document does not hold, which keep their computed names."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/detect",
+      "unit": "s",
+      "value": 0.00999,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.00999-0.00999",
+      "extra": "Running the adapter's detect query, which reports whether the adapter reads this document. The Bridge converts every record whatever the answer; it never routes."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/summary",
+      "unit": "s",
+      "value": 0.018139,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.018139-0.018139",
+      "extra": "Counting the graph's distinct triples and the findings once every record is done."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/serialising",
+      "unit": "s",
+      "value": 0.206518,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.206518-0.206518",
+      "extra": "Writing the graph and the findings out as Turtle or N-Triples."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/stage/unaccounted",
+      "unit": "s",
+      "value": 0.262023,
+      "kind": "clock",
+      "samples": 1,
+      "range": "0.262023-0.262023",
+      "extra": "Seconds of the profiled convert that none of the stages accounts for, such as writing the document and the import into the graph."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/output/graph",
+      "unit": "{count}",
+      "value": 63025,
+      "kind": "output",
+      "sha256": "37ddd3ff45eedcca686486482a5dd0ea90120d791c04352fb96a41e20d5fe7ac",
+      "extra": "Distinct triples in the output graph, with a SHA-256 fingerprint of the output that is the same whenever the content is the same, whatever order the engine wrote it in and whatever it named its blank nodes."
+    },
+    {
+      "name": "fhir-r4-lab-pull-3000/output/findings",
+      "unit": "{count}",
+      "value": 90090,
+      "kind": "output",
+      "sha256": "851b1026c63093ac92b471f425e87cc77fd94f6d38736c2dd43151cf57bdd50c",
+      "extra": "Distinct triples in the findings, with a SHA-256 fingerprint of them that is the same whenever the content is the same, whatever order the engine wrote them in and whatever it named its blank nodes."
+    },
+    {
+      "name": "fhir-r4/load",
+      "unit": "s",
+      "value": 0.971555,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.956846-1.239618",
+      "extra": "Seconds to read the adapter's and the vocabulary's files, describe the adapter and prepare it, with the engine already started."
+    },
+    {
+      "name": "fhir-r4/load/read-files",
+      "unit": "s",
+      "value": 0.016697,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.014097-0.02126",
+      "extra": "Seconds of the load spent reading files from disk."
+    },
+    {
+      "name": "fhir-r4/load/prepare",
+      "unit": "s",
+      "value": 0.957459,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.940149-1.218358",
+      "extra": "Seconds of the load spent describing the adapter and preparing it: parsing and compiling its queries, schemas and shapes."
+    },
+    {
+      "name": "fhir-r4/load/files-read",
+      "unit": "{count}",
+      "value": 69,
+      "kind": "cost",
+      "samples": 3,
+      "range": "69-69",
+      "extra": "Files read for the load, the adapter's and the vocabulary's."
+    },
+    {
+      "name": "fhir-r4/load/missing-files",
+      "unit": "{count}",
+      "value": 0,
+      "kind": "cost",
+      "samples": 3,
+      "range": "0-0",
+      "extra": "Files the load needed that the adapter's description did not list, which the host read from the folder as the load asked for them."
+    },
+    {
+      "name": "fhir-r4/boot/read-wasm",
+      "unit": "s",
+      "value": 0.007836,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.007524-0.00802",
+      "extra": "Seconds to read the engine's compiled code from disk."
+    },
+    {
+      "name": "fhir-r4/boot/compile-wasm",
+      "unit": "s",
+      "value": 0.021631,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.021095-0.026293",
+      "extra": "Seconds to turn the engine's compiled code into something the machine can run."
+    },
+    {
+      "name": "fhir-r4/boot/instantiate-wasm",
+      "unit": "s",
+      "value": 0.001885,
+      "kind": "clock",
+      "samples": 3,
+      "range": "0.00169-0.00196",
+      "extra": "Seconds to start the compiled code, which runs its start-up work."
+    }
+  ]
+}
