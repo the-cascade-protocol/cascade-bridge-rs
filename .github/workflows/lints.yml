@@ -3,6 +3,7 @@ name: lints
 # For a builder with no Rust toolchain: `gh workflow run lints.yml -f branch=<branch>` checks one
 # branch's format and lints in a couple of minutes, without waiting on its tests.
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       branch:

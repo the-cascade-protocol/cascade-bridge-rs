@@ -419,9 +419,7 @@ fn not_met(unmet: &[Unmet]) -> String {
     let said: Vec<String> = unmet.iter().take(SAID).map(Unmet::summary).collect();
     let more = match unmet.len().saturating_sub(SAID) {
         0 => String::new(),
-        more => format!(
-            "; and {more} more: run `test` with `--owed` to list every one"
-        ),
+        more => format!("; and {more} more: run `test` with `--owed` to list every one"),
     };
     format!(
         "; the accounting is not met at {} occurrence(s): {}{more}",
