@@ -271,7 +271,9 @@ impl<'a> About<'a> {
         for quad in findings {
             let predicate = quad.predicate.as_str();
             match (predicate, &quad.object) {
-                (OA_HAS_BODY, Term::NamedNode(body)) => body_of.push((&quad.subject, body.as_str())),
+                (OA_HAS_BODY, Term::NamedNode(body)) => {
+                    body_of.push((&quad.subject, body.as_str()));
+                }
                 (RDF_VALUE, Term::Literal(value)) => {
                     text.insert(&quad.subject, value.value());
                 }
