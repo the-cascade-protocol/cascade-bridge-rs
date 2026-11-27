@@ -404,7 +404,10 @@ fn nodes_of_nothing(produced: &[Quad], syntax: Syntax) -> HashSet<NamedOrBlankNo
         .collect();
     let mut held_by: HashMap<NamedOrBlankNode, Vec<NamedOrBlankNode>> = HashMap::new();
     let mut holding: Vec<NamedOrBlankNode> = Vec::new();
-    for quad in produced.iter().filter(|quad| quad.predicate.as_str() != RDF_TYPE) {
+    for quad in produced
+        .iter()
+        .filter(|quad| quad.predicate.as_str() != RDF_TYPE)
+    {
         match &quad.object {
             Term::Literal(value) if syntax.holds_nothing(value.value()) => {}
             object => match as_subject(object) {
