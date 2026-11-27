@@ -36,6 +36,11 @@ const TITLE_WRITTEN: &str = "OPTIONAL { ?item ?slot ?t . ?t a xyz:title ; rdf:_1
 
 /// An item's shelf, a record of its own standing at the shelf.
 fn shelves() -> String {
+    shelves_at("/shelf[1]")
+}
+
+/// An item's shelf, a record of its own whose arrival is selected at `step` below the item.
+fn shelves_at(step: &str) -> String {
     format!(
         "{PREFIXES}PREFIX ex: <urn:example:catalog#>
 CONSTRUCT {{
@@ -50,10 +55,21 @@ WHERE {{
   bridge:thisRecord bridge:selector ?record .
   BIND(IRI(CONCAT(\"urn:example:shelf:\", ?id)) AS ?b)
   BIND(IRI(CONCAT(\"urn:example:shelf-draft:\", ?id)) AS ?bv)
-  BIND(CONCAT(?record, \"/shelf[1]\") AS ?at)
+  BIND(CONCAT(?record, \"{step}\") AS ?at)
 }}"
     )
 }
+
+/// No record of a shelf: the tiny adapter's own shelf mapping, which reads boxes.
+const NO_SHELF_RECORD: &str = "PREFIX fx:  <http://sparql.xyz/facade-x/ns/>
+PREFIX xyz: <http://sparql.xyz/facade-x/data/>
+PREFIX ex:  <urn:example:catalog#>
+CONSTRUCT { ?s ex:shelf [ a ex:Shelf ] . }
+WHERE {
+  ?item a fx:root, xyz:item ; xyz:id ?id ; ?slot ?box .
+  ?box a xyz:box .
+  BIND(IRI(CONCAT(\"urn:example:item:\", ?id)) AS ?s)
+}";
 
 /// `title` is the verdict and what more the entry for `/item/title` says.
 fn accounting(title: &str) -> String {
@@ -76,7 +92,7 @@ fn accounting(title: &str) -> String {
 
 const CARRIED: &str = "bridge:verdict bridge:carried";
 
-const ENTRIES: [(&str, &str); 5] = [
+const ENTRIES: [(&str, &str); 6] = [
     (
         "hollow",
         r#"<catalog><item id="6"><title>Sixth</title><bin> </bin><tag>red</tag></item></catalog>"#,
@@ -93,6 +109,10 @@ const ENTRIES: [(&str, &str); 5] = [
     (
         "shelved",
         r#"<catalog><item id="5"><title>Fifth</title><shelf><mark>7</mark></shelf></item></catalog>"#,
+    ),
+    (
+        "many",
+        r#"<catalog><item id="8"><title>A</title></item><item id="9"><title>B</title></item><item id="10"><title>C</title></item><item id="11"><title>D</title></item></catalog>"#,
     ),
 ];
 
@@ -142,6 +162,56 @@ fn judged(results: &[EntryResult], name: &str) -> (&'static str, String) {
     (entry.outcome.as_str(), entry.description.clone())
 }
 
+/// The tiny adapter writing each title, with the shelf's mark carried on the shelf, its entry
+/// saying `verdict`.
+fn mark_on_the_shelf(verdict: &str) -> Variant {
+    let mark = "\"/item/shelf/mark\" ; bridge:verdict bridge:carried ;\n  \
+                bridge:carriedAs [ bridge:inRecordClass ex:Item";
+    let written = accounting(CARRIED);
+    assert!(written.contains(mark), "{written}");
+    catalog(TITLE_WRITTEN, CARRIED).with(
+        ACCOUNTING,
+        written.replacen(
+            mark,
+            &format!(
+                "\"/item/shelf/mark\" ; {verdict} ;\n  \
+                 bridge:carriedAs [ bridge:inRecordClass ex:Shelf"
+            ),
+            1,
+        ),
+    )
+}
+
+/// `variant` with the gap `ex:shelfNotMapped` of `bridge:elementNotCarried`, and a finding of
+/// `gap` addressed at `at` in each item holding a shelf.
+fn reporting(variant: Variant, gap: &str, at: &str) -> Variant {
+    variant
+        .replacing(
+            GAP_SCHEME,
+            "ex:noteHasNoTerm a skos:Concept ;",
+            "ex:shelfNotMapped a skos:Concept ;\n  skos:inScheme ex:gaps ;\n  \
+             skos:broader bridge:elementNotCarried .\n\n\
+             ex:noteHasNoTerm a skos:Concept ;",
+        )
+        .with(
+            "mapping/item-findings.rq",
+            format!(
+                "{PREFIXES}PREFIX ex: <urn:example:catalog#>
+CONSTRUCT {{
+  [] a oa:Annotation ;
+    oa:hasTarget [
+      oa:hasSource bridge:thisRecord ;
+      oa:hasSelector [ a oa:XPathSelector ; rdf:value \"{at}\" ]
+    ] ;
+    oa:hasBody ex:{gap} ;
+    oa:motivatedBy oa:classifying ;
+    sh:resultSeverity sh:Info .
+}}
+WHERE {{ ?item a fx:root, xyz:item ; ?slot ?shelf . ?shelf a xyz:shelf . }}"
+            ),
+        )
+}
+
 mod tests {
     use super::*;
 
@@ -153,18 +223,35 @@ mod tests {
         mod given_a_conversion_that_does_not_write_what_the_accounting_says_it_carries {
             use super::*;
 
+            /// fails an entry whose input holds the path, naming the path, the property looked
+            /// for and the class owed before the occurrence's address
             #[test]
-            fn fails_an_entry_whose_input_holds_the_path_naming_its_address_the_class_owed_and_the_property(
-            ) {
+            fn fails_an_entry_whose_input_holds_the_path_naming_what_is_owed_before_where() {
                 let results = ran(&catalog("", CARRIED));
                 let (outcome, description) = judged(&results, "titled");
                 assert_eq!(outcome, "failed", "{description}");
                 assert!(
                     description.contains(
-                        "the accounting is not met at 1 occurrence(s): /item/title at \
-                         \"/catalog/item[1]/title[1]\": no urn:example:catalog#title on its \
-                         urn:example:catalog#Item is written, and no finding is about it"
+                        "the accounting is not met at 1 occurrence(s): /item/title: no \
+                         urn:example:catalog#title on its urn:example:catalog#Item is written, \
+                         and no finding is about it, at \"/catalog/item[1]/title[1]\""
                     ),
+                    "{description}"
+                );
+            }
+
+            /// says the first three occurrences in full, then how many more `--owed` lists
+            #[test]
+            fn says_the_first_three_occurrences_in_full_then_how_many_more_owed_lists() {
+                let results = ran(&catalog("", CARRIED));
+                let (outcome, description) = judged(&results, "many");
+                assert_eq!(outcome, "failed", "{description}");
+                assert_eq!(entry(&results, "many").unmet.len(), 4, "{description}");
+                let said = "/item/title: no urn:example:catalog#title on its \
+                            urn:example:catalog#Item is written, and no finding is about it, at";
+                assert_eq!(description.matches(said).count(), 3, "{description}");
+                assert!(
+                    description.contains("; and 1 more: run `test` with `--owed` to list every one"),
                     "{description}"
                 );
             }
@@ -190,7 +277,23 @@ mod tests {
                 let (outcome, description) = judged(&results, "hollow");
                 assert_eq!(outcome, "failed", "{description}");
                 assert!(
-                    description.contains("not met at 1 occurrence(s): /item/title at"),
+                    description.contains("not met at 1 occurrence(s): /item/title:"),
+                    "{description}"
+                );
+            }
+
+            /// owes a member beside an empty repeat of its own path, which is no other member
+            /// of its element
+            #[test]
+            fn owes_a_member_beside_an_empty_repeat_of_its_own_path() {
+                let repeated = mark_on_the_shelf(CARRIED).with(
+                    "fixtures/in/shelved.xml",
+                    r#"<catalog><item id="5"><title>Fifth</title><shelf><mark>7</mark><mark> </mark></shelf></item></catalog>"#,
+                );
+                let (outcome, description) = judged(&ran(&repeated), "shelved");
+                assert_eq!(outcome, "failed", "{description}");
+                assert!(
+                    description.contains("not met at 1 occurrence(s): /item/shelf/mark:"),
                     "{description}"
                 );
             }
@@ -203,9 +306,37 @@ mod tests {
                 let (outcome, description) = judged(&results, "shelved");
                 assert_eq!(outcome, "failed", "{description}");
                 assert!(
-                    description.contains("not met at 1 occurrence(s): /item/title at"),
+                    description.contains("not met at 1 occurrence(s): /item/title:"),
                     "{description}"
                 );
+            }
+
+            /// places a record at the node its selector selects, however the selector spells
+            /// it, and fails an entry for a record selector that selects no one node of the
+            /// unit, naming it
+            #[test]
+            fn places_a_record_at_the_node_its_selector_selects_and_fails_one_that_selects_none() {
+                for (step, said) in [
+                    (
+                        "/*[namespace-uri()='' and local-name()='shelf'][1]",
+                        "not met at 1 occurrence(s): /item/title:",
+                    ),
+                    (
+                        "/shelf[2]",
+                        "the record selector \"/catalog/item[1]/shelf[2]\" selects no node",
+                    ),
+                    (
+                        "/..",
+                        "the record selector \"/catalog/item[1]/..\" selects a node outside the \
+                         unit",
+                    ),
+                ] {
+                    let shelved =
+                        catalog("", CARRIED).with("mapping/item-shelf.rq", shelves_at(step));
+                    let (outcome, description) = judged(&ran(&shelved), "shelved");
+                    assert_eq!(outcome, "failed", "{step}: {description}");
+                    assert!(description.contains(said), "{step}: {description}");
+                }
             }
 
             #[test]
@@ -242,54 +373,10 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?t . ?t a xyz:title . }}"
             }
 
             /// is met by a finding at the occurrence whatever its gap, and by one above it only
-            /// where its gap is one the path's entry names; owes nothing below a finding of a
-            /// gap of `bridge:elementNotCarried`
+            /// where its gap is one the path's entry names; a finding of a gap of
+            /// `bridge:elementNotCarried` above it, where a record stands, meets nothing
             #[test]
             fn is_met_by_a_finding_at_the_occurrence_or_above_it_naming_the_gap_its_entry_names() {
-                // The shelf's mark carried on the shelf, its entry saying `verdict`, and a
-                // finding of `gap` addressed at `at`.
-                let reported = |verdict: &str, gap: &str, at: &str| {
-                    let mark = "\"/item/shelf/mark\" ; bridge:verdict bridge:carried ;\n  \
-                                bridge:carriedAs [ bridge:inRecordClass ex:Item";
-                    let written = accounting(CARRIED);
-                    assert!(written.contains(mark), "{written}");
-                    catalog(TITLE_WRITTEN, CARRIED)
-                        .replacing(
-                            GAP_SCHEME,
-                            "ex:noteHasNoTerm a skos:Concept ;",
-                            "ex:shelfNotMapped a skos:Concept ;\n  skos:inScheme ex:gaps ;\n  \
-                             skos:broader bridge:elementNotCarried .\n\n\
-                             ex:noteHasNoTerm a skos:Concept ;",
-                        )
-                        .with(
-                            ACCOUNTING,
-                            written.replacen(
-                                mark,
-                                &format!(
-                                    "\"/item/shelf/mark\" ; {verdict} ;\n  \
-                                     bridge:carriedAs [ bridge:inRecordClass ex:Shelf"
-                                ),
-                                1,
-                            ),
-                        )
-                        .with(
-                            "mapping/item-findings.rq",
-                            format!(
-                                "{PREFIXES}PREFIX ex: <urn:example:catalog#>
-CONSTRUCT {{
-  [] a oa:Annotation ;
-    oa:hasTarget [
-      oa:hasSource bridge:thisRecord ;
-      oa:hasSelector [ a oa:XPathSelector ; rdf:value \"{at}\" ]
-    ] ;
-    oa:hasBody ex:{gap} ;
-    oa:motivatedBy oa:classifying ;
-    sh:resultSeverity sh:Info .
-}}
-WHERE {{ ?item a fx:root, xyz:item ; ?slot ?shelf . ?shelf a xyz:shelf . }}"
-                            ),
-                        )
-                };
                 let naming = "bridge:verdict bridge:carriedInPart ; \
                               bridge:namesGap ex:summaryLosesItsMarkup";
                 for (verdict, gap, at, expected) in [
@@ -297,12 +384,27 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?shelf . ?shelf a xyz:shelf . }}"
                     (naming, "summaryLosesItsMarkup", "shelf[1]", "cantTell"),
                     (CARRIED, "summaryLosesItsMarkup", "shelf[1]", "failed"),
                     (naming, "noteHasNoTerm", "shelf[1]", "failed"),
-                    (CARRIED, "shelfNotMapped", "shelf[1]", "cantTell"),
+                    (CARRIED, "shelfNotMapped", "shelf[1]", "failed"),
                 ] {
-                    let (outcome, description) =
-                        judged(&ran(&reported(verdict, gap, at)), "shelved");
+                    let reported = reporting(mark_on_the_shelf(verdict), gap, at);
+                    let (outcome, description) = judged(&ran(&reported), "shelved");
                     assert_eq!(outcome, expected, "{verdict}, {gap} at {at}: {description}");
                 }
+            }
+
+            /// owes nothing below a finding of a gap of `bridge:elementNotCarried` where no
+            /// record stands at its element or below it
+            #[test]
+            fn owes_nothing_below_an_element_reported_not_carried_where_no_record_stands_in_it() {
+                let unshelved = || {
+                    catalog(TITLE_WRITTEN, CARRIED).with("mapping/item-shelf.rq", NO_SHELF_RECORD)
+                };
+                let (outcome, description) = judged(&ran(&unshelved()), "shelved");
+                assert_eq!(outcome, "failed", "{description}");
+                assert!(description.contains("/item/shelf/mark:"), "{description}");
+                let reported = reporting(unshelved(), "shelfNotMapped", "shelf[1]");
+                let (outcome, description) = judged(&ran(&reported), "shelved");
+                assert_eq!(outcome, "cantTell", "{description}");
             }
 
             /// given a record nested in another, as the envelope declares
@@ -376,12 +478,68 @@ WHERE {{
                         )
                 }
 
-                /// owes nothing for a path in a nested record no record was written from,
-                /// though the record it is nested in is of the class the path is carried on
+                /// `variant` with a gap of `bridge:elementNotCarried` and a finding of it
+                /// addressed at `at`.
+                fn reporting_nothing_carried_at(variant: Variant, at: &str) -> Variant {
+                    variant
+                        .replacing(
+                            CRATE,
+                            r#""bridge:mapping": [{ "@id": "mapping/item.rq" }],"#,
+                            r#""bridge:mapping": [{ "@id": "mapping/item.rq" }], "bridge:gapScheme": { "@id": "vocab/list-gaps.ttl" }, "bridge:findingsQuery": [{ "@id": "mapping/item-findings.rq" }],"#,
+                        )
+                        .with(
+                            "vocab/list-gaps.ttl",
+                            "@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+@prefix bridge: <https://ns.cascadeprotocol.org/bridge/v1-draft#> .
+@prefix ex:     <urn:example:list#> .
+ex:gaps a skos:ConceptScheme .
+ex:itemNotMapped a skos:Concept ;
+  skos:inScheme ex:gaps ;
+  skos:broader bridge:elementNotCarried .
+",
+                        )
+                        .with(
+                            "mapping/item-findings.rq",
+                            format!(
+                                "{PREFIXES}PREFIX ex: <urn:example:list#>
+CONSTRUCT {{
+  [] a oa:Annotation ;
+    oa:hasTarget [
+      oa:hasSource bridge:thisRecord ;
+      oa:hasSelector [ a oa:FragmentSelector ; rdf:value \"{at}\" ]
+    ] ;
+    oa:hasBody ex:itemNotMapped ;
+    oa:motivatedBy oa:classifying ;
+    sh:resultSeverity sh:Info .
+}}
+WHERE {{ ?root a fx:root ; xyz:contained ?list . }}"
+                            ),
+                        )
+                }
+
+                /// owes a path in a nested record no record was written from to the record it
+                /// is nested in, as it owes any path by where it stands
                 #[test]
-                fn owes_nothing_for_a_path_in_a_nested_record_no_record_was_written_from() {
+                fn owes_a_path_in_a_nested_record_nothing_was_written_from_to_its_container() {
                     let (outcome, description) = judged(&ran(&nesting("")), "nested");
-                    assert_eq!(outcome, "cantTell", "{description}");
+                    assert_eq!(outcome, "failed", "{description}");
+                    assert!(
+                        description.contains("/contained/title: no urn:example:list#title on its"),
+                        "{description}"
+                    );
+                }
+
+                /// owes nothing in a nested record no record was written from where a finding of
+                /// a gap of `bridge:elementNotCarried` is addressed at it, and still owes it where
+                /// that finding is addressed at a member of it
+                #[test]
+                fn owes_nothing_in_a_nested_record_reported_not_carried_at_its_element() {
+                    let cases = [("/contained/0", "cantTell"), ("/contained/0/kind", "failed")];
+                    for (at, expected) in cases {
+                        let reported = reporting_nothing_carried_at(nesting(""), at);
+                        let (outcome, description) = judged(&ran(&reported), "nested");
+                        assert_eq!(outcome, expected, "{at}: {description}");
+                    }
                 }
 
                 const CONTAINED: &str = "UNION {
@@ -403,9 +561,10 @@ WHERE {{
                     let (outcome, description) = judged(&ran(&nesting(CONTAINED)), "nested");
                     assert_eq!(outcome, "failed", "{description}");
                     assert!(
-                        description.contains("/contained/title at \"/contained/0/title\""),
+                        description.contains("/contained/title: no urn:example:list#title on its"),
                         "{description}"
                     );
+                    assert!(description.contains("at \"/contained/0/title\""), "{description}");
                 }
             }
         }

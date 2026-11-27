@@ -425,6 +425,45 @@ mod running_the_commands_on_node {
                 );
             }
         }
+
+        /// with `--owed`, lists on both hosts what is owed and not met, for `test` and for
+        /// `convert`
+        #[test]
+        fn with_owed_lists_on_both_hosts_what_is_owed_and_not_met() {
+            let scratch = scratch();
+            let adapter = scratch.path().join("tiny-adapter");
+            owing_a_title(&adapter);
+            let document = adapter.join("fixtures/in/two.xml");
+            let document = document.to_string_lossy().into_owned();
+            let adapter = adapter.to_string_lossy().into_owned();
+            let vocabularies = vocabularies().to_string_lossy().into_owned();
+            let owed = |ran: &Output| -> Vec<String> {
+                String::from_utf8_lossy(&ran.stdout)
+                    .lines()
+                    .filter(|line| line.starts_with("Owed ") || line.starts_with("  /"))
+                    .map(str::to_owned)
+                    .collect()
+            };
+            let (adapter, vocabularies) = (adapter.as_str(), vocabularies.as_str());
+            for arguments in [
+                vec!["test", adapter, "--vocabularies", vocabularies, "--owed"],
+                vec!["convert", adapter, document.as_str(), "--owed"],
+            ] {
+                let (on_native, on_node) = (native(&arguments), node(&arguments));
+                assert_eq!(
+                    on_node.status.code(),
+                    on_native.status.code(),
+                    "{arguments:?}: {}",
+                    String::from_utf8_lossy(&on_node.stderr)
+                );
+                assert!(
+                    !owed(&on_native).is_empty(),
+                    "{arguments:?}: {}",
+                    String::from_utf8_lossy(&on_native.stdout)
+                );
+                assert_eq!(owed(&on_node), owed(&on_native), "{arguments:?}");
+            }
+        }
     }
 
     /// given no `--vocabularies`

@@ -1,0 +1,82 @@
+# MEASUREMENT for cascade-bridge-rs#161's fix round, removed before hand-back: the rustfmt diff,
+# clippy, the changed tests, and node_host and the specification's vector, which ci skips while
+# compatibility is red.
+name: measure-fix
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: measure-fix-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    name: measure
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: cascade-bridge-rs
+          persist-credentials: false
+      - uses: actions/checkout@v7
+        with:
+          repository: the-cascade-protocol/cascade-bridge-spec
+          ref: feat/a-test-entry-fails-by-the-accounting
+          path: cascade-bridge-spec
+          persist-credentials: false
+      - run: |
+          rustup toolchain install --profile minimal
+          channel=$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)
+          rustup default "$channel"
+          rustup component add rustfmt clippy
+          rustup target add wasm32-unknown-unknown
+        working-directory: cascade-bridge-rs
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: cascade-bridge-rs
+          save-if: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: rustfmt diff
+        continue-on-error: true
+        working-directory: cascade-bridge-rs
+        run: cargo fmt --all && git diff --exit-code
+      - name: clippy
+        continue-on-error: true
+        working-directory: cascade-bridge-rs
+        run: |
+          cargo clippy --locked --all-targets -- -D warnings
+          cargo clippy --locked -p cascade-bridge-wasm --target wasm32-unknown-unknown -- -D warnings
+      - name: library tests
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        working-directory: cascade-bridge-rs
+        run: cargo test --locked -p cascade-bridge --lib
+      - name: command tests
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        working-directory: cascade-bridge-rs
+        run: cargo test --locked -p cascade-bridge-cli --test cli
+      - name: package
+        if: ${{ !cancelled() }}
+        working-directory: cascade-bridge-rs
+        run: sh package/build.sh --fast
+      - name: node_host and the specification's vector
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        working-directory: cascade-bridge-rs
+        run: cargo test --locked -p cascade-bridge-cli --test node_host --test specification_vector -- --include-ignored
+      - name: package tests
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        working-directory: cascade-bridge-rs
+        run: |
+          node --test package/tests/
+          npx --yes typescript@7.0.2 --noEmit --strict package/tests/consumer.ts
