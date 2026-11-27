@@ -88,10 +88,8 @@ mod failing_the_entries_the_specification_lists {
             store.extend(quads).expect("loaded");
         }
         let _ = std::fs::remove_file(&report);
-        let judge = std::fs::read_to_string(
-            specification.join("engine/faults-of-a-report-against-expected-outcomes.rq"),
-        )
-        .expect("the specification's judge");
+        let judge = std::fs::read_to_string(specification.join("engine/faults-of-a-report.rq"))
+            .expect("the specification's judge");
         let QueryResults::Solutions(solutions) = SparqlEvaluator::new()
             .parse_query(&judge)
             .expect("the judge parses")
