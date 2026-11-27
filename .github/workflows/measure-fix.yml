@@ -67,12 +67,14 @@ jobs:
       - name: package
         if: ${{ !cancelled() }}
         working-directory: cascade-bridge-rs
-        run: sh package/build.sh --fast
+        run: |
+          sh package/build.sh --fast
+          (cd hosts/node && npm ci --no-audit --no-fund)
       - name: node_host and the specification's vector
         if: ${{ !cancelled() }}
         continue-on-error: true
         working-directory: cascade-bridge-rs
-        run: cargo test --locked -p cascade-bridge-cli --test node_host --test specification_vector -- --include-ignored
+        run: cargo test --locked --no-fail-fast -p cascade-bridge-cli --test node_host --test specification_vector -- --include-ignored
       - name: package tests
         if: ${{ !cancelled() }}
         continue-on-error: true
