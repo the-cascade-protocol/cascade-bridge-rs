@@ -327,11 +327,7 @@ impl<'a> About<'a> {
     /// carried at all: the occurrence then belongs to no record.
     fn drops(&self, at: &[&str]) -> bool {
         self.dropped.iter().any(|found| {
-            found.len() <= at.len()
-                && found
-                    .iter()
-                    .zip(at)
-                    .all(|(one, two)| one.as_str() == *two)
+            found.len() <= at.len() && found.iter().zip(at).all(|(one, two)| one.as_str() == *two)
         })
     }
 
