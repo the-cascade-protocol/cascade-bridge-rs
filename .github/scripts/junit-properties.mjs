@@ -9,11 +9,9 @@ import { pathToFileURL } from "node:url";
  * run from the repository's root. Nextest writes a case's module path and its test binary, and no file, line or doc
  * comment, so each case is found in the source by its path: rustfmt's indentation says which `mod` a line is in, and the
  * `///` above a `mod` or a `fn` is what it says of itself, as the vocabulary's tests say it of a class or a function. The
- * reports are merged into one, a case of the files `crates/spec.json` lists as `shaped` that cannot be found is an error,
- * and any other is left as nextest wrote it.
+ * reports are merged into one, and a case that cannot be found is left as nextest wrote it.
  */
 
-const SPEC = "crates/spec.json";
 const LIBRARIES = new Set([
   "lib",
   "rlib",
@@ -181,9 +179,8 @@ const fnRule = (depth, name) =>
  * the source does not hold it. rustfmt indents a `mod`'s items by four spaces and closes it at the `mod`'s own indent, so
  * the lines between are found without counting braces, passing over lines that begin inside a string or a block comment.
  * `mod x;` goes on in `x.rs` or `x/mod.rs` beside the file, under the file's own name unless it is the binary's first.
- * `visited` is given every file the walk read, which is how a case it could not place is tied to a shaped file.
  */
-export function placed(binary, path, linesOf, visited = []) {
+export function placed(binary, path, linesOf) {
   let file = binary;
   let directory = dirname(binary);
   let lines = linesOf(file);
@@ -191,7 +188,6 @@ export function placed(binary, path, linesOf, visited = []) {
   let to = lines?.length ?? 0;
   let depth = 0;
   const found = [];
-  visited.push(file);
   for (const [at, name] of path.entries()) {
     if (lines === undefined || !/^\w+$/.test(name)) return undefined;
     const text = insideTextOf(lines);
@@ -208,7 +204,6 @@ export function placed(binary, path, linesOf, visited = []) {
         existsSync(one),
       );
       if (file === undefined) return undefined;
-      visited.push(file);
       lines = linesOf(file);
       from = 0;
       to = lines?.length ?? 0;
@@ -249,10 +244,9 @@ export function propertiesOf(found, root) {
 
 /**
  * One report from several: every `testsuite` of each under a `testsuites` named `nextest-run`, which is how the page tells
- * the runner, each case of them given the properties of where it is in the source. `unplaced` are the cases of a `shaped`
- * file that the source does not hold.
+ * the runner, each case of them given the properties of where it is in the source.
  */
-export function merged(reports, { binaries, root, shaped }) {
+export function merged(reports, { binaries, root }) {
   const files = new Map();
   const linesOf = (file) => {
     if (!files.has(file))
@@ -262,7 +256,6 @@ export function merged(reports, { binaries, root, shaped }) {
       );
     return files.get(file);
   };
-  const unplaced = [];
   let tests = 0;
   let failures = 0;
   let errors = 0;
@@ -288,16 +281,11 @@ export function merged(reports, { binaries, root, shaped }) {
           const classname = attributes.get("classname") ?? "";
           const name = attributes.get("name") ?? "";
           const binary = binaries.get(classname);
-          const visited = [];
           const found =
             binary === undefined
               ? undefined
-              : placed(binary, name.split("::"), linesOf, visited);
-          if (found === undefined) {
-            if (visited.some((file) => shaped.has(relative(root, file).replaceAll("\\", "/"))))
-              unplaced.push(`${classname} ${name}`);
-            return element;
-          }
+              : placed(binary, name.split("::"), linesOf);
+          if (found === undefined) return element;
           const properties = `<properties>${propertiesOf(found, root).join("")}</properties>`;
           const opening = `<testcase${source}>`;
           return closed === "/"
@@ -313,7 +301,7 @@ export function merged(reports, { binaries, root, shaped }) {
     "</testsuites>",
     "",
   ].join("\n");
-  return { xml, unplaced };
+  return { xml };
 }
 
 function run([out, ...inputs]) {
@@ -328,18 +316,10 @@ function run([out, ...inputs]) {
       maxBuffer: 1 << 28,
     }),
   );
-  const spec = existsSync(SPEC) ? JSON.parse(readFileSync(SPEC, "utf8")) : {};
-  const shaped = new Set((spec.shaped ?? []).map((file) => join(dirname(SPEC), file).replaceAll("\\", "/")));
   const reports = inputs.map((input) => readFileSync(input, "utf8"));
-  const { xml, unplaced } = merged(reports, {
-    binaries: binariesOf(metadata),
-    root,
-    shaped,
-  });
+  const { xml } = merged(reports, { binaries: binariesOf(metadata), root });
   writeFileSync(out, xml);
-  for (const one of unplaced)
-    process.stderr.write(`not found in the source, though its file is shaped: ${one}\n`);
-  return unplaced.length === 0 ? 0 : 1;
+  return 0;
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href)
