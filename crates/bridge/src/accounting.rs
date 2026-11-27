@@ -43,7 +43,7 @@ struct Carry {
 /// What an entry that says its path is carried says a record written from it holds:
 /// one of `carries`, or else a finding naming one of `gaps`; and, where no record of a class
 /// `carries` names holds an occurrence, a finding of one of `reported`, the gaps its adapter
-/// reports itself, at it or above it.
+/// reports itself, and nothing else.
 #[derive(Default)]
 struct Owed {
     carries: Vec<Carry>,
@@ -135,7 +135,6 @@ impl Accounting {
                 owing.carries.extend(carries.iter().cloned());
                 owing.gaps.extend(entry.gap.iter().cloned());
                 owing.gaps.extend(entry.miss.iter().cloned());
-                owing.gaps.extend(adapter_reports.iter().cloned());
                 owing.reported.extend(adapter_reports.iter().cloned());
             }
             if let (Some(verdict), Some(gap)) = (&entry.verdict, &entry.gap) {

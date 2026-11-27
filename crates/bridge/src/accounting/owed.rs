@@ -24,7 +24,8 @@ pub(crate) enum Unmet {
         owed: Vec<(String, String)>,
     },
     /// An occurrence of a path whose entry names the gaps its adapter reports, held by no record
-    /// of a class the path is carried on, with no finding of one of `gaps` at it or above it.
+    /// of a class the path is carried on, with no finding of one of `gaps` at it, inside it, or
+    /// at an element holding it whose path's entry names that gap.
     Unreported {
         path: String,
         address: String,
@@ -88,7 +89,8 @@ fn looked_for(owed: &[(String, String)]) -> String {
 
 fn unreported(gaps: &[String]) -> String {
     format!(
-        "no finding of {} is addressed at it or above it",
+        "no finding of {} is addressed at it, inside it, or at an element holding it whose \
+         path's entry names that gap",
         gaps.join(" or ")
     )
 }
@@ -182,6 +184,19 @@ impl Accounting {
                     .push(standing.path.as_str());
             }
         }
+        let reported_at: Vec<(Vec<String>, &[String])> = unit
+            .standings()
+            .iter()
+            .filter_map(|standing| {
+                let reported = &self.owed.get(&standing.path)?.reported;
+                if reported.is_empty() {
+                    return None;
+                }
+                let address = joined(record.selector, standing.within.as_deref());
+                let at = steps(&address).into_iter().map(str::to_owned).collect();
+                Some((at, reported.as_slice()))
+            })
+            .collect();
         for standing in unit.standings().iter().filter(|standing| !standing.empty) {
             let Some(owed) = self.owed.get(&standing.path) else {
                 continue;
@@ -237,7 +252,7 @@ impl Accounting {
                 }
             }
             if looked.is_empty() {
-                if !owed.reported.is_empty() && !about.reports(&at, &owed.reported) {
+                if !owed.reported.is_empty() && !about.reports(&at, &owed.reported, &reported_at) {
                     unmet.push(Unmet::Unreported {
                         path: standing.path.clone(),
                         address,
@@ -530,15 +545,27 @@ impl<'a> About<'a> {
         self.dropped.iter().any(|found| holds(found, at))
     }
 
-    /// Whether one whose body is one of `gaps` was addressed at the occurrence or above it.
-    fn reports(&self, at: &[&str], gaps: &[String]) -> bool {
-        self.addressed
-            .iter()
-            .any(|(found, body)| holds(found, at) && gaps.iter().any(|gap| gap == body))
+    /// Whether one whose body is one of `gaps` was addressed at the occurrence or below it, or
+    /// above it where `reported_at` has an occurrence owed a finding of that body.
+    fn reports(
+        &self,
+        at: &[&str],
+        gaps: &[String],
+        reported_at: &[(Vec<String>, &[String])],
+    ) -> bool {
+        let owed_there = |found: &Vec<String>, body: &str| {
+            reported_at
+                .iter()
+                .any(|(place, reported)| place == found && reported.iter().any(|gap| gap == body))
+        };
+        self.addressed.iter().any(|(found, body)| {
+            gaps.iter().any(|gap| gap == body)
+                && (holds(at, found) || (holds(found, at) && owed_there(found, body)))
+        })
     }
 
-    /// Whether one was addressed at the occurrence or below it, or above it with a body
-    /// its path's entry names.
+    /// Whether one was addressed at the occurrence or below it, or above it with the
+    /// `bridge:namesGap` or `bridge:lookupNamesGap` of its path's entry.
     fn meets(&self, at: &[&str], owed: &Owed) -> bool {
         self.addressed.iter().any(|(found, body)| {
             let shared = found
