@@ -2,6 +2,7 @@ use super::{Accounting, Carry, Owed};
 use crate::annotation::Record;
 use crate::lift::Unit;
 use crate::load::as_subject;
+use crate::records::version_of;
 use crate::syntax::{Respelling, Syntax};
 use crate::terms::{
     BRIDGE_ARRIVED_AS, OA_HAS_BODY, OA_HAS_SELECTOR, OA_HAS_TARGET, OA_REFINED_BY,
@@ -375,15 +376,35 @@ impl<'a> Written<'a> {
     }
 }
 
-/// The nodes written with members none of which holds anything. A literal holds something where
-/// `syntax` would not call its text an empty occurrence, a node with no members is something, and
-/// a node holds what any member of it holds, so a node that is its own member adds nothing.
+/// The nodes written with members none of which holds anything. A node is a blank node or an IRI
+/// nested in a version; any other IRI is a value by its name, whatever is said of it. A literal
+/// holds something where `syntax` would not call its text an empty occurrence, a node with no
+/// members is something, a type is no member, and a node holds what any member of it holds, so a
+/// node that is its own member adds nothing.
 fn nodes_of_nothing(produced: &[Quad], syntax: Syntax) -> HashSet<NamedOrBlankNode> {
-    let with_members: HashSet<&NamedOrBlankNode> =
-        produced.iter().map(|quad| &quad.subject).collect();
+    let versions: HashSet<&str> = produced
+        .iter()
+        .filter(|quad| quad.predicate.as_str() == PROV_SPECIALIZATION_OF)
+        .filter_map(|quad| match &quad.subject {
+            NamedOrBlankNode::NamedNode(version) => Some(version.as_str()),
+            NamedOrBlankNode::BlankNode(_) => None,
+        })
+        .collect();
+    let is_node = |node: &NamedOrBlankNode| match node {
+        NamedOrBlankNode::NamedNode(iri) => {
+            let version = version_of(iri.as_str());
+            version.len() < iri.as_str().len() && versions.contains(version)
+        }
+        NamedOrBlankNode::BlankNode(_) => true,
+    };
+    let with_members: HashSet<&NamedOrBlankNode> = produced
+        .iter()
+        .filter(|quad| quad.predicate.as_str() != RDF_TYPE && is_node(&quad.subject))
+        .map(|quad| &quad.subject)
+        .collect();
     let mut held_by: HashMap<NamedOrBlankNode, Vec<NamedOrBlankNode>> = HashMap::new();
     let mut holding: Vec<NamedOrBlankNode> = Vec::new();
-    for quad in produced {
+    for quad in produced.iter().filter(|quad| quad.predicate.as_str() != RDF_TYPE) {
         match &quad.object {
             Term::Literal(value) if syntax.holds_nothing(value.value()) => {}
             object => match as_subject(object) {
