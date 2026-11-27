@@ -116,7 +116,7 @@ jobs:
           held="$RUNNER_TEMP/held"
           mkdir -p "$held"
           run() {
-            "cascade-bridge-rs/target/release/cascade-bridge" convert "cascade-bridge-adapter-$1" "$2" --vocabularies cascade-vocabulary --owed 2>&1 | tee -a "$RUNNER_TEMP/held-$1.txt"
+            "cascade-bridge-rs/target/release/cascade-bridge" convert "cascade-bridge-adapter-$1" "$2" --vocabularies cascade-vocabulary --memory-budget-mib 3072 --owed 2>&1 | tee -a "$RUNNER_TEMP/held-$1.txt"
           }
           for adapter in fhir-r4 ccda; do
             for file in cascade-bridge-adapter-$adapter/bench/*.gz; do
@@ -153,7 +153,7 @@ jobs:
                   fi
                 done
               done
-              echo "| $adapter | $host | ${mains[*]} | ${branches[*]} |" >> "$GITHUB_STEP_SUMMARY"
+              echo "| $adapter | $host | ${mains[*]} | ${branches[*]} |" | tee -a "$RUNNER_TEMP/cost.txt" >> "$GITHUB_STEP_SUMMARY"
             done
           done
       - uses: actions/upload-artifact@v7
