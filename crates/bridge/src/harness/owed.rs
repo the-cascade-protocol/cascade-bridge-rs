@@ -270,6 +270,36 @@ mod tests {
                 assert_eq!(outcome, "cantTell", "{description}");
             }
 
+            /// is not met by a property whose only written value is empty, however the
+            /// emptiness is spelled, and owes nothing for an occurrence that is itself empty
+            #[test]
+            fn is_not_met_by_a_property_written_only_as_an_empty_value() {
+                for written in [
+                    r#"BIND("" AS ?title)"#,
+                    r#"BIND(" " AS ?title)"#,
+                    r#"BIND("<p> </p>" AS ?title)"#,
+                ] {
+                    let results = ran(&catalog(written, CARRIED));
+                    let (outcome, description) = judged(&results, "titled");
+                    assert_eq!(outcome, "failed", "{written}: {description}");
+                    assert!(
+                        description.contains("not met at 1 occurrence(s): /item/title:"),
+                        "{written}: {description}"
+                    );
+                    let (outcome, description) = judged(&results, "blank");
+                    assert_eq!(outcome, "cantTell", "{written}: {description}");
+                }
+            }
+
+            /// is met by one non-empty value written beside an empty one: the check does not
+            /// count values
+            #[test]
+            fn is_met_by_a_non_empty_value_written_beside_an_empty_one() {
+                let written = catalog(r#"VALUES ?title { "" "First" }"#, CARRIED);
+                let (outcome, description) = judged(&ran(&written), "titled");
+                assert_eq!(outcome, "cantTell", "{description}");
+            }
+
             /// owes nothing for a member carried as the property an empty member of the same
             /// element is carried as, which no value can then be written for
             #[test]
@@ -331,12 +361,21 @@ mod tests {
                         "the record selector \"/catalog/item[1]/..\" selects a node outside the \
                          unit",
                     ),
+                    ("/*", "the record selector \"/catalog/item[1]/*\" selects 2 nodes"),
                 ] {
                     let shelved =
                         catalog("", CARRIED).with("mapping/item-shelf.rq", shelves_at(step));
                     let (outcome, description) = judged(&ran(&shelved), "shelved");
                     assert_eq!(outcome, "failed", "{step}: {description}");
                     assert!(description.contains(said), "{step}: {description}");
+                    if said.starts_with("the record selector") {
+                        // A selector is no occurrence, and is counted as what it is.
+                        assert!(
+                            description.contains("cannot be checked for 1 record selector(s): "),
+                            "{step}: {description}"
+                        );
+                        assert!(!description.contains("occurrence(s)"), "{step}: {description}");
+                    }
                 }
             }
 

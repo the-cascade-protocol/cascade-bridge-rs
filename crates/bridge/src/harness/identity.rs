@@ -21,6 +21,28 @@ fn relation(one: &str, two: &str, same: bool) -> String {
     )
 }
 
+/// The versioned adapter, each version arriving at its item's step as `conditions` spells it.
+fn selecting_by(conditions: &str) -> Variant {
+    versioned()
+        .replacing(
+            "mapping/item.rq",
+            "[] bridge:arrivedAs ?v ; pav:version ?id .",
+            "[] bridge:arrivedAs ?v ; pav:version ?id ;
+    <http://www.w3.org/ns/oa#hasSelector> [
+      a <http://www.w3.org/ns/oa#XPathSelector> ;
+      <http://www.w3.org/1999/02/22-rdf-syntax-ns#value> ?at ] .",
+        )
+        .replacing(
+            "mapping/item.rq",
+            "AS ?v)",
+            format!(
+                "AS ?v)
+  bridge:thisRecord bridge:selector ?record .
+  BIND(CONCAT(\"/catalog/*[{conditions}][\", STRAFTER(?record, \"item[\")) AS ?at)"
+            ),
+        )
+}
+
 fn judged(adapter: Variant, manifest: String) -> EntryResult {
     let resolver = adapter.with(MANIFEST, manifest);
     let adapter = load_adapter(&resolver).expect("adapter");
@@ -68,6 +90,28 @@ mod tests {
                         false,
                     ),
                 );
+                assert_eq!(outcome, "passed", "{said}");
+            }
+
+            /// finds the record a selector names as the node it selects, however the adapter
+            /// spells the selector its arrival stood at
+            #[test]
+            fn finds_a_record_by_the_node_its_selector_selects_not_by_how_it_is_spelled() {
+                let adapter = || selecting_by("local-name()='item' and namespace-uri()=''");
+                let item = |at: u8| {
+                    conversion(
+                        "two.xml",
+                        Some(&format!(
+                            "/catalog/*[namespace-uri()='' and local-name()='item'][{at}]"
+                        )),
+                    )
+                };
+                let (outcome, said) = judged_as(
+                    adapter(),
+                    relation(&item(1), &conversion("output-fails-a-shape.xml", None), true),
+                );
+                assert_eq!(outcome, "passed", "{said}");
+                let (outcome, said) = judged_as(adapter(), relation(&item(1), &item(2), false));
                 assert_eq!(outcome, "passed", "{said}");
             }
 
