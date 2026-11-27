@@ -41,6 +41,15 @@ impl Syntax {
         )))
     }
 
+    /// Whether `text` is an empty occurrence in this syntax, which is what a value of it
+    /// written is empty as: the lift and the accounting check both ask here.
+    pub(crate) fn holds_nothing(self, text: &str) -> bool {
+        match self {
+            Self::Xml => decode::is_xml_space(text),
+            Self::Json => decode::holds_no_text(text),
+        }
+    }
+
     /// The adapter's `bridge:elementNameOfEachRecord`: a JSON document is split by its
     /// envelope's path instead.
     pub(crate) fn records(self, adapter: &Adapter) -> Result<Option<String>> {

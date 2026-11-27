@@ -92,7 +92,19 @@ fn accounting(title: &str) -> String {
 
 const CARRIED: &str = "bridge:verdict bridge:carried";
 
-const ENTRIES: [(&str, &str); 6] = [
+const ENTRIES: [(&str, &str); 9] = [
+    (
+        "no_break_space",
+        r#"<catalog><item id="12"><title>&#160;</title></item></catalog>"#,
+    ),
+    (
+        "em_space",
+        r#"<catalog><item id="13"><title>&#8195;</title></item></catalog>"#,
+    ),
+    (
+        "escaped_markup",
+        r#"<catalog><item id="14"><title>&lt;p&gt; &lt;/p&gt;</title></item></catalog>"#,
+    ),
     (
         "hollow",
         r#"<catalog><item id="6"><title>Sixth</title><bin> </bin><tag>red</tag></item></catalog>"#,
@@ -270,6 +282,44 @@ mod tests {
                 assert_eq!(outcome, "cantTell", "{description}");
             }
 
+            /// is met by a title written as it stands where an XML element holds only a
+            /// character that is no XML white space, or markup written as text, since each is
+            /// an occurrence that is not empty
+            #[test]
+            fn is_met_by_a_value_written_as_it_stands_that_is_not_empty_in_the_source_syntax() {
+                let results = ran(&catalog(TITLE_WRITTEN, CARRIED));
+                for name in ["no_break_space", "em_space", "escaped_markup"] {
+                    let (outcome, description) = judged(&results, name);
+                    assert_eq!(outcome, "cantTell", "{name}: {description}");
+                }
+            }
+
+            /// is not met by a property whose only written value is empty, and owes nothing
+            /// for an occurrence that is itself empty
+            #[test]
+            fn is_not_met_by_a_property_written_only_as_an_empty_value() {
+                for written in [r#"BIND("" AS ?title)"#, r#"BIND(" " AS ?title)"#] {
+                    let results = ran(&catalog(written, CARRIED));
+                    let (outcome, description) = judged(&results, "titled");
+                    assert_eq!(outcome, "failed", "{written}: {description}");
+                    assert!(
+                        description.contains("not met at 1 occurrence(s): /item/title:"),
+                        "{written}: {description}"
+                    );
+                    let (outcome, description) = judged(&results, "blank");
+                    assert_eq!(outcome, "cantTell", "{written}: {description}");
+                }
+            }
+
+            /// is met by one non-empty value written beside an empty one: the check does not
+            /// count values
+            #[test]
+            fn is_met_by_a_non_empty_value_written_beside_an_empty_one() {
+                let written = catalog(r#"VALUES ?title { "" "First" }"#, CARRIED);
+                let (outcome, description) = judged(&ran(&written), "titled");
+                assert_eq!(outcome, "cantTell", "{description}");
+            }
+
             /// owes nothing for a member carried as the property an empty member of the same
             /// element is carried as, which no value can then be written for
             #[test]
@@ -331,12 +381,27 @@ mod tests {
                         "the record selector \"/catalog/item[1]/..\" selects a node outside the \
                          unit",
                     ),
+                    (
+                        "/*",
+                        "the record selector \"/catalog/item[1]/*\" selects 2 nodes",
+                    ),
                 ] {
                     let shelved =
                         catalog("", CARRIED).with("mapping/item-shelf.rq", shelves_at(step));
                     let (outcome, description) = judged(&ran(&shelved), "shelved");
                     assert_eq!(outcome, "failed", "{step}: {description}");
                     assert!(description.contains(said), "{step}: {description}");
+                    if said.starts_with("the record selector") {
+                        // A selector is no occurrence, and is counted as what it is.
+                        assert!(
+                            description.contains("cannot be checked for 1 record selector(s): "),
+                            "{step}: {description}"
+                        );
+                        assert!(
+                            !description.contains("occurrence(s)"),
+                            "{step}: {description}"
+                        );
+                    }
                 }
             }
 
@@ -558,6 +623,26 @@ WHERE {{ ?root a fx:root ; xyz:contained ?list . }}"
                     let (outcome, description) =
                         judged(&ran(&nesting_titled(CONTAINED, markup)), "nested");
                     assert_eq!(outcome, "cantTell", "{description}");
+                }
+
+                /// is not met by a title written as an empty string, a white space or markup
+                /// holding no text, where the string read is not empty
+                #[test]
+                fn is_not_met_by_a_title_written_as_nothing_where_the_string_read_is_not() {
+                    for written in ["", " ", "<p> </p>"] {
+                        let writing = format!("{CONTAINED}\n  BIND({written:?} AS ?title)");
+                        let writes = nesting_titled(&writing, "First").replacing(
+                            "mapping/item.rq",
+                            "?v prov:specializationOf ?s .",
+                            "?v prov:specializationOf ?s ; ex:title ?title .",
+                        );
+                        let (outcome, description) = judged(&ran(&writes), "nested");
+                        assert_eq!(outcome, "failed", "{written:?}: {description}");
+                        assert!(
+                            description.contains("/contained/title: no urn:example:list#title"),
+                            "{written:?}: {description}"
+                        );
+                    }
                 }
 
                 #[test]

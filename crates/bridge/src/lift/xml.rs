@@ -4,8 +4,9 @@ use super::attachment::{
 use super::{
     member, name, store_of, triple, Occurrence, Paths, Standing, Unit, Valued, FX, RDF, XYZ,
 };
-use crate::decode::{is_xml_space, normalise_attribute_value, normalise_line_endings, XML_SPACE};
+use crate::decode::{normalise_attribute_value, normalise_line_endings, XML_SPACE};
 use crate::error::{Error, Result};
+use crate::syntax::Syntax;
 use oxigraph::model::{BlankNode, Literal, NamedNode, Quad};
 use oxigraph::store::Store;
 use quick_xml::events::Event;
@@ -155,7 +156,7 @@ impl Census {
             if kept.valued.contains(&path) {
                 self.hold(&path, within, value);
             }
-            let empty = is_xml_space(value);
+            let empty = Syntax::Xml.holds_nothing(value);
             holds |= !empty;
             if kept.carried.contains(&path) {
                 let written = format!("@{}", step.write(false));
@@ -409,7 +410,7 @@ impl Builder {
             if let Some(own) = &mut top.attachment_text {
                 own.push_str(&self.text);
             }
-            if !is_xml_space(&self.text) {
+            if !Syntax::Xml.holds_nothing(&self.text) {
                 if let Some(census) = self.census.as_mut().filter(|_| top.unit) {
                     census.holds_text();
                 }
@@ -585,7 +586,7 @@ impl Builder {
 
     fn lift_text_content(&mut self, frame: &Frame) {
         let content = &self.unit_text[frame.text_from..];
-        if !is_xml_space(content) {
+        if !Syntax::Xml.holds_nothing(content) {
             self.unit.push(triple(
                 &frame.id,
                 self.text_content.clone(),

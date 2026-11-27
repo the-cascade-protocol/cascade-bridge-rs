@@ -2,7 +2,7 @@ use super::{Accounting, Carry, Owed};
 use crate::annotation::Record;
 use crate::lift::Unit;
 use crate::load::as_subject;
-use crate::syntax::Respelling;
+use crate::syntax::{Respelling, Syntax};
 use crate::terms::{
     BRIDGE_ARRIVED_AS, OA_HAS_BODY, OA_HAS_SELECTOR, OA_HAS_TARGET, OA_REFINED_BY,
     PROV_SPECIALIZATION_OF, RDF_TYPE, RDF_VALUE,
@@ -70,7 +70,9 @@ fn looked_for(owed: &[(String, String)]) -> String {
 
 impl Accounting {
     /// `nested` is where, in this unit, the records nested in it stand, each one step
-    /// below it; `spelling` spells an address of the document as the unit's occurrences are.
+    /// below it; `spelling` spells an address of the document as the unit's occurrences are;
+    /// a value written is empty where `syntax` would call the same text an empty occurrence.
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn unmet(
         &self,
         record: &Record<'_>,
@@ -79,12 +81,13 @@ impl Accounting {
         produced: &[Quad],
         findings: &[Quad],
         spelling: &dyn Respelling,
+        syntax: Syntax,
     ) -> Vec<Unmet> {
         let mut unmet = Vec::new();
         if self.owed.is_empty() || unit.standings().is_empty() {
             return unmet;
         }
-        let written = Written::of(produced);
+        let written = Written::of(produced, syntax);
         if written.selected.is_empty() {
             return unmet;
         }
@@ -238,13 +241,14 @@ struct Written<'a> {
     classes: HashMap<NamedOrBlankNode, Vec<&'a str>>,
     /// Each record with the address one of its arrivals was selected at, as written.
     selected: Vec<(NamedOrBlankNode, &'a str)>,
-    /// Each property written on a record, its versions, their arrivals, or a node they
-    /// point at that is no record, version or arrival of its own.
+    /// Each property written with a value that is not empty, on a record, its versions,
+    /// their arrivals, or a node they point at that is no record, version or arrival of
+    /// its own.
     carried: HashMap<NamedOrBlankNode, HashSet<&'a str>>,
 }
 
 impl<'a> Written<'a> {
-    fn of(produced: &'a [Quad]) -> Self {
+    fn of(produced: &'a [Quad], syntax: Syntax) -> Self {
         let mut classes: HashMap<NamedOrBlankNode, Vec<&str>> = HashMap::new();
         let mut record_of: HashMap<NamedOrBlankNode, NamedOrBlankNode> = HashMap::new();
         let mut version_of: HashMap<NamedOrBlankNode, NamedOrBlankNode> = HashMap::new();
@@ -325,6 +329,13 @@ impl<'a> Written<'a> {
         }
         let mut carried: HashMap<NamedOrBlankNode, HashSet<&str>> = HashMap::new();
         for quad in produced {
+            let empty = match &quad.object {
+                Term::Literal(value) => syntax.holds_nothing(value.value()),
+                _ => false,
+            };
+            if empty {
+                continue;
+            }
             for record in owners.get(&quad.subject).into_iter().flatten() {
                 carried
                     .entry(record.clone())
@@ -434,6 +445,16 @@ impl<'a> About<'a> {
                     && owed.gaps.iter().any(|gap| gap == body))
         })
     }
+}
+
+/// Whether two addresses of the document select one node, read as steps (name, namespace,
+/// position) however each is spelled.
+pub(crate) fn same_place(spelling: &dyn Respelling, one: &str, other: &str) -> bool {
+    one == other
+        || matches!(
+            (spelling.spelled(one), spelling.spelled(other)),
+            (Ok(one), Ok(other)) if steps(&one) == steps(&other)
+        )
 }
 
 /// An address's steps: split at each `/` outside a predicate's brackets.

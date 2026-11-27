@@ -617,6 +617,7 @@ fn unit_converted(
                 &produced,
                 &findings,
                 spelling,
+                prepared.syntax,
             )
         }),
         None => Vec::new(),

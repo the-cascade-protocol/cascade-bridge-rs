@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 mod owed;
 
-pub(crate) use owed::Unmet;
+pub(crate) use owed::{same_place, Unmet};
 
 struct Entry {
     path: String,

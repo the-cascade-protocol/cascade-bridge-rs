@@ -7,6 +7,7 @@ use super::{
 };
 use crate::error::{Error, Result};
 use crate::json::{self, Node, Value};
+use crate::syntax::Syntax;
 use oxigraph::model::{BlankNode, Literal, NamedNode, Quad, Term};
 use oxigraph::store::Store;
 use std::collections::{HashMap, HashSet};
@@ -212,29 +213,9 @@ fn census(record: &Node, valued: &HashSet<String>, carried: &HashSet<String>) ->
     census
 }
 
-/// A string is nothing where it is white space once each complete tag is taken out, as an
-/// XHTML narrative holding no visible character is.
 fn holds_nothing(node: &Node) -> bool {
     match &node.value {
-        Value::String(text) => {
-            let mut rest = text.as_str();
-            loop {
-                let (before, after) = match rest.split_once('<') {
-                    Some((before, after)) => (before, Some(after)),
-                    None => (rest, None),
-                };
-                if !before.trim().is_empty() {
-                    return false;
-                }
-                let Some(after) = after else {
-                    return true;
-                };
-                match after.split_once('>') {
-                    Some((_, beyond)) => rest = beyond,
-                    None => return false,
-                }
-            }
-        }
+        Value::String(text) => Syntax::Json.holds_nothing(text),
         Value::Object(members) => members.iter().all(|(_, member)| holds_nothing(member)),
         Value::Array(items) => items.iter().all(holds_nothing),
         Value::Null => true,
