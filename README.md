@@ -14,8 +14,8 @@ built for WebAssembly, as a pre-release on the
 
 ## Docs
 
-- [The Cascade hub](https://the-cascade-protocol.github.io/cascade-runtime-js/): where to go for each thing, and every repository.
-- [Adapters](https://the-cascade-protocol.github.io/cascade-runtime-js/adapters/): what each adapter it runs carries.
+- [The Cascade hub](https://reference.cascadeprotocol.org/): where to go for each thing, and every repository.
+- [Adapters](https://reference.cascadeprotocol.org/adapters/): what each adapter it runs carries.
 
 ## Status: DRAFT
 
