@@ -9,7 +9,7 @@ use crate::terms::{
     BRIDGE_AS_PROPERTY, BRIDGE_CARRIED, BRIDGE_CARRIED_AS, BRIDGE_CARRIED_IN_PART,
     BRIDGE_ARRIVED_AS, BRIDGE_IN_RECORD_CLASS, BRIDGE_IN_SOURCE_RECORD_TYPE, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP,
     BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY, BRIDGE_SOURCE_LACKS_REQUIRED,
-    BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, OA_HAS_BODY, OA_REFINED_BY,
+    BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, OA_HAS_BODY, OA_HAS_SELECTOR, OA_HAS_TARGET, OA_REFINED_BY,
     PROV_SPECIALIZATION_OF, RDF_TYPE, RDF_VALUE, SH_INFO, SH_RESULT_SEVERITY, SH_VALUE, SH_VIOLATION, SH_WARNING, SKOS_BROADER,
     SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
 };
@@ -92,6 +92,7 @@ pub(crate) struct Accounting {
     reported: HashMap<String, Vec<Reported>>,
     lookups: HashMap<String, Vec<Lookup>>,
     forward: HashMap<String, Forward>,
+    declared: HashSet<String>,
 }
 
 impl Accounting {
@@ -228,6 +229,7 @@ impl Accounting {
             reported,
             lookups,
             forward,
+            declared: scheme.keys().cloned().collect(),
         })
     }
 
@@ -336,27 +338,51 @@ impl Accounting {
                 }
             }
         }
-        // Where each finding was addressed below its record, indexes left out.
-        let refined: HashSet<NamedOrBlankNode> = findings
-            .iter()
-            .filter(|quad| quad.predicate.as_str() == OA_REFINED_BY)
-            .filter_map(|quad| as_subject(&quad.object))
-            .collect();
-        let addressed: Vec<String> = findings
-            .iter()
-            .filter(|quad| quad.predicate.as_str() == RDF_VALUE && refined.contains(&quad.subject))
-            .filter_map(|quad| match &quad.object {
-                Term::Literal(address) if address.value().starts_with('/') => {
-                    Some(unindexed(address.value()))
+        // Where each finding was addressed below its record, indexes left out, and whether its
+        // body is a gap the adapter declares.
+        let mut step: HashMap<(&str, &NamedOrBlankNode), NamedOrBlankNode> = HashMap::new();
+        let mut text: HashMap<&NamedOrBlankNode, &str> = HashMap::new();
+        let mut body_of: Vec<(&NamedOrBlankNode, &str)> = Vec::new();
+        for quad in findings {
+            let predicate = quad.predicate.as_str();
+            if predicate == OA_HAS_BODY {
+                if let Term::NamedNode(body) = &quad.object {
+                    body_of.push((&quad.subject, body.as_str()));
                 }
-                Term::Literal(address) => Some(unindexed(&format!(
-                    "{}/{}",
-                    record.selector,
-                    address.value()
-                ))),
-                _ => None,
-            })
-            .collect();
+            } else if predicate == RDF_VALUE {
+                if let Term::Literal(value) = &quad.object {
+                    text.insert(&quad.subject, value.value());
+                }
+            } else if predicate == OA_HAS_TARGET
+                || predicate == OA_HAS_SELECTOR
+                || predicate == OA_REFINED_BY
+            {
+                if let Some(object) = as_subject(&quad.object) {
+                    step.insert((predicate, &quad.subject), object);
+                }
+            }
+        }
+        let mut addressed: Vec<(String, bool)> = Vec::new();
+        for (annotation, body) in body_of {
+            let Some(target) = step.get(&(OA_HAS_TARGET, annotation)) else {
+                continue;
+            };
+            let Some(selector) = step.get(&(OA_HAS_SELECTOR, target)) else {
+                continue;
+            };
+            let Some(refinement) = step.get(&(OA_REFINED_BY, selector)) else {
+                continue;
+            };
+            let Some(address) = text.get(refinement) else {
+                continue;
+            };
+            let address = if address.starts_with('/') {
+                unindexed(address)
+            } else {
+                unindexed(&format!("{}/{}", record.selector, address))
+            };
+            addressed.push((address, self.declared.contains(body)));
+        }
         for occurrence in unit.occurrences() {
             let Some(forward) = self.forward.get(&occurrence.path) else {
                 continue;
@@ -370,9 +396,11 @@ impl Accounting {
             let below = format!("{at}/");
             let reported = values.contains(occurrence.path.as_str())
                 || forward.gaps.iter().any(|gap| bodies.contains(gap.as_str()))
-                || addressed
-                    .iter()
-                    .any(|found| *found == at || found.starts_with(&below));
+                || addressed.iter().any(|(found, declared)| {
+                    *found == at
+                        || found.starts_with(&below)
+                        || (*declared && at.starts_with(&format!("{found}/")))
+                });
             let carried = applicable.iter().any(|carry| {
                 written.contains(&(carry.class.as_str(), carry.property.as_str()))
             });
