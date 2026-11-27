@@ -346,7 +346,14 @@ impl Accounting {
             .iter()
             .filter(|quad| quad.predicate.as_str() == RDF_VALUE && refined.contains(&quad.subject))
             .filter_map(|quad| match &quad.object {
-                Term::Literal(address) => Some(unindexed(address.value())),
+                Term::Literal(address) if address.value().starts_with('/') => {
+                    Some(unindexed(address.value()))
+                }
+                Term::Literal(address) => Some(unindexed(&format!(
+                    "{}/{}",
+                    record.selector,
+                    address.value()
+                ))),
                 _ => None,
             })
             .collect();
