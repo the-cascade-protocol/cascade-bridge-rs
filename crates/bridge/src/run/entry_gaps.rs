@@ -656,6 +656,20 @@ mod tests {
             }
 
             #[test]
+            fn refuses_a_gap_the_adapter_reports_that_is_no_iri() {
+                let quoted = with_accounting(&format!(
+                    "{ACCOUNTING_PREAMBLE}\n[] a bridge:PathEntry ;\n   bridge:sourcePath \"/item/note\" ;\n   bridge:verdict bridge:noHome ;\n   bridge:adapterReportsGap \"ex:noteHasNoTerm\" .\n"
+                ));
+                let refusal = refused(
+                    &quoted,
+                    "two.xml",
+                    "a gap the adapter reports that is not an IRI is dropped, and its path is checked \
+                     for nothing",
+                );
+                assert!(refusal.contains("bridge:adapterReportsGap"), "{refusal}");
+            }
+
+            #[test]
             fn refuses_a_gap_declaring_two_kinds() {
                 let both = with_gaps(&scheme_but_for(
                     "ex:noteHasNoTerm a skos:Concept ;\n  skos:inScheme ex:gaps ;\n  skos:broader bridge:noPredicate, bridge:carriedWithLoss .\n",

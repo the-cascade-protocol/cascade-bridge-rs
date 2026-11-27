@@ -194,6 +194,50 @@ fn mark_on_the_shelf(verdict: &str) -> Variant {
     )
 }
 
+/// The tiny adapter writing each title, the entry for the shelf's mark saying `said` after its
+/// path.
+fn mark_said(said: &str) -> Variant {
+    let mark = "\"/item/shelf/mark\" ; bridge:verdict bridge:carried ;\n  \
+                bridge:carriedAs [ bridge:inRecordClass ex:Item ; bridge:asProperty ex:code ] .";
+    let written = accounting(CARRIED);
+    assert!(written.contains(mark), "{written}");
+    catalog(TITLE_WRITTEN, CARRIED).with(
+        ACCOUNTING,
+        written.replacen(mark, &format!("\"/item/shelf/mark\" ; {said} ."), 1),
+    )
+}
+
+/// `variant` with the entry for the shelf saying `said` after its path.
+fn shelf_said(variant: Variant, said: &str) -> Variant {
+    variant.replacing(
+        ACCOUNTING,
+        "\"/item/shelf\" ; bridge:verdict bridge:consumed .",
+        format!("\"/item/shelf\" ; {said} ."),
+    )
+}
+
+/// Each of `rows`, a variant reporting a gap at an address and the outcome expected, that
+/// `test` does not give the entry `shelved`, with what it does give.
+fn misjudged(rows: Vec<(Variant, &str, &str, &str)>) -> Vec<String> {
+    let mut wrong = Vec::new();
+    for (variant, gap, at, expected) in rows {
+        let (outcome, description) = judged(&ran(&reporting(variant, gap, at)), "shelved");
+        if outcome != expected {
+            wrong.push(format!(
+                "{gap} at {at}: {outcome}, not {expected}: {description}"
+            ));
+        }
+    }
+    wrong
+}
+
+/// `variant` writing no record at all: no item, and no shelf.
+fn writing_no_record(variant: Variant) -> Variant {
+    variant
+        .with("mapping/item.rq", items("FILTER(false)"))
+        .with("mapping/item-shelf.rq", NO_SHELF_RECORD)
+}
+
 /// `variant` with the gap `ex:shelfNotMapped` of `bridge:elementNotCarried`, and a finding of
 /// `gap` addressed at `at` in each item holding a shelf.
 fn reporting(variant: Variant, gap: &str, at: &str) -> Variant {
@@ -539,6 +583,108 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?t . ?t a xyz:title . }}"
                 let reported = reporting(unshelved(), "shelfNotMapped", "shelf[1]");
                 let (outcome, description) = judged(&ran(&reported), "shelved");
                 assert_eq!(outcome, "cantTell", "{description}");
+            }
+
+            /// given an entry naming a gap the adapter reports itself
+            mod given_an_entry_naming_a_gap_the_adapter_reports_itself {
+                use super::*;
+
+                const NO_HOME_THE_ADAPTER_REPORTS: &str =
+                    "bridge:verdict bridge:noHome ; bridge:adapterReportsGap ex:noteHasNoTerm";
+
+                const UNREPORTED: &str = "not met at 1 occurrence(s): /item/shelf/mark: \
+                                          no finding of urn:example:catalog#noteHasNoTerm is \
+                                          addressed at it, inside it, or at an element holding \
+                                          it whose path's entry names that gap, at \
+                                          \"/catalog/item[1]/shelf[1]/mark[1]\"";
+
+                /// fails an entry whose input holds the path where no finding of that gap is
+                /// addressed at it, inside it, or at an element holding it whose path's entry
+                /// names that gap, naming the gap before the address
+                #[test]
+                fn fails_an_entry_where_no_finding_of_that_gap_is_at_the_path_or_above_it() {
+                    let (outcome, description) =
+                        judged(&ran(&mark_said(NO_HOME_THE_ADAPTER_REPORTS)), "shelved");
+                    assert_eq!(outcome, "failed", "{description}");
+                    assert!(description.contains(UNREPORTED), "{description}");
+                }
+
+                /// is met by a finding of that gap at the occurrence or inside it, and at an
+                /// element holding it only where that element's path's entry names that gap
+                /// too; neither by one at the record, at an element whose entry does not name
+                /// it or beside it, nor by a finding of another gap, even at the occurrence
+                #[test]
+                fn is_met_by_that_gap_at_or_inside_it_or_above_it_where_an_entry_names_it_too() {
+                    let mark = || mark_said(NO_HOME_THE_ADAPTER_REPORTS);
+                    let titled = || catalog(TITLE_WRITTEN, CARRIED);
+                    let shelf_too = |variant| shelf_said(variant, NO_HOME_THE_ADAPTER_REPORTS);
+                    let wrong = misjudged(vec![
+                        (mark(), "noteHasNoTerm", "shelf[1]/mark[1]", "cantTell"),
+                        (
+                            shelf_too(titled()),
+                            "noteHasNoTerm",
+                            "shelf[1]/mark[1]",
+                            "cantTell",
+                        ),
+                        (shelf_too(mark()), "noteHasNoTerm", "shelf[1]", "cantTell"),
+                        (mark(), "noteHasNoTerm", "shelf[1]", "failed"),
+                        (mark(), "noteHasNoTerm", ".", "failed"),
+                        (mark(), "noteHasNoTerm", "title[1]", "failed"),
+                        (
+                            mark(),
+                            "summaryLosesItsMarkup",
+                            "shelf[1]/mark[1]",
+                            "failed",
+                        ),
+                    ]);
+                    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+                }
+
+                /// owes the path in a unit no record was written from, as in any other
+                #[test]
+                fn owes_the_path_in_a_unit_no_record_was_written_from() {
+                    let unwritten = || writing_no_record(mark_said(NO_HOME_THE_ADAPTER_REPORTS));
+                    let (outcome, description) = judged(&ran(&unwritten()), "shelved");
+                    assert_eq!(outcome, "failed", "{description}");
+                    assert!(description.contains(UNREPORTED), "{description}");
+                    let reported = reporting(unwritten(), "noteHasNoTerm", "shelf[1]/mark[1]");
+                    let (outcome, description) = judged(&ran(&reported), "shelved");
+                    assert_eq!(outcome, "cantTell", "{description}");
+                }
+
+                /// on a `bridge:carriedInPart` entry, owes the path where no record of a class
+                /// it is carried on holds it only a finding of that gap, and is met where one
+                /// does by a property written or by a finding of its `bridge:namesGap` above it,
+                /// never by that gap above it
+                #[test]
+                fn owes_a_carried_in_part_path_outside_its_classes_only_a_finding_of_that_gap() {
+                    let in_part = "bridge:verdict bridge:carriedInPart ; \
+                                   bridge:namesGap ex:summaryLosesItsMarkup ; \
+                                   bridge:adapterReportsGap ex:noteHasNoTerm ;\n  \
+                                   bridge:carriedAs [ bridge:inRecordClass ex:Shelf ; \
+                                   bridge:asProperty ex:code ]";
+                    let unshelved =
+                        || mark_said(in_part).with("mapping/item-shelf.rq", NO_SHELF_RECORD);
+                    let wrong = misjudged(vec![
+                        (unshelved(), "noteHasNoTerm", "shelf[1]/mark[1]", "cantTell"),
+                        (
+                            unshelved(),
+                            "summaryLosesItsMarkup",
+                            "shelf[1]/mark[1]",
+                            "failed",
+                        ),
+                        (mark_said(in_part), "noteHasNoTerm", "shelf[1]", "failed"),
+                        (
+                            mark_said(in_part),
+                            "summaryLosesItsMarkup",
+                            "shelf[1]",
+                            "cantTell",
+                        ),
+                    ]);
+                    assert!(wrong.is_empty(), "{}", wrong.join("\n"));
+                    let (_, description) = judged(&ran(&unshelved()), "shelved");
+                    assert!(description.contains(UNREPORTED), "{description}");
+                }
             }
 
             /// given a record nested in another, as the envelope declares

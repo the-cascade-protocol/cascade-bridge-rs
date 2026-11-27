@@ -14,7 +14,7 @@ const USAGE: &str = "usage: cascade-bridge test <adapter-dir> [--vocabularies <d
        cascade-bridge library <calls file> <results directory>
 
 --skip is for measuring only: the run leaves out the source schema check, the output shapes check or the findings queries, and its conversion is not a validated one.
---owed lists each occurrence of a path the accounting says is carried that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.";
+--owed lists each occurrence of a path the accounting says is carried, or whose gap the adapter reports, that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.";
 
 fn memory_budget(mebibytes: &str) -> Option<usize> {
     Budgets::memory_mib(mebibytes.parse().ok()?)

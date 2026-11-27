@@ -84,6 +84,7 @@ terms! {
     BRIDGE_NAMES_GAP = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "namesGap";
     BRIDGE_LOOKUP_IN = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "lookupIn";
     BRIDGE_LOOKUP_NAMES_GAP = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "lookupNamesGap";
+    BRIDGE_ADAPTER_REPORTS_GAP = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "adapterReportsGap";
     BRIDGE_NO_HOME = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "noHome";
     BRIDGE_CONVERSION_WRITES_WHAT_THE_ACCOUNTING_CARRIES = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "conversionWritesWhatTheAccountingCarries";
     BRIDGE_FAILED_CHECK = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "failedCheck";

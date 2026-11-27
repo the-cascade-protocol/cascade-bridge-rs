@@ -6,12 +6,12 @@ use crate::load::{as_subject, instances, objects, subjects, turtle, Prefixes};
 use crate::resolver::Resolver;
 use crate::run::Asked;
 use crate::terms::{
-    BRIDGE_AS_PROPERTY, BRIDGE_CARRIED, BRIDGE_CARRIED_AS, BRIDGE_CARRIED_IN_PART,
-    BRIDGE_ELEMENT_NOT_CARRIED, BRIDGE_IN_RECORD_CLASS, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP,
-    BRIDGE_NAMES_GAP, BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY,
-    BRIDGE_SOURCE_LACKS_REQUIRED, BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT,
-    SH_INFO, SH_RESULT_SEVERITY, SH_VIOLATION, SH_WARNING, SKOS_BROADER, SKOS_CONCEPT_SCHEME,
-    SKOS_NOTATION,
+    BRIDGE_ADAPTER_REPORTS_GAP, BRIDGE_AS_PROPERTY, BRIDGE_CARRIED, BRIDGE_CARRIED_AS,
+    BRIDGE_CARRIED_IN_PART, BRIDGE_ELEMENT_NOT_CARRIED, BRIDGE_IN_RECORD_CLASS, BRIDGE_LOOKUP_IN,
+    BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP, BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE,
+    BRIDGE_PATH_ENTRY, BRIDGE_SOURCE_LACKS_REQUIRED, BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED,
+    BRIDGE_VERDICT, SH_INFO, SH_RESULT_SEVERITY, SH_VIOLATION, SH_WARNING, SKOS_BROADER,
+    SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
 };
 use oxigraph::model::{NamedOrBlankNode, Quad, Term};
 use std::collections::{HashMap, HashSet};
@@ -29,6 +29,8 @@ struct Entry {
     map: Option<String>,
     miss: Option<String>,
     carries: Vec<Carry>,
+    /// Each `bridge:adapterReportsGap`.
+    reported_by_the_adapter: Vec<String>,
 }
 
 /// One `bridge:carriedAs`.
@@ -39,11 +41,14 @@ struct Carry {
 }
 
 /// What an entry that says its path is carried says a record written from it holds:
-/// one of `carries`, or else a finding naming one of `gaps`.
+/// one of `carries`, or else a finding naming one of `gaps`; and, where no record of a class
+/// `carries` names holds an occurrence, a finding of one of `reported`, the gaps its adapter
+/// reports itself, and nothing else.
 #[derive(Default)]
 struct Owed {
     carries: Vec<Carry>,
     gaps: Vec<String>,
+    reported: Vec<String>,
 }
 
 #[derive(Default)]
@@ -80,6 +85,8 @@ pub(crate) struct Accounting {
     reported: HashMap<String, Vec<Reported>>,
     lookups: HashMap<String, Vec<Lookup>>,
     owed: HashMap<String, Owed>,
+    /// Whether an occurrence is owed even in a unit no record was written from.
+    owes_where_nothing_is_written: bool,
     /// Each gap the adapter declares of `bridge:elementNotCarried`.
     not_carried_whole: HashSet<String>,
 }
@@ -121,12 +128,14 @@ impl Accounting {
                 entry.verdict.as_deref(),
                 Some(BRIDGE_CARRIED | BRIDGE_CARRIED_IN_PART)
             );
-            if carrying && !entry.carries.is_empty() {
+            let carries: &[Carry] = if carrying { &entry.carries } else { &[] };
+            let adapter_reports = &entry.reported_by_the_adapter;
+            if !carries.is_empty() || !adapter_reports.is_empty() {
                 let owing = owed.entry(entry.path.clone()).or_default();
-                owing.carries.extend(entry.carries.iter().cloned());
-                owing
-                    .gaps
-                    .extend(entry.gap.iter().chain(entry.miss.iter()).cloned());
+                owing.carries.extend(carries.iter().cloned());
+                owing.gaps.extend(entry.gap.iter().cloned());
+                owing.gaps.extend(entry.miss.iter().cloned());
+                owing.reported.extend(adapter_reports.iter().cloned());
             }
             if let (Some(verdict), Some(gap)) = (&entry.verdict, &entry.gap) {
                 if NAMES_A_GAP.contains(&verdict.as_str()) {
@@ -218,11 +227,17 @@ impl Accounting {
         for found in lookups.values_mut() {
             found.sort_by(|one, two| one.gap.cmp(&two.gap));
         }
+        for owing in owed.values_mut() {
+            owing.reported.sort();
+            owing.reported.dedup();
+        }
+        let owes_where_nothing_is_written = owed.values().any(|owing| !owing.reported.is_empty());
         Ok(Self {
             paths,
             reported,
             lookups,
             owed,
+            owes_where_nothing_is_written,
             not_carried_whole: scheme
                 .iter()
                 .filter(|(_, gap)| gap.kind.as_deref() == Some(BRIDGE_ELEMENT_NOT_CARRIED))
@@ -345,8 +360,19 @@ fn entries(resolver: &dyn Resolver, iri: &str) -> Result<Vec<Entry>> {
                     carries.push(Carry { class, property });
                 }
             }
+            let mut reported_by_the_adapter = Vec::new();
+            for gap in objects(&graph, &s, BRIDGE_ADAPTER_REPORTS_GAP)? {
+                let Term::NamedNode(named) = &gap else {
+                    return Err(Error::adapter(format!(
+                        "{iri}: the entry for {path} declares the bridge:adapterReportsGap {gap}, \
+                         which is no IRI"
+                    )));
+                };
+                reported_by_the_adapter.push(named.as_str().to_owned());
+            }
             entries.push(Entry {
                 carries,
+                reported_by_the_adapter,
                 verdict: said(BRIDGE_VERDICT, "verdict")?,
                 gap: said(BRIDGE_NAMES_GAP, "gap")?,
                 map: said(BRIDGE_LOOKUP_IN, "bridge:lookupIn")?,
