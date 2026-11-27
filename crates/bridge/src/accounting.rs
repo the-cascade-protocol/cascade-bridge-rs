@@ -9,8 +9,8 @@ use crate::terms::{
     BRIDGE_AS_PROPERTY, BRIDGE_CARRIED, BRIDGE_CARRIED_AS, BRIDGE_CARRIED_IN_PART,
     BRIDGE_ARRIVED_AS, BRIDGE_IN_RECORD_CLASS, BRIDGE_IN_SOURCE_RECORD_TYPE, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP,
     BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY, BRIDGE_SOURCE_LACKS_REQUIRED,
-    BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, OA_HAS_BODY, PROV_SPECIALIZATION_OF,
-    RDF_TYPE, SH_INFO, SH_RESULT_SEVERITY, SH_VALUE, SH_VIOLATION, SH_WARNING, SKOS_BROADER,
+    BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, OA_HAS_BODY, OA_REFINED_BY,
+    PROV_SPECIALIZATION_OF, RDF_TYPE, RDF_VALUE, SH_INFO, SH_RESULT_SEVERITY, SH_VALUE, SH_VIOLATION, SH_WARNING, SKOS_BROADER,
     SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
 };
 use oxigraph::model::{NamedOrBlankNode, Quad, Term};
@@ -336,6 +336,20 @@ impl Accounting {
                 }
             }
         }
+        // Where each finding was addressed below its record, indexes left out.
+        let refined: HashSet<NamedOrBlankNode> = findings
+            .iter()
+            .filter(|quad| quad.predicate.as_str() == OA_REFINED_BY)
+            .filter_map(|quad| as_subject(&quad.object))
+            .collect();
+        let addressed: Vec<String> = findings
+            .iter()
+            .filter(|quad| quad.predicate.as_str() == RDF_VALUE && refined.contains(&quad.subject))
+            .filter_map(|quad| match &quad.object {
+                Term::Literal(address) => Some(unindexed(address.value())),
+                _ => None,
+            })
+            .collect();
         for occurrence in unit.occurrences() {
             let Some(forward) = self.forward.get(&occurrence.path) else {
                 continue;
@@ -345,8 +359,13 @@ impl Accounting {
                 .iter()
                 .filter(|carry| wrote.contains(carry.class.as_str()))
                 .collect();
+            let at = unindexed(&occurrence.path);
+            let below = format!("{at}/");
             let reported = values.contains(occurrence.path.as_str())
-                || forward.gaps.iter().any(|gap| bodies.contains(gap.as_str()));
+                || forward.gaps.iter().any(|gap| bodies.contains(gap.as_str()))
+                || addressed
+                    .iter()
+                    .any(|found| *found == at || found.starts_with(&below));
             let carried = applicable.iter().any(|carry| {
                 written.contains(&(carry.class.as_str(), carry.property.as_str()))
             });
@@ -441,6 +460,38 @@ impl Accounting {
         }
         Ok(findings)
     }
+}
+
+/// An address without the indexes that tell one occurrence of a step from another.
+fn unindexed(address: &str) -> String {
+    if !address.contains("local-name()") {
+        return address
+            .split('/')
+            .filter(|step| step.is_empty() || !step.bytes().all(|byte| byte.is_ascii_digit()))
+            .collect::<Vec<&str>>()
+            .join("/");
+    }
+    let bytes = address.as_bytes();
+    let mut written = String::with_capacity(address.len());
+    let mut at = 0;
+    while at < bytes.len() {
+        if bytes[at] == b'[' {
+            let mut end = at + 1;
+            while end < bytes.len() && bytes[end].is_ascii_digit() {
+                end += 1;
+            }
+            if end > at + 1 && end < bytes.len() && bytes[end] == b']' {
+                at = end + 1;
+                continue;
+            }
+        }
+        let Some(character) = address[at..].chars().next() else {
+            break;
+        };
+        written.push(character);
+        at += character.len_utf8();
+    }
+    written
 }
 
 fn declared(objects: &[Term], iri: &str, path: &str, predicate: &str) -> Result<Option<String>> {
