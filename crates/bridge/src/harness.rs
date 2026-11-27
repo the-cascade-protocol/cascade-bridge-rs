@@ -1,3 +1,4 @@
+use crate::accounting::Unmet;
 use crate::annotation;
 use crate::budget::Budgets;
 use crate::compiled::Executor;
@@ -179,11 +180,11 @@ impl Entry<'_> {
     /// The one record a conversion names: of the version whose arrival stood at its
     /// bridge:selector, or, where it names none, of the one version arriving at all; and
     /// what the conversion owed by the accounting and did not meet.
-    fn record_named(&self, conversion: &NamedOrBlankNode) -> Result<(String, Vec<String>)> {
+    fn record_named(&self, conversion: &NamedOrBlankNode) -> Result<(String, Vec<Unmet>)> {
         let graph = self.graph;
         let selector = one(graph, conversion, BRIDGE_SELECTOR)?;
         let (run, _) = self.converted(Some(conversion))?;
-        let unmet: Vec<String> = run.unmet.iter().map(ToString::to_string).collect();
+        let unmet = run.unmet.clone();
         let objects_of = |subject: &NamedOrBlankNode, predicate: &str| -> Vec<Term> {
             run.quads
                 .iter()
@@ -268,7 +269,7 @@ impl Entry<'_> {
                 if same { "one record" } else { "two records" },
                 not_met(&unmet)
             ),
-            unmet,
+            unmet.iter().map(ToString::to_string).collect(),
         ))
     }
 
@@ -286,8 +287,8 @@ impl Entry<'_> {
         } else {
             ""
         };
+        let not_met = not_met(&run.unmet);
         let unmet: Vec<String> = run.unmet.iter().map(ToString::to_string).collect();
-        let not_met = not_met(&unmet);
 
         if type_iri == BRIDGE_INPUT_ONLY {
             return Ok((
@@ -408,16 +409,25 @@ impl EntryResult {
 }
 
 /// What the accounting says is carried and a conversion owed and did not meet, as an
-/// entry's description says it; nothing where all was met.
-fn not_met(unmet: &[String]) -> String {
-    match unmet {
-        [] => String::new(),
-        _ => format!(
-            "; the accounting is not met at {} occurrence(s): {}",
-            unmet.len(),
-            sample(unmet, 3, FINDING)
-        ),
+/// entry's description says it: the first few whole, then how many more `--owed` lists;
+/// nothing where all was met.
+fn not_met(unmet: &[Unmet]) -> String {
+    const SAID: usize = 3;
+    if unmet.is_empty() {
+        return String::new();
     }
+    let said: Vec<String> = unmet.iter().take(SAID).map(Unmet::summary).collect();
+    let more = match unmet.len().saturating_sub(SAID) {
+        0 => String::new(),
+        more => format!(
+            "; and {more} more: run `test` with `--owed` to list every one"
+        ),
+    };
+    format!(
+        "; the accounting is not met at {} occurrence(s): {}{more}",
+        unmet.len(),
+        said.join("; ")
+    )
 }
 
 fn is_missing(error: &Error) -> bool {

@@ -2,43 +2,75 @@ use super::{Accounting, Carry, Owed};
 use crate::annotation::Record;
 use crate::lift::Unit;
 use crate::load::as_subject;
+use crate::syntax::Respelling;
 use crate::terms::{
     BRIDGE_ARRIVED_AS, OA_HAS_BODY, OA_HAS_SELECTOR, OA_HAS_TARGET, OA_REFINED_BY,
     PROV_SPECIALIZATION_OF, RDF_TYPE, RDF_VALUE,
 };
 use oxigraph::model::{NamedOrBlankNode, Quad, Term};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt;
 
-/// An occurrence of a path the accounting says is carried, owed by the records it
-/// belongs to, with none of `owed` written on them and no finding about it.
-pub(crate) struct Unmet {
-    pub(crate) path: String,
-    pub(crate) address: String,
-    /// Each class owed and the property looked for on it.
-    pub(crate) owed: Vec<(String, String)>,
+/// What `test` fails an entry for.
+#[derive(Clone)]
+pub(crate) enum Unmet {
+    /// An occurrence of a path the accounting says is carried, owed by the records it
+    /// belongs to, with none of `owed` written on them and no finding about it.
+    Occurrence {
+        path: String,
+        address: String,
+        /// Each class owed and the property looked for on it.
+        owed: Vec<(String, String)>,
+    },
+    /// A record whose arrival selector places it nowhere in the unit, so that what it holds
+    /// cannot be told.
+    Unplaced { selector: String, selects: String },
 }
 
 impl fmt::Display for Unmet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let looked: Vec<String> = self
-            .owed
-            .iter()
-            .map(|(class, property)| format!("{property} on its {class}"))
-            .collect();
-        write!(
-            f,
-            "{} at {:?}: no {} is written, and no finding is about it",
-            self.path,
-            self.address,
-            looked.join(" or ")
-        )
+        match self {
+            Self::Occurrence {
+                path,
+                address,
+                owed,
+            } => write!(f, "{path} at {address:?}: {}", looked_for(owed)),
+            Self::Unplaced { .. } => f.write_str(&self.summary()),
+        }
     }
+}
+
+impl Unmet {
+    /// As an entry's description says it: what is owed, then where.
+    pub(crate) fn summary(&self) -> String {
+        match self {
+            Self::Occurrence {
+                path,
+                address,
+                owed,
+            } => format!("{path}: {}, at {address:?}", looked_for(owed)),
+            Self::Unplaced { selector, selects } => format!(
+                "the record selector {selector:?} {selects}, so no occurrence can be held to the \
+                 record it places"
+            ),
+        }
+    }
+}
+
+fn looked_for(owed: &[(String, String)]) -> String {
+    let looked: Vec<String> = owed
+        .iter()
+        .map(|(class, property)| format!("{property} on its {class}"))
+        .collect();
+    format!(
+        "no {} is written, and no finding is about it",
+        looked.join(" or ")
+    )
 }
 
 impl Accounting {
     /// `nested` is where, in this unit, the records nested in it stand, each one step
-    /// below it.
+    /// below it; `spelling` spells an address of the document as the unit's occurrences are.
     pub(crate) fn unmet(
         &self,
         record: &Record<'_>,
@@ -46,20 +78,67 @@ impl Accounting {
         nested: Option<&str>,
         produced: &[Quad],
         findings: &[Quad],
+        spelling: &dyn Respelling,
     ) -> Vec<Unmet> {
         let mut unmet = Vec::new();
         if self.owed.is_empty() || unit.standings().is_empty() {
             return unmet;
         }
         let written = Written::of(produced);
-        if written.places.is_empty() {
+        if written.selected.is_empty() {
             return unmet;
         }
-        let about = About::of(findings, record, &self.not_carried_whole);
+        let mut spelled: HashMap<&str, std::result::Result<String, String>> = HashMap::new();
+        for (_, selector) in &written.selected {
+            spelled.entry(*selector).or_insert_with(|| {
+                if *selector == record.selector {
+                    Ok((*selector).to_owned())
+                } else {
+                    spelling.spelled(selector)
+                }
+            });
+        }
+        let unit_at = steps(record.selector);
+        let mut places: Vec<(&NamedOrBlankNode, Vec<&str>)> = Vec::new();
+        let mut unplaced: BTreeSet<(&str, String)> = BTreeSet::new();
+        for (holder, selector) in &written.selected {
+            match &spelled[selector] {
+                Ok(spelt) => {
+                    let place = steps(spelt);
+                    if place.starts_with(&unit_at) {
+                        places.push((holder, place));
+                    } else {
+                        let outside =
+                            format!("selects a node outside the unit at {:?}", record.selector);
+                        unplaced.insert((*selector, outside));
+                    }
+                }
+                Err(selects) => {
+                    unplaced.insert((*selector, selects.clone()));
+                }
+            }
+        }
+        if !unplaced.is_empty() {
+            return unplaced
+                .into_iter()
+                .map(|(selector, selects)| Unmet::Unplaced {
+                    selector: selector.to_owned(),
+                    selects,
+                })
+                .collect();
+        }
+        let findings = spelling.respelled(findings.to_vec()).findings;
+        let mut about = About::of(&findings, record, &self.not_carried_whole);
+        // A finding that nothing in an element is carried, where a record stands in it, is
+        // contradicted by that record.
+        about
+            .dropped
+            .retain(|found| !places.iter().any(|(_, place)| holds(found, place)));
         let nested = nested.map(steps);
         let nested = nested.as_deref();
-        // A value written from several members of one element is not written where one is empty.
-        let mut hollow: HashSet<(String, &str)> = HashSet::new();
+        // A value written from several members of one element is not written where one is
+        // empty; a repeat of the same path is no other member.
+        let mut hollow: HashMap<(String, &str), Vec<&str>> = HashMap::new();
         for standing in unit.standings().iter().filter(|standing| standing.empty) {
             let address = joined(record.selector, standing.within.as_deref());
             let element = parent(&address);
@@ -69,7 +148,10 @@ impl Accounting {
                 .into_iter()
                 .flat_map(|owed| &owed.carries)
             {
-                hollow.insert((element.clone(), carry.property.as_str()));
+                hollow
+                    .entry((element.clone(), carry.property.as_str()))
+                    .or_default()
+                    .push(standing.path.as_str());
             }
         }
         for standing in unit.standings().iter().filter(|standing| !standing.empty) {
@@ -78,21 +160,29 @@ impl Accounting {
             };
             let address = joined(record.selector, standing.within.as_deref());
             let element = parent(&address);
-            if owed
-                .carries
-                .iter()
-                .any(|carry| hollow.contains(&(element.clone(), carry.property.as_str())))
-            {
+            let hollowed = |carry: &Carry| {
+                hollow
+                    .get(&(element.clone(), carry.property.as_str()))
+                    .is_some_and(|paths| paths.iter().any(|path| *path != standing.path))
+            };
+            if owed.carries.iter().any(hollowed) {
                 continue;
             }
             let at = steps(&address);
             if about.drops(&at) {
                 continue;
             }
-            let inside = region(nested, &at);
+            // What is in a nested record no record stands in is held by the records around it.
+            let mut inside = region(nested, &at);
+            if !places
+                .iter()
+                .any(|(_, place)| region(nested, place) == inside)
+            {
+                inside = None;
+            }
             let mut nearest: Vec<&NamedOrBlankNode> = Vec::new();
             let mut best = (0, false);
-            for (holder, place) in &written.places {
+            for (holder, place) in &places {
                 if region(nested, place) != inside {
                     continue;
                 }
@@ -107,7 +197,7 @@ impl Accounting {
                     nearest.clear();
                 }
                 if near == best {
-                    nearest.push(holder);
+                    nearest.push(*holder);
                 }
             }
             let mut looked: Vec<(&Carry, &NamedOrBlankNode)> = Vec::new();
@@ -132,7 +222,7 @@ impl Accounting {
                 .collect();
             owed.sort();
             owed.dedup();
-            unmet.push(Unmet {
+            unmet.push(Unmet::Occurrence {
                 path: standing.path.clone(),
                 address,
                 owed,
@@ -146,8 +236,8 @@ impl Accounting {
 /// written on it.
 struct Written<'a> {
     classes: HashMap<NamedOrBlankNode, Vec<&'a str>>,
-    /// Each record with the steps of an address one of its arrivals was selected at.
-    places: Vec<(NamedOrBlankNode, Vec<&'a str>)>,
+    /// Each record with the address one of its arrivals was selected at, as written.
+    selected: Vec<(NamedOrBlankNode, &'a str)>,
     /// Each property written on a record, its versions, their arrivals, or a node they
     /// point at that is no record, version or arrival of its own.
     carried: HashMap<NamedOrBlankNode, HashSet<&'a str>>,
@@ -242,17 +332,17 @@ impl<'a> Written<'a> {
                     .insert(quad.predicate.as_str());
             }
         }
-        let places = version_of
+        let selected = version_of
             .iter()
             .filter_map(|(arrival, version)| {
                 let record = record_of.get(version)?;
                 let value = value_of.get(selected_at.get(arrival)?).copied()?;
-                Some((record.clone(), steps(value)))
+                Some((record.clone(), value))
             })
             .collect();
         Self {
             classes,
-            places,
+            selected,
             carried,
         }
     }
@@ -326,9 +416,7 @@ impl<'a> About<'a> {
     /// Whether one said an element holding the occurrence, or the occurrence itself, was not
     /// carried at all: the occurrence then belongs to no record.
     fn drops(&self, at: &[&str]) -> bool {
-        self.dropped.iter().any(|found| {
-            found.len() <= at.len() && found.iter().zip(at).all(|(one, two)| one.as_str() == *two)
-        })
+        self.dropped.iter().any(|found| holds(found, at))
     }
 
     /// Whether one was addressed at the occurrence or below it, or above it with a body
@@ -376,6 +464,15 @@ fn steps(address: &str) -> Vec<&str> {
     steps
 }
 
+/// Whether the address of `found` is `at` or an element holding it.
+fn holds<A: AsRef<str>, B: AsRef<str>>(found: &[A], at: &[B]) -> bool {
+    found.len() <= at.len()
+        && found
+            .iter()
+            .zip(at)
+            .all(|(one, two)| one.as_ref() == two.as_ref())
+}
+
 /// The record nested in this unit that the steps lie in, or none where they lie in no
 /// nested record.
 fn region<'s>(nested: Option<&[&str]>, steps: &'s [&'s str]) -> Option<&'s [&'s str]> {
@@ -390,7 +487,7 @@ fn parent(address: &str) -> String {
 
 fn joined(selector: &str, within: Option<&str>) -> String {
     match within {
-        None | Some("") => selector.to_owned(),
+        None | Some("" | ".") => selector.to_owned(),
         Some(within) if within.starts_with('/') => format!("{selector}{within}"),
         Some(within) => format!("{selector}/{within}"),
     }

@@ -9,7 +9,7 @@ use crate::query::{Fallback, Form, Planned, Profile, Query};
 use crate::rdf::FINDINGS_PREFIXES;
 use crate::records::{self, Document, Release, Supplied};
 use crate::resolver::Resolver;
-use crate::syntax::{Addresses, Syntax};
+use crate::syntax::{Addresses, Respelling, Syntax};
 use crate::terms::SCHEMA_ENCODING_FORMAT;
 use crate::validate::Schema;
 use crate::vocabulary::Vocabulary;
@@ -466,6 +466,7 @@ pub(crate) fn convert_with(
     let mut lift =
         lifting(prepared, &text, &reading, paths, profile).explained_by(ErrorKind::Document)?;
     let followed = syntax.addresses();
+    let spelling = syntax.respelling(&text);
     let mut conversion = Conversion {
         quads: Vec::new(),
         findings: Vec::new(),
@@ -491,6 +492,7 @@ pub(crate) fn convert_with(
             &unit,
             nested,
             followed.as_ref(),
+            spelling.as_ref(),
             &arrived_in,
             &shared,
             profile,
@@ -548,6 +550,7 @@ fn unit_converted(
     unit: &Unit,
     nested: Option<&str>,
     followed: &dyn Addresses,
+    spelling: &dyn Respelling,
     arrived_in: &Document,
     shared: &Shared,
     profile: &Profile,
@@ -607,7 +610,14 @@ fn unit_converted(
     let unmet = match prepared.accounting.as_ref().filter(|_| asked.owing()) {
         Some(accounting) => profile.during(Stage::Accounting, || {
             let nested = nested.map(|nested| format!("{selector}{nested}"));
-            accounting.unmet(&record, unit, nested.as_deref(), &produced, &findings)
+            accounting.unmet(
+                &record,
+                unit,
+                nested.as_deref(),
+                &produced,
+                &findings,
+                spelling,
+            )
         }),
         None => Vec::new(),
     };

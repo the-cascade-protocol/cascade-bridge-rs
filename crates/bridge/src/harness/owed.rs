@@ -251,7 +251,8 @@ mod tests {
                             urn:example:catalog#Item is written, and no finding is about it, at";
                 assert_eq!(description.matches(said).count(), 3, "{description}");
                 assert!(
-                    description.contains("; and 1 more: run `test` with `--owed` to list every one"),
+                    description
+                        .contains("; and 1 more: run `test` with `--owed` to list every one"),
                     "{description}"
                 );
             }
@@ -534,7 +535,10 @@ WHERE {{ ?root a fx:root ; xyz:contained ?list . }}"
                 /// that finding is addressed at a member of it
                 #[test]
                 fn owes_nothing_in_a_nested_record_reported_not_carried_at_its_element() {
-                    let cases = [("/contained/0", "cantTell"), ("/contained/0/kind", "failed")];
+                    let cases = [
+                        ("/contained/0", "cantTell"),
+                        ("/contained/0/kind", "failed"),
+                    ];
                     for (at, expected) in cases {
                         let reported = reporting_nothing_carried_at(nesting(""), at);
                         let (outcome, description) = judged(&ran(&reported), "nested");
@@ -564,7 +568,10 @@ WHERE {{ ?root a fx:root ; xyz:contained ?list . }}"
                         description.contains("/contained/title: no urn:example:list#title on its"),
                         "{description}"
                     );
-                    assert!(description.contains("at \"/contained/0/title\""), "{description}");
+                    assert!(
+                        description.contains("at \"/contained/0/title\""),
+                        "{description}"
+                    );
                 }
             }
         }

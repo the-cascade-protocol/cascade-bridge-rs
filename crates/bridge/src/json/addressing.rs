@@ -135,6 +135,17 @@ impl Respelling for Spelled<'_> {
             .collect();
         Respelled { findings, missed }
     }
+
+    fn spelled(&self, address: &str) -> std::result::Result<String, String> {
+        let Some(root) = self.value.get_or_init(|| parse(self.text).ok()).as_ref() else {
+            return Err("lies in a document no pointer can follow".to_owned());
+        };
+        match selected(root, address).as_slice() {
+            [(positions, _)] => Ok(pointer(&tokens_at(root, positions))),
+            [] => Err("selects no node".to_owned()),
+            several => Err(format!("selects {} nodes", several.len())),
+        }
+    }
 }
 
 #[cfg(test)]
