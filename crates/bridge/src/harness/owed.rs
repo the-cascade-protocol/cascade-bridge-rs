@@ -241,19 +241,24 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?t . ?t a xyz:title . }}"
                 assert_eq!(outcome, "cantTell", "{description}");
             }
 
-            /// is met by a finding addressed above the path only where its gap says that
-            /// element was not carried at all, as a gap of `bridge:noPredicate` does and one of
-            /// `bridge:carriedWithLoss` does not
+            /// is met by a finding at the occurrence whatever its gap, and by one above it only
+            /// where its gap is one the path's entry names
             #[test]
-            fn is_met_by_a_finding_above_the_path_only_where_its_gap_says_the_element_was_not_carried(
+            fn is_met_by_a_finding_at_the_occurrence_or_above_it_naming_the_gap_its_entry_names(
             ) {
-                let reported_at_the_box = |gap: &str| {
+                // The box's bin carried on the box, its entry saying `verdict`, and a finding
+                // of `gap` addressed at `at`.
+                let reported = |verdict: &str, gap: &str, at: &str| {
                     catalog(TITLE_WRITTEN, CARRIED)
                         .with(
                             ACCOUNTING,
                             accounting(CARRIED).replacen(
-                                "ex:Item ; bridge:asProperty ex:code",
-                                "ex:Box ; bridge:asProperty ex:code",
+                                "\"/item/box/bin\" ; bridge:verdict bridge:carried ;\n  \
+                                 bridge:carriedAs [ bridge:inRecordClass ex:Item",
+                                &format!(
+                                    "\"/item/box/bin\" ; {verdict} ;\n  \
+                                     bridge:carriedAs [ bridge:inRecordClass ex:Box"
+                                ),
                                 1,
                             ),
                         )
@@ -265,7 +270,7 @@ CONSTRUCT {{
   [] a oa:Annotation ;
     oa:hasTarget [
       oa:hasSource bridge:thisRecord ;
-      oa:hasSelector [ a oa:XPathSelector ; rdf:value \"box[1]\" ]
+      oa:hasSelector [ a oa:XPathSelector ; rdf:value \"{at}\" ]
     ] ;
     oa:hasBody ex:{gap} ;
     oa:motivatedBy oa:classifying ;
@@ -275,16 +280,17 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?box . ?box a xyz:box . }}"
                             ),
                         )
                 };
-                let (outcome, description) =
-                    judged(&ran(&reported_at_the_box("noteHasNoTerm")), "boxed");
-                assert_eq!(outcome, "cantTell", "{description}");
-                let (outcome, description) =
-                    judged(&ran(&reported_at_the_box("summaryLosesItsMarkup")), "boxed");
-                assert_eq!(outcome, "failed", "{description}");
-                assert!(
-                    description.contains("/item/box/bin at \"/catalog/item[1]/box[1]/bin[1]\""),
-                    "{description}"
-                );
+                let naming = "bridge:verdict bridge:carriedInPart ; \
+                              bridge:namesGap ex:summaryLosesItsMarkup";
+                for (verdict, gap, at, expected) in [
+                    (CARRIED, "noteHasNoTerm", "box[1]/bin[1]", "cantTell"),
+                    (naming, "summaryLosesItsMarkup", "box[1]", "cantTell"),
+                    (CARRIED, "summaryLosesItsMarkup", "box[1]", "failed"),
+                    (naming, "noteHasNoTerm", "box[1]", "failed"),
+                ] {
+                    let (outcome, description) = judged(&ran(&reported(verdict, gap, at)), "boxed");
+                    assert_eq!(outcome, expected, "{verdict}, {gap} at {at}: {description}");
+                }
             }
 
             /// given a record nested in another, as the envelope declares

@@ -64,6 +64,8 @@ terms! {
     BRIDGE_DOC_ROOT_MEMBER_NAME = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "docRootMemberName";
     BRIDGE_DOC_ROOT_MEMBER_VALUE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "docRootMemberValue";
     BRIDGE_JSON_PATH_OF_EACH_RECORD = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "jsonPathOfEachRecord";
+    BRIDGE_PATH_OF_CONTENT_IN_RECORD = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "pathOfContentInRecord";
+    BRIDGE_PATH_OF_CONTAINED_CONTENT_BELOW_CONTENT = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "pathOfContainedContentBelowContent";
     BRIDGE_SOURCE_MEDIA_TYPE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "sourceMediaType";
     BRIDGE_SOURCE_SCHEMA = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "sourceSchema";
     BRIDGE_VOCABULARY_FILE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "vocabularyFile";
@@ -83,7 +85,13 @@ terms! {
     BRIDGE_LOOKUP_IN = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "lookupIn";
     BRIDGE_LOOKUP_NAMES_GAP = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "lookupNamesGap";
     BRIDGE_NO_HOME = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "noHome";
+    BRIDGE_CONVERSION_WRITES_WHAT_THE_ACCOUNTING_CARRIES = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "conversionWritesWhatTheAccountingCarries";
+    BRIDGE_FAILED_CHECK = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "failedCheck";
+    BRIDGE_CARRIED = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "carried";
     BRIDGE_CARRIED_IN_PART = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "carriedInPart";
+    BRIDGE_CARRIED_AS = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "carriedAs";
+    BRIDGE_IN_RECORD_CLASS = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "inRecordClass";
+    BRIDGE_AS_PROPERTY = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "asProperty";
     BRIDGE_NO_PREDICATE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "noPredicate";
     BRIDGE_SOURCE_LACKS_REQUIRED = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "sourceLacksRequired";
     BRIDGE_VALUE_NOT_MAPPED = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "valueNotMapped";

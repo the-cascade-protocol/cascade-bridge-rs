@@ -11,7 +11,8 @@ use crate::records::Supplied;
 use crate::resolver::Resolver;
 use crate::run::{convert_with, prepare, Asked, Conversion, Prepared, Source};
 use crate::terms::{
-    BRIDGE_ARRIVED_AS, BRIDGE_CONVERSION, BRIDGE_DATASET, BRIDGE_ENVELOPE,
+    BRIDGE_ARRIVED_AS, BRIDGE_CONVERSION, BRIDGE_CONVERSION_WRITES_WHAT_THE_ACCOUNTING_CARRIES,
+    BRIDGE_DATASET, BRIDGE_ENVELOPE,
     BRIDGE_EXPECTED_FINDINGS, BRIDGE_EXPECTED_GRAPH, BRIDGE_FACTS, BRIDGE_IDENTITY_RELATION_TEST,
     BRIDGE_INPUT, BRIDGE_INPUT_ONLY, BRIDGE_ISOMORPHIC, BRIDGE_SAME_RECORD, BRIDGE_SELECTOR,
     BRIDGE_SPARQL_1_1, MF_ACTION, MF_ENTRIES, MF_NAME, MF_RESULT, OA_HAS_SELECTOR, PROV_AGENT,
@@ -52,6 +53,7 @@ pub(crate) struct EntryResult {
     pub(crate) name: String,
     pub(crate) outcome: Outcome,
     pub(crate) description: String,
+    pub(crate) failed_check: Option<&'static str>,
     pub(crate) elapsed: Duration,
 }
 
@@ -175,11 +177,13 @@ impl Entry<'_> {
     }
 
     /// The one record a conversion names: of the version whose arrival stood at its
-    /// bridge:selector, or, where it names none, of the one version arriving at all.
-    fn record_named(&self, conversion: &NamedOrBlankNode) -> Result<String> {
+    /// bridge:selector, or, where it names none, of the one version arriving at all; and
+    /// what the conversion owed by the accounting and did not meet.
+    fn record_named(&self, conversion: &NamedOrBlankNode) -> Result<(String, Vec<String>)> {
         let graph = self.graph;
         let selector = one(graph, conversion, BRIDGE_SELECTOR)?;
         let (run, _) = self.converted(Some(conversion))?;
+        let unmet: Vec<String> = run.unmet.iter().map(ToString::to_string).collect();
         let objects_of = |subject: &NamedOrBlankNode, predicate: &str| -> Vec<Term> {
             run.quads
                 .iter()
@@ -208,7 +212,7 @@ impl Entry<'_> {
             .flat_map(|version| said(&version, PROV_SPECIALIZATION_OF))
             .collect();
         match (records.len(), records.first()) {
-            (1, Some(record)) => Ok(record.clone()),
+            (1, Some(record)) => Ok((record.clone(), unmet)),
             (named, _) => Err(Error::adapter(format!(
                 "a conversion{} names {named} record(s); each conversion of an identity relation test names one",
                 selector.map_or_else(String::new, |at| format!(" at {at}"))
@@ -216,7 +220,7 @@ impl Entry<'_> {
         }
     }
 
-    fn related(&self, action: Option<&NamedOrBlankNode>) -> Result<(Outcome, String)> {
+    fn related(&self, action: Option<&NamedOrBlankNode>) -> Result<Judged> {
         let graph = self.graph;
         let conversions: Vec<NamedOrBlankNode> = action
             .map(|a| objects(graph, a, BRIDGE_CONVERSION))
@@ -249,8 +253,10 @@ impl Entry<'_> {
                 ))
             }
         };
-        let (first, second) = (self.record_named(first)?, self.record_named(second)?);
-        let outcome = if (first == second) == same {
+        let ((first, mut unmet), (second, more)) =
+            (self.record_named(first)?, self.record_named(second)?);
+        unmet.extend(more);
+        let outcome = if (first == second) == same && unmet.is_empty() {
             Outcome::Passed
         } else {
             Outcome::Failed
@@ -258,13 +264,15 @@ impl Entry<'_> {
         Ok((
             outcome,
             format!(
-                "the conversions name {first} and {second}, which must be {}",
-                if same { "one record" } else { "two records" }
+                "the conversions name {first} and {second}, which must be {}{}",
+                if same { "one record" } else { "two records" },
+                not_met(&unmet)
             ),
+            failed_check(&unmet),
         ))
     }
 
-    fn judge(&self, type_iri: &str) -> Result<(Outcome, String)> {
+    fn judge(&self, type_iri: &str) -> Result<Judged> {
         let graph = self.graph;
         let action = objects(graph, &self.node, MF_ACTION)?
             .first()
@@ -278,16 +286,23 @@ impl Entry<'_> {
         } else {
             ""
         };
+        let unmet: Vec<String> = run.unmet.iter().map(ToString::to_string).collect();
+        let not_met = not_met(&unmet);
 
         if type_iri == BRIDGE_INPUT_ONLY {
             return Ok((
-                Outcome::CantTell,
+                if unmet.is_empty() {
+                    Outcome::CantTell
+                } else {
+                    Outcome::Failed
+                },
                 format!(
-                    "input-only: {} unit(s), {} triples and {} finding(s) recorded, not judged (bridge:InputOnlyTest){detect}",
+                    "input-only: {} unit(s), {} triples and {} finding(s) recorded, not judged (bridge:InputOnlyTest){not_met}{detect}",
                     run.units,
                     run.triples(),
                     run.annotations()
                 ),
+                failed_check(&unmet),
             ));
         }
 
@@ -368,12 +383,36 @@ impl Entry<'_> {
                 sample(&graph_extra, 2, LINE)
             )
         };
-        let outcome = if graph_ok && findings_ok {
+        let outcome = if graph_ok && findings_ok && unmet.is_empty() {
             Outcome::Passed
         } else {
             Outcome::Failed
         };
-        Ok((outcome, format!("{graph_text}; {findings_text}{detect}")))
+        Ok((
+            outcome,
+            format!("{graph_text}; {findings_text}{not_met}{detect}"),
+            failed_check(&unmet),
+        ))
+    }
+}
+
+/// An entry's outcome, what it says, and the check that failed it where one did.
+type Judged = (Outcome, String, Option<&'static str>);
+
+fn failed_check(unmet: &[String]) -> Option<&'static str> {
+    (!unmet.is_empty()).then_some(BRIDGE_CONVERSION_WRITES_WHAT_THE_ACCOUNTING_CARRIES)
+}
+
+/// What the accounting says is carried and a conversion owed and did not meet, as an
+/// entry's description says it; nothing where all was met.
+fn not_met(unmet: &[String]) -> String {
+    match unmet {
+        [] => String::new(),
+        _ => format!(
+            "; the accounting is not met at {} occurrence(s): {}",
+            unmet.len(),
+            sample(unmet, 3, FINDING)
+        ),
     }
 }
 
@@ -448,6 +487,7 @@ pub(crate) fn run_manifest_noting_fallbacks(
             Err(e) => (term_value(&entry), Some(e)),
         };
 
+        let mut failed_check = None;
         let (outcome, description) = match (&setup, &node, unnamed) {
             (None, _, _) => (
                 Outcome::Inapplicable,
@@ -503,7 +543,10 @@ pub(crate) fn run_manifest_noting_fallbacks(
                     node: node.clone(),
                 };
                 match entry.judge(&type_iri) {
-                    Ok(verdict) => verdict,
+                    Ok((outcome, description, check)) => {
+                        failed_check = check;
+                        (outcome, description)
+                    }
                     Err(e) if is_missing(&e) => return Err(e),
                     Err(e) => (Outcome::Failed, format!("error: {e}")),
                 }
@@ -515,6 +558,7 @@ pub(crate) fn run_manifest_noting_fallbacks(
             name,
             outcome,
             description,
+            failed_check,
             elapsed: start.elapsed(),
         });
     }

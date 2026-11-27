@@ -1,7 +1,9 @@
 use super::attachment::{
     decoded, names_text, TEXT_CONTENT, TEXT_DECODED_FROM_BASE64, TEXT_WITH_ELEMENT_BREAKS,
 };
-use super::{member, name, store_of, triple, Occurrence, Paths, Unit, Valued, FX, RDF, XYZ};
+use super::{
+    member, name, store_of, triple, Occurrence, Paths, Standing, Unit, Valued, FX, RDF, XYZ,
+};
 use crate::decode::{is_xml_space, normalise_attribute_value, normalise_line_endings, XML_SPACE};
 use crate::error::{Error, Result};
 use oxigraph::model::{BlankNode, Literal, NamedNode, Quad};
@@ -45,6 +47,9 @@ struct Open {
     within: Option<String>,
     valued: bool,
     childless: bool,
+    /// Whether it or an element in it holds text or an attribute that is not whitespace.
+    holds: bool,
+    standing: Option<usize>,
 }
 
 #[derive(Default)]
@@ -54,24 +59,32 @@ struct Census {
     occurrences: Vec<Occurrence>,
     held: HashMap<(String, String), usize>,
     values: Vec<Valued>,
+    standings: Vec<Standing>,
+}
+
+struct Kept<'a> {
+    valued: &'a HashSet<String>,
+    carried: &'a HashSet<String>,
 }
 
 impl Census {
-    fn of(record: &Step, attributes: &[Attribute], valued: &HashSet<String>) -> Self {
+    fn of(record: &Step, attributes: &[Attribute], kept: &Kept<'_>) -> Self {
         let mut census = Self::default();
         let path = format!("/{}", record.write(false));
-        census.attributes(&path, None, attributes, valued);
+        let holds = census.attributes(&path, None, attributes, kept);
         // The record element is no path: it stands here to spell the paths below it.
         census.below.push(Open {
             path,
             within: None,
             valued: false,
             childless: true,
+            holds,
+            standing: None,
         });
         census
     }
 
-    fn open(&mut self, step: Step, attributes: &[Attribute], valued: &HashSet<String>) {
+    fn open(&mut self, step: Step, attributes: &[Attribute], kept: &Kept<'_>) {
         let (path, within) = {
             let parent = self.below.last_mut().expect("the record element is open");
             parent.childless = false;
@@ -82,13 +95,29 @@ impl Census {
             (format!("{}/{}", parent.path, step.write(false)), within)
         };
         self.add(path.clone(), Some(&within));
-        self.attributes(&path, Some(&within), attributes, valued);
+        let holds = self.attributes(&path, Some(&within), attributes, kept);
+        let standing = kept.carried.contains(&path).then(|| {
+            self.standings.push(Standing {
+                path: path.clone(),
+                within: Some(within.clone()),
+                empty: false,
+            });
+            self.standings.len() - 1
+        });
         self.below.push(Open {
-            valued: valued.contains(&path),
+            valued: kept.valued.contains(&path),
             path,
             within: Some(within),
             childless: true,
+            holds,
+            standing,
         });
+    }
+
+    fn holds_text(&mut self) {
+        if let Some(open) = self.below.last_mut() {
+            open.holds = true;
+        }
     }
 
     fn close(&mut self, text: Option<&str>) {
@@ -98,6 +127,12 @@ impl Census {
         if let Some(text) = text {
             self.hold(&closed.path, closed.within.as_deref(), text);
         }
+        if let Some(standing) = closed.standing {
+            self.standings[standing].empty = !closed.holds;
+        }
+        if let Some(parent) = self.below.last_mut() {
+            parent.holds |= closed.holds;
+        }
     }
 
     fn wants_value(&self) -> bool {
@@ -106,20 +141,36 @@ impl Census {
             .is_some_and(|open| open.valued && open.childless)
     }
 
+    /// Whether an attribute's value is not whitespace.
     fn attributes(
         &mut self,
         element: &str,
         within: Option<&str>,
         attributes: &[Attribute],
-        valued: &HashSet<String>,
-    ) {
+        kept: &Kept<'_>,
+    ) -> bool {
+        let mut holds = false;
         for (step, value) in attributes.iter().filter_map(Attribute::named) {
             let path = format!("{element}/@{}", step.write(false));
-            if valued.contains(&path) {
+            if kept.valued.contains(&path) {
                 self.hold(&path, within, value);
+            }
+            let empty = is_xml_space(value);
+            holds |= !empty;
+            if kept.carried.contains(&path) {
+                let written = format!("@{}", step.write(false));
+                self.standings.push(Standing {
+                    path: path.clone(),
+                    within: Some(match within {
+                        Some(within) => format!("{within}/{written}"),
+                        None => written,
+                    }),
+                    empty,
+                });
             }
             self.add(path, within);
         }
+        holds
     }
 
     fn hold(&mut self, path: &str, within: Option<&str>, value: &str) {
@@ -359,6 +410,9 @@ impl Builder {
                 own.push_str(&self.text);
             }
             if !is_xml_space(&self.text) {
+                if let Some(census) = self.census.as_mut().filter(|_| top.unit) {
+                    census.holds_text();
+                }
                 top.members += 1;
                 top.kept = None;
                 let quad = triple(
@@ -423,8 +477,9 @@ impl Builder {
                 &element.written,
                 &element.declarations,
             ));
-            if let (Some(census), Paths::Kept { valued }) = (&mut self.census, &self.paths) {
-                census.open(step.clone(), &element.attributes, valued);
+            if let (Some(census), Paths::Kept { valued, carried }) = (&mut self.census, &self.paths)
+            {
+                census.open(step.clone(), &element.attributes, &Kept { valued, carried });
             }
             let id = self.fresh();
             let kept_id = match self.stack.last().is_some_and(|top| top.skeleton.is_some()) {
@@ -492,7 +547,11 @@ impl Builder {
                 .chain([step.clone()])
                 .collect();
             let census = match &self.paths {
-                Paths::Kept { valued } => Some(Census::of(&step, &element.attributes, valued)),
+                Paths::Kept { valued, carried } => Some(Census::of(
+                    &step,
+                    &element.attributes,
+                    &Kept { valued, carried },
+                )),
                 Paths::Dropped => None,
             };
             self.census = census;
@@ -716,18 +775,14 @@ impl<R: BufRead> Lift<R> {
                 Event::End(_) => {
                     if self.builder.close()? {
                         let quads = std::mem::take(&mut self.builder.unit);
-                        let (occurrences, values) = self
-                            .builder
-                            .census
-                            .take()
-                            .map(|census| (census.occurrences, census.values))
-                            .unwrap_or_default();
+                        let census = self.builder.census.take().unwrap_or_default();
                         return Ok(Some(Unit {
                             store: store_of(quads)?,
                             text: std::mem::take(&mut self.builder.raw),
                             selector: selector(&std::mem::take(&mut self.builder.unit_path)),
-                            occurrences,
-                            values,
+                            occurrences: census.occurrences,
+                            values: census.values,
+                            standings: census.standings,
                         }));
                     }
                 }

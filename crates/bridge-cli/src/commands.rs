@@ -9,11 +9,12 @@ use std::io::Write as _;
 use std::time::{Duration, Instant};
 
 const USAGE: &str = "usage: cascade-bridge test <adapter-dir> [--vocabularies <directory>] [--earl <out.ttl>] [--fallbacks <out.json>] [--datasets] [--executor compiled|spareval|both] [--memory-budget-mib <1-3072>] [--time-budget-seconds <n>]
-       cascade-bridge convert <adapter-dir> <document> [--envelope <iri>] [--facts <file>] [--vocabularies <directory>] [--out <file>] [--findings <file>] [--format turtle|ntriples] [--executor compiled|spareval|both] [--memory-budget-mib <1-3072>] [--time-budget-seconds <n>] [--profile] [--skip schema|shapes|findings]
+       cascade-bridge convert <adapter-dir> <document> [--envelope <iri>] [--facts <file>] [--vocabularies <directory>] [--out <file>] [--findings <file>] [--format turtle|ntriples] [--executor compiled|spareval|both] [--memory-budget-mib <1-3072>] [--time-budget-seconds <n>] [--profile] [--skip schema|shapes|findings] [--owed]
        cascade-bridge explain <adapter-dir> [--vocabularies <directory>]
        cascade-bridge library <calls file> <results directory>
 
---skip is for measuring only: the run leaves out the source schema check, the output shapes check or the findings queries, and its conversion is not a validated one.";
+--skip is for measuring only: the run leaves out the source schema check, the output shapes check or the findings queries, and its conversion is not a validated one.
+--owed writes no graph: it lists each occurrence of a path the accounting says is carried that the conversion owes and neither writes nor reports, as test fails an entry for.";
 
 fn memory_budget(mebibytes: &str) -> Option<usize> {
     Budgets::memory_mib(mebibytes.parse().ok()?)
@@ -52,6 +53,7 @@ struct Convert {
     budgets: Budgets,
     profile: bool,
     skip: Vec<Skip>,
+    owed: bool,
 }
 
 impl Convert {
@@ -122,6 +124,7 @@ fn parse(argv: impl IntoIterator<Item = String>) -> Option<Command> {
                 budgets: Budgets::default(),
                 profile: false,
                 skip: Vec::new(),
+                owed: false,
             };
             while let Some(flag) = argv.next() {
                 match flag.as_str() {
@@ -140,6 +143,7 @@ fn parse(argv: impl IntoIterator<Item = String>) -> Option<Command> {
                     }
                     "--profile" => arguments.profile = true,
                     "--skip" => arguments.skip.push(Skip::named(&argv.next()?)?),
+                    "--owed" => arguments.owed = true,
                     _ => return None,
                 }
             }
@@ -414,6 +418,17 @@ fn convert(arguments: &Convert) -> Result<u8, String> {
         envelope: envelope.as_deref(),
         facts: facts.as_ref().map(|(iri, bytes)| Facts { iri, bytes }),
     };
+    if arguments.owed {
+        let unmet = loaded
+            .unmet(&document, arguments.options())
+            .map_err(|e| e.to_string())?;
+        let mut said = format!("Owed     {iri}  {} unmet\n", unmet.len());
+        for line in &unmet {
+            let _ = writeln!(said, "  {line}");
+        }
+        out(said.as_bytes())?;
+        return Ok(0);
+    }
     let converting = Instant::now();
     let conversion = if arguments.profile {
         let (conversion, queries) = loaded

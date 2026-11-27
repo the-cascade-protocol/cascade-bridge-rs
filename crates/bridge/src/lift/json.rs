@@ -2,8 +2,8 @@
 // it, and so which path splits it, is said by its value's members.
 use super::attachment::{decoded, names_text, TEXT_DECODED_FROM_BASE64};
 use super::{
-    admitting, member, name, store_of, triple, Admission, Occurrence, Paths, Reading, Unit, Valued,
-    FX, RDF, XYZ,
+    admitting, member, name, store_of, triple, Admission, Occurrence, Paths, Reading, Standing,
+    Unit, Valued, FX, RDF, XYZ,
 };
 use crate::error::{Error, Result};
 use crate::json::{self, Node, Value};
@@ -148,16 +148,17 @@ impl super::Lift for Lift<'_> {
         };
         self.next += 1;
         let record = self.root.at(positions).expect("a record the path selected");
-        let (occurrences, values) = match &self.paths {
-            Paths::Kept { valued } => census(record, valued),
-            Paths::Dropped => (Vec::new(), Vec::new()),
+        let census = match &self.paths {
+            Paths::Kept { valued, carried } => census(record, valued, carried),
+            Paths::Dropped => Census::default(),
         };
         Ok(Some(Unit {
             store: store_of(Written::decoding_attachments().root(record, &HashSet::new())?)?,
             text: self.text[record.span.clone()].to_owned(),
             selector: json::pointer(&json::tokens_at(&self.root, positions)),
-            occurrences,
-            values,
+            occurrences: census.occurrences,
+            values: census.values,
+            standings: census.standings,
         }))
     }
 
@@ -195,58 +196,89 @@ struct Census {
     occurrences: Vec<Occurrence>,
     held: HashMap<(String, String), usize>,
     values: Vec<Valued>,
+    standings: Vec<Standing>,
+}
+
+struct Kept<'a> {
+    valued: &'a HashSet<String>,
+    carried: &'a HashSet<String>,
 }
 
 /// A path's step is a member's name as a JSON Pointer reference token; an array's
 /// items stand at its own path.
-fn census(record: &Node, valued: &HashSet<String>) -> (Vec<Occurrence>, Vec<Valued>) {
+fn census(record: &Node, valued: &HashSet<String>, carried: &HashSet<String>) -> Census {
     let mut census = Census::default();
-    census.members(record, "", &mut Vec::new(), valued);
-    (census.occurrences, census.values)
+    census.members(record, "", &mut Vec::new(), &Kept { valued, carried });
+    census
+}
+
+/// A string is nothing where it is white space once each complete tag is taken out, as an
+/// XHTML narrative holding no visible character is.
+fn holds_nothing(node: &Node) -> bool {
+    match &node.value {
+        Value::String(text) => {
+            let mut rest = text.as_str();
+            loop {
+                let (before, after) = match rest.split_once('<') {
+                    Some((before, after)) => (before, Some(after)),
+                    None => (rest, None),
+                };
+                if !before.trim().is_empty() {
+                    return false;
+                }
+                let Some(after) = after else {
+                    return true;
+                };
+                match after.split_once('>') {
+                    Some((_, beyond)) => rest = beyond,
+                    None => return false,
+                }
+            }
+        }
+        Value::Object(members) => members.iter().all(|(_, member)| holds_nothing(member)),
+        Value::Array(items) => items.iter().all(holds_nothing),
+        Value::Null => true,
+        Value::Number(_) | Value::Bool(_) => false,
+    }
 }
 
 impl Census {
-    fn members(
-        &mut self,
-        node: &Node,
-        path: &str,
-        tokens: &mut Vec<String>,
-        valued: &HashSet<String>,
-    ) {
+    fn members(&mut self, node: &Node, path: &str, tokens: &mut Vec<String>, kept: &Kept<'_>) {
         let Value::Object(members) = &node.value else {
             return;
         };
         for (named, member) in members {
             let path = format!("{path}/{}", named.replace('~', "~0").replace('/', "~1"));
             tokens.push(named.clone());
-            self.stand(member, &path, tokens, valued);
+            self.stand(member, &path, tokens, kept);
             tokens.pop();
         }
     }
 
-    fn stand(
-        &mut self,
-        node: &Node,
-        path: &str,
-        tokens: &mut Vec<String>,
-        valued: &HashSet<String>,
-    ) {
+    fn stand(&mut self, node: &Node, path: &str, tokens: &mut Vec<String>, kept: &Kept<'_>) {
         match &node.value {
             Value::Null => {}
             Value::Array(items) => {
                 for (index, item) in items.iter().enumerate() {
                     tokens.push(index.to_string());
-                    self.stand(item, path, tokens, valued);
+                    self.stand(item, path, tokens, kept);
                     tokens.pop();
                 }
             }
             _ => {
                 let within = json::pointer(tokens);
-                if let Some(value) = node.scalar().filter(|_| valued.contains(path)) {
+                if let Some(value) = node.scalar().filter(|_| kept.valued.contains(path)) {
                     self.hold(path, value, &within);
                 }
+                if kept.carried.contains(path) {
+                    self.standings.push(Standing {
+                        path: path.to_owned(),
+                        within: Some(within.clone()),
+                        empty: holds_nothing(node),
+                    });
+                }
                 self.add(path, within);
-                self.members(node, path, tokens, valued);
+                self.members(node, path, tokens, kept);
             }
         }
     }

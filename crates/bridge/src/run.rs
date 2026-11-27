@@ -1,4 +1,4 @@
-use crate::accounting::{gap_scheme, Accounting};
+use crate::accounting::{gap_scheme, Accounting, Unmet};
 use crate::annotation::{self, Record};
 use crate::compiled::{Dataset, Shared};
 use crate::error::{Error, ErrorKind, Explained, Result};
@@ -22,6 +22,8 @@ struct Envelope {
     admission: Admission,
     document_schema: Option<Box<dyn Schema>>,
     source_schema: Option<usize>,
+    /// Where, from a record read in it, the records nested in it stand.
+    nested: Option<String>,
 }
 
 pub(crate) struct Prepared {
@@ -109,6 +111,7 @@ pub(crate) struct Conversion {
     pub(crate) findings: Vec<Quad>,
     pub(crate) units: usize,
     pub(crate) detected: Option<bool>,
+    pub(crate) unmet: Vec<Unmet>,
 }
 
 impl Conversion {
@@ -122,18 +125,25 @@ impl Conversion {
     }
 }
 
-/// Which findings a convert makes: the census, every other finding, both or neither.
+/// Which findings a convert makes: the census, every other finding, both or neither;
+/// and, with every other finding, whether it checks what the accounting says is owed.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(crate) struct Asked {
     pub(crate) findings: bool,
     pub(crate) census: bool,
+    pub(crate) owed: bool,
 }
 
 impl Asked {
     pub(crate) const ALL: Self = Self {
         findings: true,
         census: true,
+        owed: true,
     };
+
+    fn owing(self) -> bool {
+        self.findings && self.owed
+    }
 
     fn any(self) -> bool {
         self.findings || self.census
@@ -345,6 +355,15 @@ fn envelopes(
                 .filter(|_| compiling)
                 .map(|iri| source_schemas.compiled(iri, syntax, resolver))
                 .transpose()?,
+            nested: envelope
+                .path_of_contained_content_below_content
+                .as_deref()
+                .map(|contained| {
+                    format!(
+                        "{}{contained}",
+                        envelope.path_of_content_in_record.as_deref().unwrap_or("")
+                    )
+                }),
         });
     }
     Ok(envelopes)
@@ -436,7 +455,7 @@ pub(crate) fn convert_with(
         .accounting
         .as_ref()
         .filter(|_| asked.any())
-        .map_or(Paths::Dropped, Accounting::paths);
+        .map_or(Paths::Dropped, |accounting| accounting.paths(asked.owing()));
     let reading = reading(prepared, named);
     let arrived_in = Document::new(source.bytes, source.facts).explained_by(ErrorKind::Facts)?;
 
@@ -452,6 +471,7 @@ pub(crate) fn convert_with(
         findings: Vec::new(),
         units: 0,
         detected: None,
+        unmet: Vec::new(),
     };
     while let Some(unit) = profile
         .during(Stage::Lift, || lift.next_unit())
@@ -460,13 +480,16 @@ pub(crate) fn convert_with(
         conversion.units += 1;
         // A record was read, so the document root was: no envelope is needed yet.
         let document = lift.document_selector(None);
-        let schema = prepared.source_schema(admitting(lift.as_ref(), &reading));
-        let (produced, findings) = unit_converted(
+        let envelope = admitting(lift.as_ref(), &reading);
+        let schema = prepared.source_schema(envelope);
+        let nested = envelope.and_then(|chosen| prepared.envelopes[chosen].nested.as_deref());
+        let (produced, findings, unmet) = unit_converted(
             prepared,
             schema,
             source.iri,
             &document,
             &unit,
+            nested,
             followed.as_ref(),
             &arrived_in,
             &shared,
@@ -475,6 +498,7 @@ pub(crate) fn convert_with(
         )?;
         conversion.quads.extend(produced);
         conversion.findings.extend(findings);
+        conversion.unmet.extend(unmet);
     }
     conversion.quads.extend(arrived_in.described(
         &Release {
@@ -522,12 +546,13 @@ fn unit_converted(
     iri: &str,
     document: &str,
     unit: &Unit,
+    nested: Option<&str>,
     followed: &dyn Addresses,
     arrived_in: &Document,
     shared: &Shared,
     profile: &Profile,
     asked: Asked,
-) -> Result<(Vec<Quad>, Vec<Quad>)> {
+) -> Result<(Vec<Quad>, Vec<Quad>, Vec<Unmet>)> {
     let selector = unit.selector();
     let selector_type = prepared.syntax.selector_type();
     let record = Record {
@@ -561,7 +586,7 @@ fn unit_converted(
         arrived_in.arrived(versioned, &selector, selector_type, &data)
     })?;
     if !asked.findings {
-        return Ok((produced, findings));
+        return Ok((produced, findings, Vec::new()));
     }
     if let Some(vocabulary) = &prepared.vocabulary {
         findings.extend(profile.during(Stage::OutputValidation, || {
@@ -579,7 +604,14 @@ fn unit_converted(
     })?;
     findings.extend(queried);
     findings.extend(unresolved);
-    Ok((produced, findings))
+    let unmet = match prepared.accounting.as_ref().filter(|_| asked.owing()) {
+        Some(accounting) => profile.during(Stage::Accounting, || {
+            let nested = nested.map(|nested| format!("{selector}{nested}"));
+            accounting.unmet(&record, unit, nested.as_deref(), &produced, &findings)
+        }),
+        None => Vec::new(),
+    };
+    Ok((produced, findings, unmet))
 }
 
 fn validated(
@@ -794,6 +826,7 @@ mod tests {
             findings: Vec::new(),
             units: 0,
             detected: None,
+            unmet: Vec::new(),
         }
     }
 
