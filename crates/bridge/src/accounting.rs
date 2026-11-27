@@ -129,14 +129,14 @@ impl Accounting {
                 Some(BRIDGE_CARRIED | BRIDGE_CARRIED_IN_PART)
             );
             let carries: &[Carry] = if carrying { &entry.carries } else { &[] };
-            let reported = &entry.reported_by_the_adapter;
-            if !carries.is_empty() || !reported.is_empty() {
+            let adapter_reports = &entry.reported_by_the_adapter;
+            if !carries.is_empty() || !adapter_reports.is_empty() {
                 let owing = owed.entry(entry.path.clone()).or_default();
                 owing.carries.extend(carries.iter().cloned());
                 owing.gaps.extend(entry.gap.iter().cloned());
                 owing.gaps.extend(entry.miss.iter().cloned());
-                owing.gaps.extend(reported.iter().cloned());
-                owing.reported.extend(reported.iter().cloned());
+                owing.gaps.extend(adapter_reports.iter().cloned());
+                owing.reported.extend(adapter_reports.iter().cloned());
             }
             if let (Some(verdict), Some(gap)) = (&entry.verdict, &entry.gap) {
                 if NAMES_A_GAP.contains(&verdict.as_str()) {
