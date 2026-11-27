@@ -224,6 +224,18 @@ WHERE {{ ?item a fx:root, xyz:item ; ?slot ?shelf . ?shelf a xyz:shelf . }}"
         )
 }
 
+/// The tiny adapter writing each item's title as a node of its own, nested in the version as
+/// `?title`, with `?deeper` a second such node, `members` being what the mapping writes of them.
+fn titled_by_a_node(members: &str) -> Variant {
+    let titled = r##"BIND(IRI(CONCAT(STR(?v), "#title")) AS ?title)
+  BIND(IRI(CONCAT(STR(?v), "#deeper")) AS ?deeper)"##;
+    catalog(titled, CARRIED).replacing(
+        "mapping/item.rq",
+        "?v prov:specializationOf ?s ; ex:title ?title .",
+        format!("?v prov:specializationOf ?s ; ex:title ?title . {members}"),
+    )
+}
+
 mod tests {
     use super::*;
 
@@ -320,6 +332,57 @@ mod tests {
                 assert_eq!(outcome, "cantTell", "{description}");
             }
 
+            /// is not met by a property whose only value written is a node nested in the version
+            /// whose every member is empty, however deep, a node that is its own member and a
+            /// typed node whose other members are empty included, and owes nothing for an
+            /// occurrence that is itself empty
+            #[test]
+            fn is_not_met_by_a_property_written_only_as_a_node_of_nothing() {
+                for members in [
+                    r#"?title ex:part "" ."#,
+                    r#"?title ex:part "", " " ."#,
+                    r#"?title ex:part ?deeper . ?deeper ex:part " " ."#,
+                    "?title ex:part ?title .",
+                    r#"?title a ex:Code ; ex:part "" ."#,
+                ] {
+                    let results = ran(&titled_by_a_node(members));
+                    let (outcome, description) = judged(&results, "titled");
+                    assert_eq!(outcome, "failed", "{members}: {description}");
+                    assert!(
+                        description.contains("not met at 1 occurrence(s): /item/title:"),
+                        "{members}: {description}"
+                    );
+                    let (outcome, description) = judged(&results, "blank");
+                    assert_eq!(outcome, "cantTell", "{members}: {description}");
+                }
+            }
+
+            /// is met by a property written as a node holding something: a literal with text, or
+            /// a node with no members, at any depth; a node whose only member is its type is a
+            /// value, and so is a typed node holding a code; an IRI outside the version is a
+            /// value by its name, whatever is said of it; and a member that is empty only in
+            /// another syntax, as a no-break space is in JSON, is text
+            #[test]
+            fn is_met_by_a_property_written_as_a_node_that_holds_something() {
+                for members in [
+                    "",
+                    "?title ex:part \"\u{a0}\" .",
+                    r#"?title ex:part "First" ."#,
+                    r#"?title ex:part "", "First" ."#,
+                    "?title ex:part ?deeper .",
+                    r#"?title ex:part ?deeper . ?deeper ex:part "First" ."#,
+                    r#"?title ex:part ?title, "First" ."#,
+                    "?title a ex:Code .",
+                    "?title a ex:Code ; ex:code <urn:example:code> .",
+                    r#"?title ex:code <urn:example:code> . <urn:example:code> ex:part "" ."#,
+                    "?title ex:code <urn:example:code> . <urn:example:code> a ex:Code .",
+                ] {
+                    let results = ran(&titled_by_a_node(members));
+                    let (outcome, description) = judged(&results, "titled");
+                    assert_eq!(outcome, "cantTell", "{members}: {description}");
+                }
+            }
+
             /// owes nothing for a member carried as the property an empty member of the same
             /// element is carried as, which no value can then be written for
             #[test]
@@ -384,6 +447,11 @@ mod tests {
                     (
                         "/*",
                         "the record selector \"/catalog/item[1]/*\" selects 2 nodes",
+                    ),
+                    (
+                        "1 +",
+                        "the record selector \"/catalog/item[1]1 +\" is no XPath, or selects no \
+                         set of nodes",
                     ),
                 ] {
                     let shelved =

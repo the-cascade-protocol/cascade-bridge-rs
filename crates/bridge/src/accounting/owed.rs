@@ -2,6 +2,7 @@ use super::{Accounting, Carry, Owed};
 use crate::annotation::Record;
 use crate::lift::Unit;
 use crate::load::as_subject;
+use crate::records::version_of;
 use crate::syntax::{Respelling, Syntax};
 use crate::terms::{
     BRIDGE_ARRIVED_AS, OA_HAS_BODY, OA_HAS_SELECTOR, OA_HAS_TARGET, OA_REFINED_BY,
@@ -327,11 +328,15 @@ impl<'a> Written<'a> {
                 }
             }
         }
+        let nothing = nodes_of_nothing(produced, syntax);
         let mut carried: HashMap<NamedOrBlankNode, HashSet<&str>> = HashMap::new();
         for quad in produced {
             let empty = match &quad.object {
                 Term::Literal(value) => syntax.holds_nothing(value.value()),
-                _ => false,
+                object => match as_subject(object) {
+                    Some(node) => nothing.contains(&node),
+                    None => false,
+                },
             };
             if empty {
                 continue;
@@ -369,6 +374,68 @@ impl<'a> Written<'a> {
             .get(record)
             .is_some_and(|properties| properties.contains(property))
     }
+}
+
+/// The nodes written with members none of which holds anything. A node is a blank node or an IRI
+/// nested in a version; any other IRI is a value by its name, whatever is said of it. A literal
+/// holds something where `syntax` would not call its text an empty occurrence, a node with no
+/// members is something, a type is no member, and a node holds what any member of it holds, so a
+/// node that is its own member adds nothing.
+fn nodes_of_nothing(produced: &[Quad], syntax: Syntax) -> HashSet<NamedOrBlankNode> {
+    let versions: HashSet<&str> = produced
+        .iter()
+        .filter(|quad| quad.predicate.as_str() == PROV_SPECIALIZATION_OF)
+        .filter_map(|quad| match &quad.subject {
+            NamedOrBlankNode::NamedNode(version) => Some(version.as_str()),
+            NamedOrBlankNode::BlankNode(_) => None,
+        })
+        .collect();
+    let is_node = |node: &NamedOrBlankNode| match node {
+        NamedOrBlankNode::NamedNode(iri) => {
+            let version = version_of(iri.as_str());
+            version.len() < iri.as_str().len() && versions.contains(version)
+        }
+        NamedOrBlankNode::BlankNode(_) => true,
+    };
+    let with_members: HashSet<&NamedOrBlankNode> = produced
+        .iter()
+        .filter(|quad| quad.predicate.as_str() != RDF_TYPE && is_node(&quad.subject))
+        .map(|quad| &quad.subject)
+        .collect();
+    let mut held_by: HashMap<NamedOrBlankNode, Vec<NamedOrBlankNode>> = HashMap::new();
+    let mut holding: Vec<NamedOrBlankNode> = Vec::new();
+    for quad in produced
+        .iter()
+        .filter(|quad| quad.predicate.as_str() != RDF_TYPE)
+    {
+        match &quad.object {
+            Term::Literal(value) if syntax.holds_nothing(value.value()) => {}
+            object => match as_subject(object) {
+                Some(member) if with_members.contains(&member) => {
+                    held_by
+                        .entry(member)
+                        .or_default()
+                        .push(quad.subject.clone());
+                }
+                _ => holding.push(quad.subject.clone()),
+            },
+        }
+    }
+    let mut something: HashSet<NamedOrBlankNode> = HashSet::new();
+    while let Some(node) = holding.pop() {
+        if something.contains(&node) {
+            continue;
+        }
+        if let Some(holders) = held_by.get(&node) {
+            holding.extend(holders.iter().cloned());
+        }
+        something.insert(node);
+    }
+    with_members
+        .into_iter()
+        .filter(|node| !something.contains(*node))
+        .cloned()
+        .collect()
 }
 
 /// Where each of a unit's findings was addressed, as steps, and its body; and where each

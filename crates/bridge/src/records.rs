@@ -239,7 +239,7 @@ pub(crate) struct Dropped {
 }
 
 /// The IRI the version's own IRI begins, where `iri` is the version or a node nested in it.
-fn version_of(iri: &str) -> &str {
+pub(crate) fn version_of(iri: &str) -> &str {
     iri.split_once('#').map_or(iri, |(version, _)| version)
 }
 
