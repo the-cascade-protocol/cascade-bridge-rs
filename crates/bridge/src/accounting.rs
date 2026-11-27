@@ -7,7 +7,7 @@ use crate::resolver::Resolver;
 use crate::run::Asked;
 use crate::terms::{
     BRIDGE_AS_PROPERTY, BRIDGE_CARRIED, BRIDGE_CARRIED_AS, BRIDGE_CARRIED_IN_PART,
-    BRIDGE_IN_RECORD_CLASS, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP,
+    BRIDGE_ARRIVED_AS, BRIDGE_IN_RECORD_CLASS, BRIDGE_IN_SOURCE_RECORD_TYPE, BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP,
     BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY, BRIDGE_SOURCE_LACKS_REQUIRED,
     BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, OA_HAS_BODY, PROV_SPECIALIZATION_OF,
     RDF_TYPE, SH_INFO, SH_RESULT_SEVERITY, SH_VALUE, SH_VIOLATION, SH_WARNING, SKOS_BROADER,
@@ -24,20 +24,35 @@ struct Entry {
     /// The concept map a value is looked up in; `miss` is the gap for a value it lacks.
     map: Option<String>,
     miss: Option<String>,
-    /// Each `bridge:carriedAs` as its record class and its property.
-    carries: Vec<(String, String)>,
+    carries: Vec<Carry>,
+}
+
+/// One `bridge:carriedAs`.
+#[derive(Clone)]
+struct Carry {
+    record_type: Option<String>,
+    class: String,
+    property: String,
 }
 
 /// What an entry that carries its path says the conversion writes for it.
 #[derive(Default)]
 struct Forward {
-    carries: Vec<(String, String)>,
+    carries: Vec<Carry>,
     gaps: Vec<String>,
+}
+
+pub(crate) enum ForwardKind {
+    /// None of the entry's properties was written, and no finding was about the path.
+    Missed,
+    /// The record holds the path, but no `bridge:carriedAs` of the entry names a source record type the unit holds.
+    Unlisted,
 }
 
 /// A path the accounting says is carried, found in a record that wrote none of what it
 /// carries it as and reported no gap for it.
 pub(crate) struct ForwardMiss {
+    pub(crate) kind: ForwardKind,
     pub(crate) record: String,
     pub(crate) path: String,
     pub(crate) wanted: Vec<(String, String)>,
@@ -233,28 +248,75 @@ impl Accounting {
         }
         let mut classes: HashMap<NamedOrBlankNode, Vec<&str>> = HashMap::new();
         let mut record_of: HashMap<NamedOrBlankNode, NamedOrBlankNode> = HashMap::new();
+        let mut version_of: HashMap<NamedOrBlankNode, NamedOrBlankNode> = HashMap::new();
+        let mut children: HashMap<NamedOrBlankNode, Vec<NamedOrBlankNode>> = HashMap::new();
         for quad in produced {
-            if quad.predicate.as_str() == RDF_TYPE {
+            let predicate = quad.predicate.as_str();
+            if predicate == RDF_TYPE {
                 if let Term::NamedNode(class) = &quad.object {
                     classes
                         .entry(quad.subject.clone())
                         .or_default()
                         .push(class.as_str());
                 }
-            } else if quad.predicate.as_str() == PROV_SPECIALIZATION_OF {
-                if let Some(of) = as_subject(&quad.object) {
-                    record_of.insert(quad.subject.clone(), of);
+            } else if let Some(object) = as_subject(&quad.object) {
+                if predicate == PROV_SPECIALIZATION_OF {
+                    record_of.insert(quad.subject.clone(), object);
+                } else if predicate == BRIDGE_ARRIVED_AS {
+                    version_of.insert(quad.subject.clone(), object);
+                } else {
+                    children
+                        .entry(quad.subject.clone())
+                        .or_default()
+                        .push(object);
+                }
+            }
+        }
+        let records: HashSet<&NamedOrBlankNode> = record_of.values().collect();
+        let plain = |node: &NamedOrBlankNode| {
+            !records.contains(node) && !record_of.contains_key(node) && !version_of.contains_key(node)
+        };
+        // Each node of a record, its versions, their arrivals and what they hold in nodes of no
+        // record of their own, with the classes of the record it belongs to.
+        let mut owner: HashMap<NamedOrBlankNode, HashSet<&str>> = HashMap::new();
+        let mut pending: Vec<NamedOrBlankNode> = Vec::new();
+        for (version, record) in &record_of {
+            let Some(of) = classes.get(record) else {
+                continue;
+            };
+            for node in [version, record] {
+                owner.entry(node.clone()).or_default().extend(of.iter().copied());
+                pending.push(node.clone());
+            }
+        }
+        for (arrival, version) in &version_of {
+            if let Some(of) = owner.get(version).cloned() {
+                owner.entry(arrival.clone()).or_default().extend(of);
+            }
+        }
+        while let Some(node) = pending.pop() {
+            let of = owner[&node].clone();
+            for child in children
+                .get(&node)
+                .into_iter()
+                .flatten()
+                .filter(|child| plain(child))
+            {
+                let held = owner.entry(child.clone()).or_default();
+                let before = held.len();
+                held.extend(of.iter().copied());
+                if held.len() != before {
+                    pending.push(child.clone());
                 }
             }
         }
         let mut written: HashSet<(&str, &str)> = HashSet::new();
         for quad in produced {
-            if let Some(of) = record_of.get(&quad.subject) {
-                for class in classes.get(of).into_iter().flatten() {
-                    written.insert((*class, quad.predicate.as_str()));
-                }
+            for class in owner.get(&quad.subject).into_iter().flatten() {
+                written.insert((*class, quad.predicate.as_str()));
             }
         }
+        let mut holds: HashMap<&str, bool> = HashMap::new();
         let mut values: HashSet<&str> = HashSet::new();
         let mut bodies: HashSet<&str> = HashSet::new();
         for quad in findings {
@@ -272,17 +334,49 @@ impl Accounting {
             let Some(forward) = self.forward.get(&occurrence.path) else {
                 continue;
             };
-            let carried = forward
-                .carries
-                .iter()
-                .any(|(class, property)| written.contains(&(class.as_str(), property.as_str())));
+            let mut applicable: Vec<&Carry> = Vec::new();
+            for carry in &forward.carries {
+                let applies = match &carry.record_type {
+                    None => true,
+                    Some(record_type) => *holds.entry(record_type.as_str()).or_insert_with(|| {
+                        unit.text.contains(&format!("\"{record_type}\""))
+                            || unit.text.contains(&format!("'{record_type}'"))
+                    }),
+                };
+                if applies {
+                    applicable.push(carry);
+                }
+            }
             let reported = values.contains(occurrence.path.as_str())
                 || forward.gaps.iter().any(|gap| bodies.contains(gap.as_str()));
-            if !carried && !reported {
+            let carried = applicable.iter().any(|carry| {
+                written.contains(&(carry.class.as_str(), carry.property.as_str()))
+            });
+            if applicable.is_empty() {
                 misses.push(ForwardMiss {
+                    kind: ForwardKind::Unlisted,
                     record: record.selector.to_owned(),
                     path: occurrence.path.clone(),
-                    wanted: forward.carries.clone(),
+                    wanted: forward
+                        .carries
+                        .iter()
+                        .map(|carry| {
+                            (
+                                carry.record_type.clone().unwrap_or_default(),
+                                carry.property.clone(),
+                            )
+                        })
+                        .collect(),
+                });
+            } else if !carried && !reported {
+                misses.push(ForwardMiss {
+                    kind: ForwardKind::Missed,
+                    record: record.selector.to_owned(),
+                    path: occurrence.path.clone(),
+                    wanted: applicable
+                        .iter()
+                        .map(|carry| (carry.class.clone(), carry.property.clone()))
+                        .collect(),
                 });
             }
         }
@@ -402,8 +496,18 @@ fn entries(resolver: &dyn Resolver, iri: &str) -> Result<Vec<Entry>> {
                     path,
                     "bridge:asProperty",
                 )?;
+                let record_type = match objects(&graph, &node, BRIDGE_IN_SOURCE_RECORD_TYPE)?
+                    .first()
+                {
+                    Some(Term::Literal(record_type)) => Some(record_type.value().to_owned()),
+                    _ => None,
+                };
                 if let (Some(class), Some(property)) = (class, property) {
-                    carries.push((class, property));
+                    carries.push(Carry {
+                        record_type,
+                        class,
+                        property,
+                    });
                 }
             }
             entries.push(Entry {

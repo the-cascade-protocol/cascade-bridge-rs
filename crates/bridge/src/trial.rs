@@ -1,4 +1,4 @@
-use crate::accounting::ForwardMiss;
+use crate::accounting::{ForwardKind, ForwardMiss};
 use crate::budget::Budgets;
 use crate::compiled::Executor;
 use crate::error::Result;
@@ -201,16 +201,33 @@ pub fn trial_forward_accounting(
         );
     }
 
-    let missed: Vec<&Row> = rows.iter().filter(|row| !row.misses.is_empty()).collect();
+    for (kind, title) in [
+        (ForwardKind::Missed, "misses: a carried path held, none of its properties written, no finding about it"),
+        (ForwardKind::Unlisted, "unlisted: a carried path held in a unit none of whose record types the entry's carriedAs names (shown: the record types and properties it does name)"),
+    ] {
+        tabulated(&mut said, &rows, &kind, title);
+    }
+    Ok(said)
+}
+
+fn tabulated(said: &mut String, rows: &[Row], kind: &ForwardKind, title: &str) {
+    let missed: Vec<&Row> = rows
+        .iter()
+        .filter(|row| row.misses.iter().any(|miss| same(&miss.kind, kind)))
+        .collect();
     let _ = writeln!(
         said,
-        "\n{} entries report a miss; {} misses in all.\n",
+        "\n#### {title}\n\n{} entries; {} paths in all.\n",
         missed.len(),
-        missed.iter().map(|row| row.misses.len()).sum::<usize>()
+        missed
+            .iter()
+            .flat_map(|row| &row.misses)
+            .filter(|miss| same(&miss.kind, kind))
+            .count()
     );
-    let mut by_path: BTreeMap<(&str, String), Vec<&str>> = BTreeMap::new();
+    let mut by_path: BTreeMap<(&str, String), Vec<String>> = BTreeMap::new();
     for row in &missed {
-        for miss in &row.misses {
+        for miss in row.misses.iter().filter(|miss| same(&miss.kind, kind)) {
             let wanted: Vec<String> = miss
                 .wanted
                 .iter()
@@ -225,17 +242,17 @@ pub fn trial_forward_accounting(
             by_path
                 .entry((miss.path.as_str(), wanted.join(" | ")))
                 .or_default()
-                .push(row.name.as_str());
+                .push(format!("{} @{}", row.name, miss.record));
         }
     }
     if !by_path.is_empty() {
-        let _ = writeln!(said, "| path | carried as | entries | the entries |");
+        let _ = writeln!(said, "| path | carried as | units | the entries |");
         let _ = writeln!(said, "|---|---|---|---|");
         for ((path, wanted), names) in &by_path {
             let mut names = names.clone();
             names.sort_unstable();
             names.dedup();
-            let shown: Vec<&str> = names.iter().copied().take(6).collect();
+            let shown: Vec<&str> = names.iter().map(String::as_str).take(4).collect();
             let more = if names.len() > shown.len() {
                 format!(" and {} more", names.len() - shown.len())
             } else {
@@ -256,5 +273,11 @@ pub fn trial_forward_accounting(
             );
         }
     }
-    Ok(said)
+}
+
+fn same(one: &ForwardKind, other: &ForwardKind) -> bool {
+    matches!(
+        (one, other),
+        (ForwardKind::Missed, ForwardKind::Missed) | (ForwardKind::Unlisted, ForwardKind::Unlisted)
+    )
 }
