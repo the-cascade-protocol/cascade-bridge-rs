@@ -9,6 +9,7 @@ use crate::rdf::{serialise, serialise_at};
 use crate::records::Supplied;
 use crate::resolver::{key, Maps};
 use crate::run::{self, prepare, prepare_skipping, Asked, Prepared, Source};
+use crate::survey::Survey;
 use crate::terms::{
     BRIDGE_ADAPTER, BRIDGE_CASCADE_VOCABULARY_REPOSITORY, BRIDGE_CRATE_FILE, BRIDGE_ENVELOPE,
     BRIDGE_LOAD_FILE, BRIDGE_SOURCE_MEDIA_TYPE, BRIDGE_TEST_MANIFEST, BRIDGE_VOCABULARY_FILE,
@@ -257,6 +258,21 @@ impl Loaded {
 
     pub fn convert(&self, document: &Document<'_>) -> Result<Conversion> {
         self.convert_with(document, ConvertOptions::default())
+    }
+
+    /// Refuses a survey that could not be made of any document: the adapter names no accounting,
+    /// or `envelope` is none of its own. A host asks it before the first document, so a folder
+    /// with none to read is refused as one with many.
+    pub fn check_survey(&self, envelope: Option<&str>) -> Result<()> {
+        run::refuse_survey(&self.prepared, envelope).map(|_| ())
+    }
+
+    /// Reads each path of the document's records against the accounting, and adds what is held at
+    /// them to `into` as a document of that `name`; a document that cannot be read is listed there
+    /// as not read. It fails only where no survey can be made: the adapter names no accounting, or
+    /// the envelope the document names is none of its own.
+    pub fn survey(&self, into: &mut Survey, name: &str, document: &Document<'_>) -> Result<()> {
+        run::survey(&self.prepared, source(document), name, into)
     }
 
     pub fn convert_with(

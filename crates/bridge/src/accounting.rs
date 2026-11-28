@@ -6,12 +6,12 @@ use crate::load::{as_subject, instances, objects, subjects, turtle, Envelope, Pr
 use crate::resolver::Resolver;
 use crate::run::Asked;
 use crate::terms::{
-    BRIDGE_ADAPTER_REPORTS_GAP, BRIDGE_AS_PROPERTY, BRIDGE_CARRIED, BRIDGE_CARRIED_AS,
-    BRIDGE_CARRIED_IN_PART, BRIDGE_ELEMENT_NOT_CARRIED, BRIDGE_IN_RECORD_CLASS, BRIDGE_LOOKUP_IN,
-    BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP, BRIDGE_NO_HOME, BRIDGE_NO_PREDICATE,
-    BRIDGE_PATH_ENTRY, BRIDGE_SOURCE_LACKS_REQUIRED, BRIDGE_SOURCE_PATH, BRIDGE_VALUE_NOT_MAPPED,
-    BRIDGE_VERDICT, SH_INFO, SH_RESULT_SEVERITY, SH_VIOLATION, SH_WARNING, SKOS_BROADER,
-    SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
+    BRIDGE_ADAPTER_REPORTS_GAP, BRIDGE_AS_PROPERTY, BRIDGE_BECAUSE, BRIDGE_CARRIED,
+    BRIDGE_CARRIED_AS, BRIDGE_CARRIED_IN_PART, BRIDGE_ELEMENT_NOT_CARRIED, BRIDGE_IN_RECORD_CLASS,
+    BRIDGE_LOOKUP_IN, BRIDGE_LOOKUP_NAMES_GAP, BRIDGE_NAMES_GAP, BRIDGE_NO_HOME,
+    BRIDGE_NO_PREDICATE, BRIDGE_PATH_ENTRY, BRIDGE_SOURCE_LACKS_REQUIRED, BRIDGE_SOURCE_PATH,
+    BRIDGE_VALUE_NOT_MAPPED, BRIDGE_VERDICT, SH_INFO, SH_RESULT_SEVERITY, SH_VIOLATION, SH_WARNING,
+    SKOS_BROADER, SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
 };
 use oxigraph::model::{NamedOrBlankNode, Quad, Term};
 use std::collections::{HashMap, HashSet};
@@ -32,6 +32,20 @@ struct Entry {
     carries: Vec<Carry>,
     /// Each `bridge:adapterReportsGap`.
     reported_by_the_adapter: Vec<String>,
+    because: Option<String>,
+}
+
+/// What an entry says of the path it is written for, as the entry writes it.
+pub(crate) struct Decision {
+    pub(crate) verdict: Option<String>,
+    pub(crate) gap: Option<String>,
+    pub(crate) because: Option<String>,
+}
+
+struct Accounted {
+    /// The path of the entry that says so.
+    written_for: String,
+    decision: Decision,
 }
 
 /// One `bridge:carriedAs`.
@@ -83,6 +97,7 @@ fn key(value: &str) -> String {
 
 /// A form an envelope writes a place in: a content prefix, possibly empty, followed or not by
 /// the contained prefix. Its `prefix` is never empty.
+#[derive(Clone)]
 struct Form {
     prefix: String,
     content: String,
@@ -90,6 +105,7 @@ struct Form {
 }
 
 /// The non-empty forms an adapter's envelopes write a place in, longest first.
+#[derive(Clone)]
 pub(crate) struct Forms(Vec<Form>);
 
 impl Forms {
@@ -123,6 +139,15 @@ impl Forms {
             path.strip_prefix(form.prefix.as_str())
                 .is_some_and(|rest| rest.starts_with('/'))
         })
+    }
+
+    /// The place a path written in a form stands at, and the prefix of the form; a path no
+    /// form's prefix leads is its own place, in the bare form.
+    pub(crate) fn place_of<'p>(&self, path: &'p str) -> (&'p str, Option<String>) {
+        match self.of(path) {
+            Some(form) => (&path[form.prefix.len()..], Some(form.prefix.clone())),
+            None => (path, None),
+        }
     }
 
     /// Each entry copied to the forms it stands for, and the path of the entry each copy was
@@ -185,8 +210,11 @@ impl Forms {
 }
 
 pub(crate) struct Accounting {
-    /// Each path an entry accounts for, with the path of the entry that says so.
-    accounted_by: HashMap<String, String>,
+    /// Each path an entry accounts for, with the entry that says so.
+    accounted_by: HashMap<String, Accounted>,
+    /// The prefixes the accounting's file binds.
+    pub(crate) prefixes: Prefixes,
+    pub(crate) forms: Forms,
     reported: HashMap<String, Vec<Reported>>,
     lookups: HashMap<String, Vec<Lookup>>,
     owed: HashMap<String, Owed>,
@@ -203,14 +231,32 @@ impl Accounting {
         scheme: &HashMap<String, Gap>,
         forms: &Forms,
     ) -> Result<Self> {
-        let (entries, copied_from) = forms.copied(entries(resolver, iri)?);
-        Self::of(entries, copied_from, scheme, iri, resolver)
+        let (entries, prefixes) = entries(resolver, iri)?;
+        let (entries, copied_from) = forms.copied(entries);
+        Self::of(
+            entries,
+            prefixes,
+            forms.clone(),
+            copied_from,
+            scheme,
+            iri,
+            resolver,
+        )
     }
 
     /// The path of the entry that accounts for `path` as a record writes it: its own, or
     /// the entry written for its place.
     pub(crate) fn entry_for(&self, path: &str) -> Option<&str> {
-        self.accounted_by.get(path).map(String::as_str)
+        self.accounted_by
+            .get(path)
+            .map(|accounted| accounted.written_for.as_str())
+    }
+
+    /// What the entry that `entry_for` finds says.
+    pub(crate) fn decision_for(&self, path: &str) -> Option<&Decision> {
+        self.accounted_by
+            .get(path)
+            .map(|accounted| &accounted.decision)
     }
 
     /// `owing` keeps where each occurrence of a carried path stands, which only
@@ -222,11 +268,14 @@ impl Accounting {
                 true => self.owed.keys().cloned().collect(),
                 false => HashSet::new(),
             },
+            kinds: false,
         }
     }
 
     fn of(
         entries: Vec<Entry>,
+        prefixes: Prefixes,
+        forms: Forms,
         copied_from: HashMap<String, String>,
         scheme: &HashMap<String, Gap>,
         iri: &str,
@@ -333,7 +382,17 @@ impl Accounting {
                 }
             }
             let written_for = copied_from.get(&entry.path).unwrap_or(&entry.path).clone();
-            accounted_by.insert(entry.path, written_for);
+            accounted_by.insert(
+                entry.path,
+                Accounted {
+                    written_for,
+                    decision: Decision {
+                        verdict: entry.verdict,
+                        gap: entry.gap,
+                        because: entry.because,
+                    },
+                },
+            );
         }
         // Sorted, so a run's output does not depend on which way a hash fell.
         for gaps in reported.values_mut() {
@@ -349,6 +408,8 @@ impl Accounting {
         let owes_where_nothing_is_written = owed.values().any(|owing| !owing.reported.is_empty());
         Ok(Self {
             accounted_by,
+            prefixes,
+            forms,
             reported,
             lookups,
             owed,
@@ -441,8 +502,8 @@ fn declared(objects: &[Term], iri: &str, path: &str, predicate: &str) -> Result<
 
 /// A `bridge:sourcePath` that is no literal is refused: dropping it would report the
 /// path as unaccounted.
-fn entries(resolver: &dyn Resolver, iri: &str) -> Result<Vec<Entry>> {
-    let (graph, _) = turtle(&resolver.read(iri)?, iri)?;
+fn entries(resolver: &dyn Resolver, iri: &str) -> Result<(Vec<Entry>, Prefixes)> {
+    let (graph, prefixes) = turtle(&resolver.read(iri)?, iri)?;
     let typed = instances(&graph, BRIDGE_PATH_ENTRY)?;
     let mut entries = Vec::new();
     for s in subjects(&graph, BRIDGE_SOURCE_PATH)? {
@@ -485,6 +546,13 @@ fn entries(resolver: &dyn Resolver, iri: &str) -> Result<Vec<Entry>> {
                 };
                 reported_by_the_adapter.push(named.as_str().to_owned());
             }
+            let reasons: Vec<String> = objects(&graph, &s, BRIDGE_BECAUSE)?
+                .iter()
+                .filter_map(|reason| match reason {
+                    Term::Literal(reason) => Some(reason.value().to_owned()),
+                    _ => None,
+                })
+                .collect();
             entries.push(Entry {
                 carries,
                 reported_by_the_adapter,
@@ -493,10 +561,11 @@ fn entries(resolver: &dyn Resolver, iri: &str) -> Result<Vec<Entry>> {
                 map: said(BRIDGE_LOOKUP_IN, "bridge:lookupIn")?,
                 miss: said(BRIDGE_LOOKUP_NAMES_GAP, "bridge:lookupNamesGap")?,
                 path: path.to_owned(),
+                because: (!reasons.is_empty()).then(|| reasons.join(" ")),
             });
         }
     }
-    Ok(entries)
+    Ok((entries, prefixes))
 }
 
 pub(crate) fn gap_scheme(

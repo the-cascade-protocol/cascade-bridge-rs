@@ -24,6 +24,7 @@ mod records;
 mod resolver;
 mod run;
 mod shapes;
+mod survey;
 mod syntax;
 pub mod terms;
 mod validate;
@@ -40,3 +41,4 @@ pub use library::{
 pub use measure::{Skip, Stage, StageTime};
 pub use oxrdf;
 pub use oxrdfio;
+pub use survey::{Narrowing, NotRead, Survey, SurveyReport, SurveyRow, NEVER_DECIDED};

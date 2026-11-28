@@ -3,8 +3,9 @@ mod common;
 use cascade_bridge::oxrdf::Term;
 use cascade_bridge::oxrdfio::{self, RdfFormat};
 use common::{
-    canonical, canonical_lines, copied_to, map_of, names, outcomes, owing_a_title, quads,
-    read_at_its_own_iri, results, scratch, tiny, vocabularies, BASE, MAX_LENGTH,
+    a_folder_of_three_documents, canonical, canonical_lines, copied_to, map_of, names, outcomes,
+    owing_a_title, quads, read_at_its_own_iri, results, scratch, tiny, tiny_without_accounting,
+    vocabularies, BASE, MAX_LENGTH,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::process::{Command, Stdio};
@@ -1050,6 +1051,198 @@ mod running_an_adapters_tests {
                 ]),
             );
         }
+    }
+}
+
+fn surveyed(folder: &std::path::Path, flags: &[&str]) -> std::process::Output {
+    let mut arguments = vec![
+        "survey".to_owned(),
+        adapter(),
+        folder.to_string_lossy().into_owned(),
+    ];
+    arguments.extend(flags.iter().map(|flag| (*flag).to_owned()));
+    let arguments: Vec<&str> = arguments.iter().map(String::as_str).collect();
+    cascade_bridge(&arguments)
+}
+
+fn survey_row(documents: usize, occurrences: usize, rest: &str) -> String {
+    format!("  {documents:>8}  {occurrences:>8}  {rest}")
+}
+
+fn tsv_lines(path: &std::path::Path) -> Vec<String> {
+    std::fs::read_to_string(path)
+        .expect("the written TSV")
+        .lines()
+        .map(str::to_owned)
+        .collect()
+}
+
+const SURVEY_TSV_HEADER: &str = "kind\tpath\tverdict\tgap\treason\tdocuments\toccurrences\tforms";
+
+/// Surveying a folder of documents with an adapter · cascade-bridge survey
+///
+/// `survey` lifts every document of a folder and reads each path in them against the adapter's
+/// accounting, converting none. It prints the paths no entry names, the paths whose entry says no
+/// Cascade term carries them, and the paths whose entry says they are left out on purpose, each
+/// ranked by how many documents hold it, and lists each file it could not read. It exits 0 once the
+/// adapter was read, and 2 where it was not.
+mod surveying_a_folder {
+    use super::*;
+
+    #[test]
+    fn ranks_each_path_under_its_verdict_by_the_documents_that_hold_it() {
+        let folder = a_folder_of_three_documents();
+        let run = surveyed(folder.path(), &[]);
+        let stdout = String::from_utf8_lossy(&run.stdout);
+        assert_eq!(
+            run.status.code(),
+            Some(0),
+            "{stdout}{}",
+            String::from_utf8_lossy(&run.stderr)
+        );
+        let lines: Vec<&str> = stdout.lines().collect();
+        assert!(lines[0].starts_with("Adapter  "), "{stdout}");
+        let expected = [
+            "Documents  3 read, 1 not read, 3 record(s)".to_owned(),
+            "Columns    documents, occurrences, path".to_owned(),
+            "Counts     documents is how many files hold the path; occurrences is how many times it stands in all of them".to_owned(),
+            String::new(),
+            "Never decided: 1 path(s) no entry of the accounting covers".to_owned(),
+            survey_row(2, 3, "/item/novelty"),
+            String::new(),
+            "No term yet: 1 path(s) whose entry says no Cascade term carries them".to_owned(),
+            survey_row(2, 2, "/item/note  gap ex:noteHasNoTerm"),
+            String::new(),
+            "Left out on purpose: 1 path(s) whose entry says they are not carried".to_owned(),
+            survey_row(
+                1,
+                1,
+                "/item/@internal  because An exporter's own marker is not data about the item.",
+            ),
+            String::new(),
+            "Not read: 1 document(s)".to_owned(),
+        ];
+        assert_eq!(lines[1..=expected.len()], expected, "{stdout}");
+        assert_eq!(lines.len(), expected.len() + 2, "{stdout}");
+        assert!(
+            lines[expected.len() + 1].starts_with("  broken.xml  "),
+            "{stdout}"
+        );
+    }
+
+    #[test]
+    fn writes_every_path_it_saw_to_the_tsv_file_whatever_its_verdict() {
+        let folder = a_folder_of_three_documents();
+        let out = scratch();
+        let tsv = out.path().join("survey.tsv");
+        let run = surveyed(folder.path(), &["--tsv", &tsv.to_string_lossy()]);
+        assert_eq!(
+            run.status.code(),
+            Some(0),
+            "{}",
+            String::from_utf8_lossy(&run.stderr)
+        );
+        assert_eq!(
+            tsv_lines(&tsv),
+            [
+                SURVEY_TSV_HEADER,
+                "\t/item/@id\tcarried\t\t\t3\t3\t",
+                "\t/item/title\tcarried\t\t\t3\t3\t",
+                "\t/item/novelty\tneverDecided\t\t\t2\t3\t",
+                "\t/item/note\tnoHome\turn:example:catalog#noteHasNoTerm\t\t2\t2\t",
+                "\t/item/@internal\tignored\t\tAn exporter's own marker is not data about the item.\t1\t1\t",
+            ]
+        );
+    }
+
+    #[test]
+    fn narrows_to_the_paths_under_a_path_step_by_step_and_to_a_record_kind() {
+        let folder = a_folder_of_three_documents();
+        let out = scratch();
+        let tsv = out.path().join("narrowed.tsv");
+        let tsv_path = tsv.to_string_lossy().into_owned();
+        let under = |path: &str| {
+            let run = surveyed(folder.path(), &["--tsv", &tsv_path, "--under", path]);
+            assert_eq!(run.status.code(), Some(0), "--under {path}");
+            tsv_lines(&tsv)
+                .into_iter()
+                .skip(1)
+                .map(|row| row.split('\t').nth(1).unwrap_or_default().to_owned())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(under("/item/note"), ["/item/note"]);
+        assert_eq!(under("/item/no"), Vec::<String>::new());
+        assert_eq!(under("/item").len(), 5);
+        let run = surveyed(
+            folder.path(),
+            &["--tsv", &tsv_path, "--kind", "Observation"],
+        );
+        assert_eq!(run.status.code(), Some(0));
+        assert_eq!(tsv_lines(&tsv), [SURVEY_TSV_HEADER]);
+    }
+
+    #[test]
+    fn exits_2_for_an_adapter_with_no_accounting_though_no_document_is_read() {
+        let adapter = scratch();
+        tiny_without_accounting(adapter.path());
+        let folder = scratch();
+        let run = cascade_bridge(&[
+            "survey",
+            &adapter.path().to_string_lossy(),
+            &folder.path().to_string_lossy(),
+        ]);
+        assert_eq!(run.status.code(), Some(2));
+        assert!(run.stdout.is_empty());
+        assert!(
+            String::from_utf8_lossy(&run.stderr).contains("bridge:sourceAccounting"),
+            "{}",
+            String::from_utf8_lossy(&run.stderr)
+        );
+    }
+
+    #[test]
+    fn exits_2_for_an_envelope_the_adapter_does_not_declare_though_no_document_is_read() {
+        let folder = scratch();
+        let run = surveyed(folder.path(), &["--envelope", "#nope"]);
+        assert_eq!(run.status.code(), Some(2));
+        assert!(run.stdout.is_empty());
+        assert!(
+            String::from_utf8_lossy(&run.stderr).contains("declares no envelope"),
+            "{}",
+            String::from_utf8_lossy(&run.stderr)
+        );
+    }
+
+    #[test]
+    fn says_no_document_was_read_and_prints_each_section_empty_for_an_empty_folder() {
+        let folder = scratch();
+        let run = surveyed(folder.path(), &[]);
+        assert_eq!(run.status.code(), Some(0));
+        let stdout = String::from_utf8_lossy(&run.stdout);
+        let lines: Vec<&str> = stdout.lines().skip(1).collect();
+        assert_eq!(lines[0], "Documents  0 read, 0 not read, 0 record(s)");
+        assert!(lines.contains(&"No document was read."), "{stdout}");
+        for section in [
+            "Never decided: 0 path(s) no entry of the accounting covers",
+            "No term yet: 0 path(s) whose entry says no Cascade term carries them",
+            "Left out on purpose: 0 path(s) whose entry says they are not carried",
+        ] {
+            assert!(lines.contains(&section), "{stdout}");
+        }
+    }
+
+    #[test]
+    fn exits_2_naming_the_folder_when_it_cannot_be_read() {
+        let folder = scratch();
+        let absent = folder.path().join("no-such-folder");
+        let run = surveyed(&absent, &[]);
+        assert_eq!(run.status.code(), Some(2));
+        assert!(run.stdout.is_empty());
+        assert!(
+            String::from_utf8_lossy(&run.stderr).contains("no-such-folder"),
+            "{}",
+            String::from_utf8_lossy(&run.stderr)
+        );
     }
 }
 

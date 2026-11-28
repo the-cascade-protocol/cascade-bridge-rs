@@ -199,6 +199,7 @@ impl Census {
                     path,
                     within: within.map(str::to_owned),
                     count: 1,
+                    kind: None,
                 });
             }
         }
@@ -478,7 +479,12 @@ impl Builder {
                 &element.written,
                 &element.declarations,
             ));
-            if let (Some(census), Paths::Kept { valued, carried }) = (&mut self.census, &self.paths)
+            if let (
+                Some(census),
+                Paths::Kept {
+                    valued, carried, ..
+                },
+            ) = (&mut self.census, &self.paths)
             {
                 census.open(step.clone(), &element.attributes, &Kept { valued, carried });
             }
@@ -548,7 +554,9 @@ impl Builder {
                 .chain([step.clone()])
                 .collect();
             let census = match &self.paths {
-                Paths::Kept { valued, carried } => Some(Census::of(
+                Paths::Kept {
+                    valued, carried, ..
+                } => Some(Census::of(
                     &step,
                     &element.attributes,
                     &Kept { valued, carried },
@@ -846,6 +854,10 @@ impl<R: BufRead> super::Lift for Lift<R> {
 
     fn admits(&self, admission: &super::Admission) -> bool {
         admission.root.is_some() && self.builder.document_element == admission.root
+    }
+
+    fn has_document_element(&self) -> bool {
+        self.builder.document_element.is_some()
     }
 
     fn document_selector(&self, described: Option<&str>) -> String {

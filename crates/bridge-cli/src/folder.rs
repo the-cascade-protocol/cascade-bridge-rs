@@ -87,6 +87,33 @@ impl Folder {
     }
 }
 
+/// A file or symbolic link directly inside a directory.
+pub struct Listed {
+    pub name: String,
+    pub path: PathBuf,
+    pub linked: bool,
+}
+
+/// What lies directly inside a directory, a subdirectory left out, by name.
+pub fn listed(directory: &str) -> Result<Vec<Listed>, String> {
+    let path = fs::canonicalize(directory).map_err(|e| format!("{directory}: {e}"))?;
+    let mut listed = Vec::new();
+    for entry in fs::read_dir(&path).map_err(|e| at(&path, &e))? {
+        let entry = entry.map_err(|e| at(&path, &e))?;
+        let kind = entry.file_type().map_err(|e| at(&entry.path(), &e))?;
+        if kind.is_dir() {
+            continue;
+        }
+        listed.push(Listed {
+            name: entry.file_name().to_string_lossy().into_owned(),
+            path: entry.path(),
+            linked: kind.is_symlink(),
+        });
+    }
+    listed.sort_by(|one, other| one.name.cmp(&other.name));
+    Ok(listed)
+}
+
 fn at(path: &Path, error: &std::io::Error) -> String {
     format!("{}: {error}", path.display())
 }

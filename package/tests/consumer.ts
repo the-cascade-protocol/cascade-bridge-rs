@@ -1,4 +1,4 @@
-import { Adapter, describe, test } from "../dist/cascade_bridge.js";
+import { Adapter, describe, Survey, test } from "../dist/cascade_bridge.js";
 import type {
   BridgeError,
   Conversion,
@@ -6,6 +6,7 @@ import type {
   Named,
   Skip,
   StageTime,
+  SurveyReport,
   TestReport,
 } from "../dist/cascade_bridge.js";
 
@@ -29,8 +30,14 @@ const conversion: Conversion = loaded.convert(document, { findings: true, census
 const graph: Uint8Array = conversion.graph;
 const findings: Uint8Array | undefined = conversion.findings;
 const owed: string[] = loaded.unmet(document, { executor: "compiled" });
+const survey: Survey = new Survey();
+loaded.checkSurvey(document.envelope);
+loaded.survey(survey, "catalog.xml", document);
+survey.notRead("notes.txt", "a symbolic link, which is not read");
+const surveyed: SurveyReport = survey.report({ kind: "Observation", under: "/resource" });
+survey.free();
 loaded.free();
-void [accepted, graph, findings, owed];
+void [accepted, graph, findings, owed, surveyed.text, surveyed.tsv];
 
 const measured: Adapter = Adapter.loadForMeasurement(adapter, vocabulary, ["findings", "shapes"]);
 const loading: StageTime[] = measured.loadStages();
