@@ -14,7 +14,7 @@ use crate::terms::{
     SKOS_CONCEPT_SCHEME, SKOS_NOTATION,
 };
 use oxigraph::model::{NamedOrBlankNode, Quad, Term};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 mod owed;
@@ -81,50 +81,92 @@ fn key(value: &str) -> String {
     value.trim_matches(XML_SPACE).to_lowercase()
 }
 
-/// The prefixes, none of them empty, an adapter's envelopes write a place under: each
-/// envelope's content prefix and its contained prefix.
-pub(crate) struct Forms(Vec<String>);
+/// A form an envelope writes a place in: a content prefix, possibly empty, followed or not by
+/// the contained prefix. Its `prefix` is never empty.
+struct Form {
+    prefix: String,
+    content: String,
+    contained: Option<String>,
+}
+
+/// The non-empty forms an adapter's envelopes write a place in, longest first.
+pub(crate) struct Forms(Vec<Form>);
 
 impl Forms {
     pub(crate) fn declared(envelopes: &[Envelope]) -> Self {
-        let mut prefixes = BTreeSet::new();
+        let mut forms: Vec<Form> = Vec::new();
         for envelope in envelopes {
             let content = envelope.path_of_content_in_record.as_deref().unwrap_or("");
-            prefixes.insert(content.to_owned());
-            if let Some(contained) = &envelope.path_of_contained_content_below_content {
-                prefixes.insert(format!("{content}{contained}"));
+            let contained = envelope.path_of_contained_content_below_content.as_deref();
+            let wholes = [(content.to_owned(), None)]
+                .into_iter()
+                .chain(contained.map(|c| (format!("{content}{c}"), Some(c.to_owned()))));
+            for (prefix, contained) in wholes {
+                if !prefix.is_empty() && !forms.iter().any(|form| form.prefix == prefix) {
+                    forms.push(Form {
+                        prefix,
+                        content: content.to_owned(),
+                        contained,
+                    });
+                }
             }
         }
-        prefixes.remove("");
-        let mut prefixes: Vec<String> = prefixes.into_iter().collect();
-        prefixes.sort_by(|one, other| other.len().cmp(&one.len()).then_with(|| one.cmp(other)));
-        Self(prefixes)
+        forms.sort_by(|one, other| {
+            (other.prefix.len(), &one.prefix).cmp(&(one.prefix.len(), &other.prefix))
+        });
+        Self(forms)
     }
 
     /// The form a path is written in: the longest prefix a `/` follows.
-    fn of(&self, path: &str) -> Option<&str> {
-        self.0
-            .iter()
-            .find(|prefix| {
-                path.strip_prefix(prefix.as_str())
-                    .is_some_and(|rest| rest.starts_with('/'))
-            })
-            .map(String::as_str)
+    fn of(&self, path: &str) -> Option<&Form> {
+        self.0.iter().find(|form| {
+            path.strip_prefix(form.prefix.as_str())
+                .is_some_and(|rest| rest.starts_with('/'))
+        })
     }
 
-    /// Each entry written for a place, copied to every prefix it is not written under, unless
-    /// an entry stands at the prefixed path; and the place each copy was made from.
+    /// Each entry copied to the forms it stands for, and the path of the entry each copy was
+    /// made from. The most specific entry wins at a path: one standing there; then one
+    /// written with the contained prefix and no content prefix, which stands for its place in
+    /// the contained form under every content prefix; then the place's own entry, which stands
+    /// for it in every form. An entry written with a content prefix stands for itself only.
     fn copied(&self, entries: Vec<Entry>) -> (Vec<Entry>, HashMap<String, String>) {
         let standing: HashSet<String> = entries.iter().map(|entry| entry.path.clone()).collect();
         let mut made = Vec::new();
         let mut from: HashMap<String, String> = HashMap::new();
+        let mut overridden: HashSet<String> = HashSet::new();
+        for entry in &entries {
+            let Some(written) = self.of(&entry.path).filter(|form| form.content.is_empty()) else {
+                continue;
+            };
+            let place = &entry.path[written.prefix.len()..];
+            for form in self
+                .0
+                .iter()
+                .filter(|form| !form.content.is_empty() && form.contained == written.contained)
+            {
+                let path = format!("{}{place}", form.prefix);
+                if standing.contains(&path) {
+                    continue;
+                }
+                overridden.insert(path.clone());
+                from.insert(path.clone(), entry.path.clone());
+                made.push(Entry {
+                    path,
+                    ..entry.clone()
+                });
+            }
+        }
         for entry in entries
             .iter()
             .filter(|entry| self.of(&entry.path).is_none())
         {
-            for prefix in &self.0 {
-                let path = format!("{prefix}{}", entry.path);
-                if standing.contains(&path) || self.of(&path) != Some(prefix.as_str()) {
+            for form in &self.0 {
+                let path = format!("{}{}", form.prefix, entry.path);
+                if standing.contains(&path)
+                    || overridden.contains(&path)
+                    || self.of(&path).map(|read| &read.prefix) != Some(&form.prefix)
+                {
                     continue;
                 }
                 from.insert(path.clone(), entry.path.clone());
