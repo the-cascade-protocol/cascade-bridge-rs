@@ -172,6 +172,26 @@ mod tests {
             );
         }
 
+        /// reads a path in the form its longest prefix names, so an entry for a place that begins
+        /// like a longer prefix does not account for a place of that form
+        #[test]
+        fn reads_a_path_in_the_form_its_longest_prefix_names() {
+            let mut entries = written_once();
+            entries.extend(carrying(&["/contained/novelty"]));
+            let found = findings(
+                &declaring_forms(&entries, WRITTEN_IN_EVERY_FORM),
+                "forms.json",
+            );
+            assert_eq!(
+                censuses(&found),
+                paths(&[
+                    "/novelty",
+                    "/resource/novelty",
+                    "/resource/contained/novelty"
+                ])
+            );
+        }
+
         /// reads each path as its own place where the adapter declares no form
         #[test]
         fn reads_each_path_as_its_own_place_where_the_adapter_declares_no_form() {
