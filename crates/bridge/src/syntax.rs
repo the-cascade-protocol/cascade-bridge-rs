@@ -69,6 +69,7 @@ impl Syntax {
         match self {
             Self::Xml => Ok(Admission {
                 root: envelope.doc_root_element_name.clone(),
+                unread_kind_path: envelope.path_of_record_kind_below_content.clone(),
                 ..Admission::default()
             }),
             Self::Json => {
@@ -81,6 +82,7 @@ impl Syntax {
                     root: envelope.doc_root_member_name.clone(),
                     value: envelope.doc_root_member_value.clone(),
                     records: envelope.json_path_of_each_record.clone(),
+                    unread_kind_path: None,
                     kinds: envelope
                         .path_of_record_kind_below_content
                         .as_ref()

@@ -1077,7 +1077,7 @@ fn tsv_lines(path: &std::path::Path) -> Vec<String> {
         .collect()
 }
 
-const SURVEY_TSV_HEADER: &str = "kind\tpath\tverdict\tgap\treason\tdocuments\toccurrences";
+const SURVEY_TSV_HEADER: &str = "kind\tpath\tverdict\tgap\treason\tdocuments\toccurrences\tforms";
 
 /// Surveying a folder of documents with an adapter · cascade-bridge survey
 ///
@@ -1105,6 +1105,7 @@ mod surveying_a_folder {
         let expected = [
             "Documents  3 read, 1 not read, 3 record(s)".to_owned(),
             "Columns    documents, occurrences, path".to_owned(),
+            "Counts     documents is how many files hold the path; occurrences is how many times it stands in all of them".to_owned(),
             String::new(),
             "Never decided: 1 path(s) no entry of the accounting covers".to_owned(),
             survey_row(2, 3, "/item/novelty"),
@@ -1145,11 +1146,11 @@ mod surveying_a_folder {
             tsv_lines(&tsv),
             [
                 SURVEY_TSV_HEADER,
-                "\t/item/@id\tcarried\t\t\t3\t3",
-                "\t/item/title\tcarried\t\t\t3\t3",
-                "\t/item/novelty\tneverDecided\t\t\t2\t3",
-                "\t/item/note\tnoHome\turn:example:catalog#noteHasNoTerm\t\t2\t2",
-                "\t/item/@internal\tignored\t\tAn exporter's own marker is not data about the item.\t1\t1",
+                "\t/item/@id\tcarried\t\t\t3\t3\t",
+                "\t/item/title\tcarried\t\t\t3\t3\t",
+                "\t/item/novelty\tneverDecided\t\t\t2\t3\t",
+                "\t/item/note\tnoHome\turn:example:catalog#noteHasNoTerm\t\t2\t2\t",
+                "\t/item/@internal\tignored\t\tAn exporter's own marker is not data about the item.\t1\t1\t",
             ]
         );
     }

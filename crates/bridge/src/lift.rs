@@ -103,6 +103,8 @@ pub(crate) struct Admission {
     pub(crate) records: Option<String>,
     /// A JSON envelope's `bridge:pathOfRecordKindBelowContent`, where it declares one.
     pub(crate) kinds: Option<Kinds>,
+    /// An XML envelope's `bridge:pathOfRecordKindBelowContent`, which a survey does not read.
+    pub(crate) unread_kind_path: Option<String>,
 }
 
 /// How a document is split: by the adapter's `bridge:elementNameOfEachRecord`, or by
@@ -139,6 +141,9 @@ pub(crate) trait Lift {
 
     /// Known of an XML document once its document element has been read.
     fn admits(&self, admission: &Admission) -> bool;
+
+    /// Whether the text was a document of the syntax: JSON that parsed, or XML with a document element.
+    fn has_document_element(&self) -> bool;
 
     /// `described` is the envelope's, for a document whose root was never read.
     fn document_selector(&self, described: Option<&str>) -> String;

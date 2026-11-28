@@ -8,6 +8,7 @@ fn envelope(root: &str, value: Option<&str>, records: &str) -> Admission {
         value: value.map(str::to_owned),
         records: Some(records.to_owned()),
         kinds: None,
+        unread_kind_path: None,
     }
 }
 

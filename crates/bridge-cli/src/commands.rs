@@ -16,7 +16,7 @@ const USAGE: &str = "usage: cascade-bridge test <adapter-dir> [--vocabularies <d
 
 --skip is for measuring only: the run leaves out the source schema check, the output shapes check or the findings queries, and its conversion is not a validated one.
 --owed lists each occurrence of a path the accounting says is carried, or whose gap the adapter reports, that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.
-survey converts nothing: it lifts each file directly in <folder> and reads each path of its records against the adapter's accounting, then prints the paths no entry covers, the paths whose entry says no Cascade term carries them, and the paths whose entry says they are left out on purpose, ranked by the documents that hold each, and lists each file it could not read. --tsv writes every path it saw to <file>; --kind keeps one record kind; --under keeps a path and the paths below it; --envelope reads every document in that envelope. It exits 0 once the adapter was read, and 2 where it was not.";
+survey converts nothing: it lifts each file directly in <folder> and reads each path of its records against the adapter's accounting, then prints the paths no entry covers, the paths whose entry says no Cascade term carries them, and the paths whose entry says they are left out on purpose, ranked by the documents that hold each, and lists each file it could not read. A path is a place: one written in a bare record and in an envelope's content member is one row, saying the forms it was written in. --tsv writes every place it saw to <file>, the forms as its last column; --kind keeps one record kind; --under keeps a place and the places below it; --envelope reads every document in that envelope. It exits 0 once the adapter was read, and 2 where it was not, an empty folder included.";
 
 fn memory_budget(mebibytes: &str) -> Option<usize> {
     Budgets::memory_mib(mebibytes.parse().ok()?)
@@ -440,6 +440,9 @@ fn survey(arguments: &Surveying) -> Result<u8, String> {
         .as_deref()
         .map(|named| crate_named(&inputs.adapter.iri, named))
         .transpose()?;
+    loaded
+        .check_survey(envelope.as_deref())
+        .map_err(|e| e.to_string())?;
     let mut surveyed = Survey::new();
     for file in listed(&arguments.folder)? {
         if file.linked {

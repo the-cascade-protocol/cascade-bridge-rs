@@ -97,6 +97,7 @@ fn key(value: &str) -> String {
 
 /// A form an envelope writes a place in: a content prefix, possibly empty, followed or not by
 /// the contained prefix. Its `prefix` is never empty.
+#[derive(Clone)]
 struct Form {
     prefix: String,
     content: String,
@@ -104,6 +105,7 @@ struct Form {
 }
 
 /// The non-empty forms an adapter's envelopes write a place in, longest first.
+#[derive(Clone)]
 pub(crate) struct Forms(Vec<Form>);
 
 impl Forms {
@@ -137,6 +139,15 @@ impl Forms {
             path.strip_prefix(form.prefix.as_str())
                 .is_some_and(|rest| rest.starts_with('/'))
         })
+    }
+
+    /// The place a path written in a form stands at, and the prefix of the form; a path no
+    /// form's prefix leads is its own place, in the bare form.
+    pub(crate) fn place_of<'p>(&self, path: &'p str) -> (&'p str, Option<String>) {
+        match self.of(path) {
+            Some(form) => (&path[form.prefix.len()..], Some(form.prefix.clone())),
+            None => (path, None),
+        }
     }
 
     /// Each entry copied to the forms it stands for, and the path of the entry each copy was
@@ -203,6 +214,7 @@ pub(crate) struct Accounting {
     accounted_by: HashMap<String, Accounted>,
     /// The prefixes the accounting's file binds.
     pub(crate) prefixes: Prefixes,
+    pub(crate) forms: Forms,
     reported: HashMap<String, Vec<Reported>>,
     lookups: HashMap<String, Vec<Lookup>>,
     owed: HashMap<String, Owed>,
@@ -221,7 +233,15 @@ impl Accounting {
     ) -> Result<Self> {
         let (entries, prefixes) = entries(resolver, iri)?;
         let (entries, copied_from) = forms.copied(entries);
-        Self::of(entries, prefixes, copied_from, scheme, iri, resolver)
+        Self::of(
+            entries,
+            prefixes,
+            forms.clone(),
+            copied_from,
+            scheme,
+            iri,
+            resolver,
+        )
     }
 
     /// The path of the entry that accounts for `path` as a record writes it: its own, or
@@ -255,6 +275,7 @@ impl Accounting {
     fn of(
         entries: Vec<Entry>,
         prefixes: Prefixes,
+        forms: Forms,
         copied_from: HashMap<String, String>,
         scheme: &HashMap<String, Gap>,
         iri: &str,
@@ -388,6 +409,7 @@ impl Accounting {
         Ok(Self {
             accounted_by,
             prefixes,
+            forms,
             reported,
             lookups,
             owed,

@@ -856,6 +856,10 @@ impl<R: BufRead> super::Lift for Lift<R> {
         admission.root.is_some() && self.builder.document_element == admission.root
     }
 
+    fn has_document_element(&self) -> bool {
+        self.builder.document_element.is_some()
+    }
+
     fn document_selector(&self, described: Option<&str>) -> String {
         let read = self
             .builder

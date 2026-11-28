@@ -677,6 +677,17 @@ impl Adapter {
         Ok(value.unchecked_into())
     }
 
+    /// Throws where no survey could be made of any document: the adapter names no accounting, or
+    /// `envelope` is none of its own. Asked before the first document, so a folder with none to
+    /// read is refused as one with many.
+    #[wasm_bindgen(js_name = checkSurvey)]
+    pub fn check_survey(&self, envelope: Option<String>) -> Result<(), JsValue> {
+        guarded()?;
+        self.loaded
+            .check_survey(envelope.as_deref())
+            .map_err(thrown)
+    }
+
     /// Adds what the records of the document hold at each path, read against the accounting, to
     /// `into` under `name`; a document that cannot be read is listed there as not read. It throws
     /// only where no survey can be made: the adapter names no accounting, or `document.envelope`

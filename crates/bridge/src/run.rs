@@ -9,7 +9,7 @@ use crate::query::{Fallback, Form, Planned, Profile, Query};
 use crate::rdf::FINDINGS_PREFIXES;
 use crate::records::{self, Document, Release, Supplied};
 use crate::resolver::Resolver;
-use crate::survey::{Place, Seen, Survey};
+use crate::survey::{Seen, Survey};
 use crate::syntax::{Addresses, Respelling, Syntax};
 use crate::terms::SCHEMA_ENCODING_FORMAT;
 use crate::validate::Schema;
@@ -433,13 +433,45 @@ pub(crate) fn accepts(prepared: &Prepared, source: Source<'_>) -> Result<bool> {
     detected(detect, lift, &Profile::default())
 }
 
-/// What one document's records hold at each path, by the record kind it stands in, and how many
-/// records it has.
+/// What one document's records hold at each path, by the record kind it stands in.
+struct Surveyed {
+    records: usize,
+    found: BTreeMap<(Option<String>, String), usize>,
+}
+
+/// Why a document that parsed, or did not, holds no record.
+fn why_no_record(
+    prepared: &Prepared,
+    reading: &Reading<'_>,
+    lift: &dyn Lift,
+    named: Option<usize>,
+) -> &'static str {
+    if named.is_some() {
+        "the envelope it was read in finds no record in it"
+    } else if !lift.has_document_element() {
+        match prepared.syntax {
+            Syntax::Xml => "it is not XML, the syntax this adapter reads",
+            Syntax::Json => "it is not JSON, the syntax this adapter reads",
+        }
+    } else if reading.envelopes.is_empty() {
+        "it parses, and holds no record the adapter reads"
+    } else if admitting(lift, reading).is_none() {
+        "it parses, and no envelope of this adapter accepts it"
+    } else {
+        "it parses, an envelope accepts it, and it holds no record"
+    }
+}
+
+/// What one document's records hold at each path, by the record kind it stands in, how many
+/// records it has, and, where it has none, why: an `Err` is the document's own fault.
 fn surveyed_paths(
     prepared: &Prepared,
     source: &Source<'_>,
     named: Option<usize>,
-) -> Result<(usize, BTreeMap<Place, usize>)> {
+) -> Result<std::result::Result<Surveyed, String>> {
+    if source.bytes.iter().all(u8::is_ascii_whitespace) {
+        return Ok(Err("the file is empty".to_owned()));
+    }
     let syntax = prepared.syntax;
     let text = syntax
         .decode(source.bytes)
@@ -458,7 +490,26 @@ fn surveyed_paths(
                 .or_insert(0) += occurrence.count;
         }
     }
-    Ok((records, found))
+    if records == 0 {
+        return Ok(Err(
+            why_no_record(prepared, &reading, lift.as_ref(), named).to_owned()
+        ));
+    }
+    Ok(Ok(Surveyed { records, found }))
+}
+
+/// The envelope a survey is asked to read every document in, if any, once it is known that the
+/// adapter can be surveyed at all: it names an accounting, and the envelope is one of its own.
+pub(crate) fn refuse_survey(prepared: &Prepared, envelope: Option<&str>) -> Result<Option<usize>> {
+    if prepared.accounting.is_none() {
+        return Err(Error::adapter(
+            "the adapter names no bridge:sourceAccounting, which a survey reads each path against",
+        ));
+    }
+    envelope
+        .map(|iri| prepared.named_envelope(iri))
+        .transpose()
+        .map_err(|refused| Error::adapter(refused.to_string()))
 }
 
 /// Adds the document to `into`, or lists it there as not read; an error is one that ends the
@@ -469,34 +520,45 @@ pub(crate) fn survey(
     name: &str,
     into: &mut Survey,
 ) -> Result<()> {
-    let Some(accounting) = &prepared.accounting else {
-        return Err(Error::adapter(
-            "the adapter names no bridge:sourceAccounting, which a survey reads each path against",
-        ));
-    };
-    let named = source
-        .envelope
-        .map(|iri| prepared.named_envelope(iri))
-        .transpose()
-        .map_err(|refused| Error::adapter(refused.to_string()))?;
+    let named = refuse_survey(prepared, source.envelope)?;
+    let accounting = prepared
+        .accounting
+        .as_ref()
+        .expect("refuse_survey found an accounting");
+    if prepared
+        .envelopes
+        .iter()
+        .any(|envelope| envelope.admission.unread_kind_path.is_some())
+    {
+        into.note(
+            "record kinds are read for JSON envelopes only; the kind path an XML envelope of this adapter declares is not read, so every record is one kind",
+        );
+    }
     match surveyed_paths(prepared, &source, named) {
-        Ok((0, _)) => into.not_read(
-            name,
-            match named {
-                Some(_) => "the envelope it was read in finds no record in it",
-                None => "no record the adapter reads was found in it",
-            },
-        ),
-        Ok((records, found)) => into.read(
+        Ok(Ok(Surveyed { records, found })) => into.read(
             records,
-            found.into_iter().map(|(place, occurrences)| Seen {
-                decision: accounting.decision_for(&place.1),
-                place,
-                occurrences,
+            found.into_iter().map(|((kind, path), occurrences)| {
+                let (place, form) = accounting.forms.place_of(&path);
+                Seen {
+                    decision: accounting.decision_for(&path),
+                    place: place.to_owned(),
+                    form,
+                    kind,
+                    occurrences,
+                }
             }),
             &accounting.prefixes,
         ),
-        Err(refused) => into.not_read(name, &refused.to_string()),
+        Ok(Err(why)) => into.not_read(name, &why),
+        Err(refused) => into.not_read(
+            name,
+            &match prepared.syntax {
+                Syntax::Xml => format!("it is not XML, the syntax this adapter reads: {refused}"),
+                Syntax::Json => {
+                    format!("it is not JSON, the syntax this adapter reads: {refused}")
+                }
+            },
+        ),
     }
     Ok(())
 }

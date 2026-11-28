@@ -31,6 +31,7 @@ const graph: Uint8Array = conversion.graph;
 const findings: Uint8Array | undefined = conversion.findings;
 const owed: string[] = loaded.unmet(document, { executor: "compiled" });
 const survey: Survey = new Survey();
+loaded.checkSurvey(document.envelope);
 loaded.survey(survey, "catalog.xml", document);
 survey.notRead("notes.txt", "a symbolic link, which is not read");
 const surveyed: SurveyReport = survey.report({ kind: "Observation", under: "/resource" });

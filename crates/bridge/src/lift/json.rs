@@ -184,6 +184,10 @@ impl super::Lift for Lift<'_> {
         })
     }
 
+    fn has_document_element(&self) -> bool {
+        true
+    }
+
     fn document_selector(&self, _described: Option<&str>) -> String {
         String::new()
     }
@@ -300,11 +304,11 @@ impl Census {
                 }
             }
             _ => {
-                let contained;
-                let kind = match kept.kinds {
+                let named;
+                let below = match kept.kinds {
                     Some(kinds) if kinds.contained.as_deref() == Some(path) => {
-                        contained = text_at(node, &kinds.kind);
-                        &contained
+                        named = text_at(node, &kinds.kind).or_else(|| kind.clone());
+                        &named
                     }
                     _ => kind,
                 };
@@ -320,7 +324,7 @@ impl Census {
                     });
                 }
                 self.add(path, within, kind);
-                self.members(node, path, tokens, kept, kind);
+                self.members(node, path, tokens, kept, below);
             }
         }
     }

@@ -1,14 +1,17 @@
+use crate::accounting::Decision;
 use crate::fixtures::{
     accounting, annotations, entry, findings, says, tiny, tiny_json, unaccounted, Variant, CRATE,
     OA, PATH_NOT_ACCOUNTED, SH,
 };
 use crate::load::load_adapter;
-use crate::run::declared_forms::{declaring_forms, written_once, WRITTEN_IN_EVERY_FORM};
 use crate::resolver::Resolver;
+use crate::run::declared_forms::{declaring_forms, written_once, WRITTEN_IN_EVERY_FORM};
 use crate::run::{prepare, survey, Source};
-use crate::survey::{Narrowing, Survey, SurveyReport, NEVER_DECIDED};
+use crate::survey::{Narrowing, Seen, Survey, SurveyReport, NEVER_DECIDED};
 use crate::Result;
 use std::collections::BTreeSet;
+
+const BRIDGE: &str = "https://ns.cascadeprotocol.org/bridge/v1-draft#";
 
 const CATALOG_INPUTS: [&str; 8] = [
     "two.xml",
@@ -233,11 +236,144 @@ mod tests {
         let names: Vec<&str> = report.not_read.iter().map(|n| n.name.as_str()).collect();
         assert_eq!(names, ["empty.json", "no-envelope.json", "scalar.json"]);
         assert!(report.not_read.iter().all(|n| !n.reason.is_empty()));
-        assert_eq!(
-            rows(&report, NEVER_DECIDED),
-            [(None, "/resource/novelty", 1, 1)]
-        );
+        assert_eq!(rows(&report, NEVER_DECIDED), [(None, "/novelty", 1, 1)]);
         assert_eq!(report.read, 1);
+    }
+
+    #[test]
+    fn says_why_each_document_that_holds_no_record_was_not_read() {
+        let adapter = telling_kinds_apart()
+            .with("fixtures/in/empty.json", "")
+            .with("fixtures/in/broken.json", "{not json")
+            .with("fixtures/in/no-envelope.json", r#"{"other": 1}"#)
+            .with(
+                "fixtures/in/empty-list.json",
+                r#"{"kind": "list", "items": []}"#,
+            );
+        let report = surveyed(
+            &adapter,
+            &[
+                "empty.json",
+                "broken.json",
+                "no-envelope.json",
+                "empty-list.json",
+            ],
+        );
+        let reasons: Vec<(&str, &str)> = report
+            .not_read
+            .iter()
+            .map(|n| (n.name.as_str(), n.reason.as_str()))
+            .collect();
+        assert_eq!(reasons.len(), 4);
+        assert_eq!(
+            reasons
+                .iter()
+                .map(|(name, reason)| (*name, reason.split(':').next().unwrap_or_default()))
+                .collect::<Vec<_>>(),
+            [
+                (
+                    "broken.json",
+                    "it is not JSON, the syntax this adapter reads"
+                ),
+                (
+                    "empty-list.json",
+                    "it parses, an envelope accepts it, and it holds no record"
+                ),
+                ("empty.json", "the file is empty"),
+                (
+                    "no-envelope.json",
+                    "it parses, and no envelope of this adapter accepts it"
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn says_a_text_in_an_xml_adapter_is_not_xml() {
+        let adapter = Variant::of(tiny()).with("fixtures/in/text.xml", "not a document");
+        let report = surveyed(&adapter, &["text.xml"]);
+        assert_eq!(
+            report.not_read[0].reason,
+            "it is not XML, the syntax this adapter reads"
+        );
+    }
+
+    #[test]
+    fn says_that_kinds_are_not_read_where_an_xml_envelope_declares_a_kind_path() {
+        let adapter = Variant::of(tiny()).replacing(
+            CRATE,
+            r#""bridge:docRootElementName": "catalog","#,
+            r#""bridge:docRootElementName": "catalog", "bridge:pathOfRecordKindBelowContent": "/kind","#,
+        );
+        let text = surveyed(&adapter, &["two.xml"]).text();
+        assert!(
+            text.lines()
+                .any(|line| line.starts_with("Note       record kinds are read for JSON")),
+            "{text}"
+        );
+        assert!(!surveyed(&tiny(), &["two.xml"]).text().contains("Note  "));
+    }
+
+    fn saying(verdict: &str, gap: Option<&str>, because: Option<&str>) -> Decision {
+        Decision {
+            verdict: Some(format!("{BRIDGE}{verdict}")),
+            gap: gap.map(str::to_owned),
+            because: because.map(str::to_owned),
+        }
+    }
+
+    fn found<'a>(place: &str, decision: &'a Decision) -> Seen<'a> {
+        Seen {
+            kind: None,
+            place: place.to_owned(),
+            form: None,
+            occurrences: 1,
+            decision: Some(decision),
+        }
+    }
+
+    #[test]
+    fn prints_a_reason_shared_by_consecutive_rows_once_above_them() {
+        let said = saying("ignored", None, Some("A marker.\nOn two lines."));
+        let mut survey = Survey::new();
+        survey.read(
+            1,
+            ["/a", "/b", "/c"].map(|place| found(place, &said)),
+            &Vec::new(),
+        );
+        let text = survey.report(&Narrowing::default()).text();
+        assert_eq!(text.matches("A marker. On two lines.").count(), 1, "{text}");
+        assert!(
+            text.contains("  because A marker. On two lines.\n"),
+            "{text}"
+        );
+    }
+
+    #[test]
+    fn lists_a_path_carried_in_part_that_names_a_gap_with_those_that_wait_on_a_term() {
+        let partly = saying("carriedInPart", Some("urn:example:gap"), None);
+        let whole = saying("carried", None, None);
+        let mut survey = Survey::new();
+        survey.read(
+            1,
+            [found("/partly", &partly), found("/whole", &whole)],
+            &Vec::new(),
+        );
+        let text = survey.report(&Narrowing::default()).text();
+        assert!(
+            text.contains("No term yet: 1 path(s)")
+                && text.contains("/partly  gap urn:example:gap (carried in part)"),
+            "{text}"
+        );
+        assert!(text.contains("Left out on purpose: 0 path(s)"), "{text}");
+    }
+
+    #[test]
+    fn escapes_a_control_character_in_a_name_or_a_reason() {
+        let mut survey = Survey::new();
+        survey.not_read("a\tb.xml", "first\nsecond");
+        let text = survey.report(&Narrowing::default()).text();
+        assert!(text.contains("  a b.xml  first second\n"), "{text}");
     }
 
     #[test]
