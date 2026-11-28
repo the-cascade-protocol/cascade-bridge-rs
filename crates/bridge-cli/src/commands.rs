@@ -1,8 +1,8 @@
-use crate::folder::{Folder, Inputs};
+use crate::folder::{listed, Folder, Inputs};
 use crate::iri::file_iri;
 use cascade_bridge::{
     describe, load, load_skipping, test, Budgets, ConvertOptions, Description, Document, Executor,
-    Facts, Format, Outcome, Skip, Stage, StageTime, TestOptions, NAME, VERSION,
+    Facts, Format, Narrowing, Outcome, Skip, Stage, StageTime, Survey, TestOptions, NAME, VERSION,
 };
 use std::fmt::Write as _;
 use std::io::Write as _;
@@ -11,10 +11,12 @@ use std::time::{Duration, Instant};
 const USAGE: &str = "usage: cascade-bridge test <adapter-dir> [--vocabularies <directory>] [--earl <out.ttl>] [--fallbacks <out.json>] [--datasets] [--executor compiled|spareval|both] [--memory-budget-mib <1-3072>] [--time-budget-seconds <n>] [--owed]
        cascade-bridge convert <adapter-dir> <document> [--envelope <iri>] [--facts <file>] [--vocabularies <directory>] [--out <file>] [--findings <file>] [--format turtle|ntriples] [--executor compiled|spareval|both] [--memory-budget-mib <1-3072>] [--time-budget-seconds <n>] [--profile] [--skip schema|shapes|findings] [--owed]
        cascade-bridge explain <adapter-dir> [--vocabularies <directory>]
+       cascade-bridge survey <adapter-dir> <folder> [--envelope <iri>] [--tsv <file>] [--kind <kind>] [--under <path>]
        cascade-bridge library <calls file> <results directory>
 
 --skip is for measuring only: the run leaves out the source schema check, the output shapes check or the findings queries, and its conversion is not a validated one.
---owed lists each occurrence of a path the accounting says is carried, or whose gap the adapter reports, that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.";
+--owed lists each occurrence of a path the accounting says is carried, or whose gap the adapter reports, that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.
+survey converts nothing: it lifts each file directly in <folder> and reads each path of its records against the adapter's accounting, then prints the paths no entry covers, the paths whose entry says no Cascade term carries them, and the paths whose entry says they are left out on purpose, ranked by the documents that hold each, and lists each file it could not read. --tsv writes every path it saw to <file>; --kind keeps one record kind; --under keeps a path and the paths below it; --envelope reads every document in that envelope. It exits 0 once the adapter was read, and 2 where it was not.";
 
 fn memory_budget(mebibytes: &str) -> Option<usize> {
     Budgets::memory_mib(mebibytes.parse().ok()?)
@@ -73,10 +75,20 @@ struct Explain {
     vocabularies: Option<String>,
 }
 
+struct Surveying {
+    directory: String,
+    folder: String,
+    envelope: Option<String>,
+    tsv: Option<String>,
+    kind: Option<String>,
+    under: Option<String>,
+}
+
 enum Command {
     Test(Test),
     Convert(Convert),
     Explain(Explain),
+    Survey(Surveying),
     Library { calls: String, results: String },
 }
 
@@ -165,6 +177,26 @@ fn parse(argv: impl IntoIterator<Item = String>) -> Option<Command> {
             }
             Some(Command::Explain(arguments))
         }
+        "survey" => {
+            let mut arguments = Surveying {
+                directory: argv.next()?,
+                folder: argv.next()?,
+                envelope: None,
+                tsv: None,
+                kind: None,
+                under: None,
+            };
+            while let Some(flag) = argv.next() {
+                match flag.as_str() {
+                    "--envelope" => arguments.envelope = Some(argv.next()?),
+                    "--tsv" => arguments.tsv = Some(argv.next()?),
+                    "--kind" => arguments.kind = Some(argv.next()?),
+                    "--under" => arguments.under = Some(argv.next()?),
+                    _ => return None,
+                }
+            }
+            Some(Command::Survey(arguments))
+        }
         "library" => {
             let command = Command::Library {
                 calls: argv.next()?,
@@ -187,6 +219,7 @@ pub fn run(argv: impl IntoIterator<Item = String>) -> u8 {
         Command::Test(arguments) => run_test(&arguments),
         Command::Convert(arguments) => convert(&arguments),
         Command::Explain(arguments) => explain(&arguments),
+        Command::Survey(arguments) => survey(&arguments),
         Command::Library { calls, results } => crate::library::run(&calls, &results),
     };
     ran.unwrap_or_else(|reason| {
@@ -383,6 +416,67 @@ fn explain(arguments: &Explain) -> Result<u8, String> {
                 let _ = writeln!(said, "Query    {query}\n  evaluated: {reason}\n");
             }
         }
+    }
+    out(said.as_bytes())?;
+    Ok(0)
+}
+
+/// What a survey leaves unloaded: it lifts and reads the accounting, and checks and maps nothing.
+const SURVEY_SKIPS: [Skip; 3] = [Skip::Schema, Skip::Shapes, Skip::Findings];
+
+fn read_with_iri(path: &std::path::Path) -> Result<(Vec<u8>, String), String> {
+    let bytes = std::fs::read(path).map_err(|e| e.to_string())?;
+    let iri = file_iri(path).map_err(|e| e.to_string())?;
+    Ok((bytes, iri))
+}
+
+fn survey(arguments: &Surveying) -> Result<u8, String> {
+    let (mut inputs, _) = opened(&arguments.directory, None)?;
+    inputs.adapter = inputs.adapter.with_every_file()?;
+    let loaded =
+        inputs.complete(|adapter, vocabulary| load_skipping(adapter, vocabulary, &SURVEY_SKIPS))?;
+    let envelope = arguments
+        .envelope
+        .as_deref()
+        .map(|named| crate_named(&inputs.adapter.iri, named))
+        .transpose()?;
+    let mut surveyed = Survey::new();
+    for file in listed(&arguments.folder)? {
+        if file.linked {
+            surveyed.not_read(&file.name, "a symbolic link, which is not read");
+            continue;
+        }
+        let (bytes, iri) = match read_with_iri(&file.path) {
+            Ok(read) => read,
+            Err(reason) => {
+                surveyed.not_read(&file.name, &reason);
+                continue;
+            }
+        };
+        let document = Document {
+            iri: &iri,
+            bytes: &bytes,
+            envelope: envelope.as_deref(),
+            facts: None,
+        };
+        loaded
+            .survey(&mut surveyed, &file.name, &document)
+            .map_err(|e| e.to_string())?;
+    }
+    let report = surveyed.report(&Narrowing {
+        kind: arguments.kind.clone(),
+        under: arguments.under.clone(),
+    });
+    if let Some(path) = &arguments.tsv {
+        written(path, report.tsv().as_bytes())?;
+    }
+    let mut said = format!(
+        "{}\n{}",
+        adapter_line(loaded.identifier(), loaded.iri()),
+        report.text()
+    );
+    if let Some(path) = &arguments.tsv {
+        let _ = writeln!(said, "TSV      {path}");
     }
     out(said.as_bytes())?;
     Ok(0)

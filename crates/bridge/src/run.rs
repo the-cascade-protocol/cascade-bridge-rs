@@ -9,13 +9,14 @@ use crate::query::{Fallback, Form, Planned, Profile, Query};
 use crate::rdf::FINDINGS_PREFIXES;
 use crate::records::{self, Document, Release, Supplied};
 use crate::resolver::Resolver;
+use crate::survey::{Place, Seen, Survey};
 use crate::syntax::{Addresses, Respelling, Syntax};
 use crate::terms::SCHEMA_ENCODING_FORMAT;
 use crate::validate::Schema;
 use crate::vocabulary::Vocabulary;
 use oxigraph::model::Quad;
 use oxrdfio::{RdfFormat, RdfParser};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 struct Envelope {
     iri: String,
@@ -432,6 +433,74 @@ pub(crate) fn accepts(prepared: &Prepared, source: Source<'_>) -> Result<bool> {
     detected(detect, lift, &Profile::default())
 }
 
+/// What one document's records hold at each path, by the record kind it stands in, and how many
+/// records it has.
+fn surveyed_paths(
+    prepared: &Prepared,
+    source: &Source<'_>,
+    named: Option<usize>,
+) -> Result<(usize, BTreeMap<Place, usize>)> {
+    let syntax = prepared.syntax;
+    let text = syntax
+        .decode(source.bytes)
+        .explained_by(ErrorKind::Document)?;
+    let reading = reading(prepared, named);
+    let mut lift = syntax
+        .lift(&text, &reading, Paths::surveyed())
+        .explained_by(ErrorKind::Document)?;
+    let mut records = 0;
+    let mut found = BTreeMap::new();
+    while let Some(unit) = lift.next_unit().explained_by(ErrorKind::Document)? {
+        records += 1;
+        for occurrence in unit.occurrences() {
+            *found
+                .entry((occurrence.kind.clone(), occurrence.path.clone()))
+                .or_insert(0) += occurrence.count;
+        }
+    }
+    Ok((records, found))
+}
+
+/// Adds the document to `into`, or lists it there as not read; an error is one that ends the
+/// survey, whichever document it was asked of.
+pub(crate) fn survey(
+    prepared: &Prepared,
+    source: Source<'_>,
+    name: &str,
+    into: &mut Survey,
+) -> Result<()> {
+    let Some(accounting) = &prepared.accounting else {
+        return Err(Error::adapter(
+            "the adapter names no bridge:sourceAccounting, which a survey reads each path against",
+        ));
+    };
+    let named = source
+        .envelope
+        .map(|iri| prepared.named_envelope(iri))
+        .transpose()
+        .map_err(|refused| Error::adapter(refused.to_string()))?;
+    match surveyed_paths(prepared, &source, named) {
+        Ok((0, _)) => into.not_read(
+            name,
+            match named {
+                Some(_) => "the envelope it was read in finds no record in it",
+                None => "no record of the adapter's was found in it",
+            },
+        ),
+        Ok((records, found)) => into.read(
+            records,
+            found.into_iter().map(|(place, occurrences)| Seen {
+                decision: accounting.decision_for(&place.1),
+                place,
+                occurrences,
+            }),
+            &accounting.prefixes,
+        ),
+        Err(refused) => into.not_read(name, &refused.to_string()),
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 pub(crate) fn convert(prepared: &Prepared, source: Source<'_>) -> Result<Conversion> {
     convert_with(prepared, source, &Profile::default(), Asked::ALL)
@@ -784,6 +853,8 @@ mod selector;
 mod skips;
 #[cfg(test)]
 mod source_accounting;
+#[cfg(test)]
+mod surveying;
 #[cfg(test)]
 mod validation;
 #[cfg(test)]

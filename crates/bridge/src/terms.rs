@@ -66,7 +66,9 @@ terms! {
     BRIDGE_JSON_PATH_OF_EACH_RECORD = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "jsonPathOfEachRecord";
     BRIDGE_PATH_OF_CONTENT_IN_RECORD = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "pathOfContentInRecord";
     BRIDGE_PATH_OF_CONTAINED_CONTENT_BELOW_CONTENT = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "pathOfContainedContentBelowContent";
-    BRIDGE_SOURCE_MEDIA_TYPE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "sourceMediaType";
+    BRIDGE_PATH_OF_RECORD_KIND_BELOW_CONTENT = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "pathOfRecordKindBelowContent";
+    BRIDGE_BECAUSE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "because";
+    BRIDGE_SOURCE_MEDIA_TYPE ="https://ns.cascadeprotocol.org/bridge/v1-draft#", "sourceMediaType";
     BRIDGE_SOURCE_SCHEMA = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "sourceSchema";
     BRIDGE_VOCABULARY_FILE = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "vocabularyFile";
     BRIDGE_CASCADE_VOCABULARY_REPOSITORY = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "cascadeVocabularyRepository";

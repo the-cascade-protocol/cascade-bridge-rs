@@ -76,10 +76,22 @@ impl Syntax {
                     json::path(path)
                         .map_err(|e| Error::adapter(format!("envelope {}: {e}", envelope.iri)))?;
                 }
+                let content = envelope.path_of_content_in_record.as_deref().unwrap_or("");
                 Ok(Admission {
                     root: envelope.doc_root_member_name.clone(),
                     value: envelope.doc_root_member_value.clone(),
                     records: envelope.json_path_of_each_record.clone(),
+                    kinds: envelope
+                        .path_of_record_kind_below_content
+                        .as_ref()
+                        .map(|kind| lift::Kinds {
+                            record: format!("{content}{kind}"),
+                            contained: envelope
+                                .path_of_contained_content_below_content
+                                .as_ref()
+                                .map(|contained| format!("{content}{contained}")),
+                            kind: kind.clone(),
+                        }),
                 })
             }
         }

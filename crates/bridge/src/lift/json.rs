@@ -2,14 +2,15 @@
 // it, and so which path splits it, is said by its value's members.
 use super::attachment::{decoded, names_text, TEXT_DECODED_FROM_BASE64};
 use super::{
-    admitting, member, name, store_of, triple, Admission, Occurrence, Paths, Reading, Standing,
-    Unit, Valued, FX, RDF, XYZ,
+    admitting, member, name, store_of, triple, Admission, Kinds, Occurrence, Paths, Reading,
+    Standing, Unit, Valued, FX, RDF, XYZ,
 };
 use crate::error::{Error, Result};
 use crate::json::{self, Node, Value};
 use crate::syntax::Syntax;
 use oxigraph::model::{BlankNode, Literal, NamedNode, Quad, Term};
 use oxigraph::store::Store;
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 
 pub(crate) struct Lift<'a> {
@@ -18,6 +19,7 @@ pub(crate) struct Lift<'a> {
     records: Vec<Vec<usize>>,
     next: usize,
     paths: Paths,
+    kinds: Option<Kinds>,
 }
 
 pub(crate) fn lift<'a>(text: &'a str, reading: &Reading<'_>, paths: Paths) -> Result<Lift<'a>> {
@@ -34,12 +36,16 @@ pub(crate) fn lift<'a>(text: &'a str, reading: &Reading<'_>, paths: Paths) -> Re
         records: Vec::new(),
         next: 0,
         paths,
+        kinds: None,
     };
-    let path = admitting(&lift, reading)
+    let chosen = admitting(&lift, reading)
         .and_then(|chosen| reading.envelopes.get(chosen))
-        .and_then(|admission| admission.records.as_deref());
-    if let Some(path) = path {
+        .copied();
+    if let Some(path) = chosen.and_then(|admission| admission.records.as_deref()) {
         lift.records = json::records(&lift.root, &json::path(path)?);
+    }
+    if matches!(lift.paths, Paths::Kept { kinds: true, .. }) {
+        lift.kinds = chosen.and_then(|admission| admission.kinds.clone());
     }
     Ok(lift)
 }
@@ -150,7 +156,9 @@ impl super::Lift for Lift<'_> {
         self.next += 1;
         let record = self.root.at(positions).expect("a record the path selected");
         let census = match &self.paths {
-            Paths::Kept { valued, carried } => census(record, valued, carried),
+            Paths::Kept {
+                valued, carried, ..
+            } => census(record, valued, carried, self.kinds.as_ref()),
             Paths::Dropped => Census::default(),
         };
         Ok(Some(Unit {
@@ -203,13 +211,44 @@ struct Census {
 struct Kept<'a> {
     valued: &'a HashSet<String>,
     carried: &'a HashSet<String>,
+    kinds: Option<&'a Kinds>,
+}
+
+/// The text of the scalar a pointer of member names reaches from `node`.
+fn text_at(node: &Node, pointer: &str) -> Option<String> {
+    let mut node = node;
+    for token in pointer.split('/').skip(1) {
+        let name = token.replace("~1", "/").replace("~0", "~");
+        let Value::Object(members) = &node.value else {
+            return None;
+        };
+        node = &members.iter().find(|(named, _)| *named == name)?.1;
+    }
+    node.scalar().map(str::to_owned)
 }
 
 /// A path's step is a member's name as a JSON Pointer reference token; an array's
-/// items stand at its own path.
-fn census(record: &Node, valued: &HashSet<String>, carried: &HashSet<String>) -> Census {
+/// items stand at its own path. Where `kinds` is given, a path is counted apart in each record
+/// kind it stands in: the record's, or that of the contained record it stands below.
+fn census(
+    record: &Node,
+    valued: &HashSet<String>,
+    carried: &HashSet<String>,
+    kinds: Option<&Kinds>,
+) -> Census {
     let mut census = Census::default();
-    census.members(record, "", &mut Vec::new(), &Kept { valued, carried });
+    let kind = kinds.and_then(|kinds| text_at(record, &kinds.record));
+    census.members(
+        record,
+        "",
+        &mut Vec::new(),
+        &Kept {
+            valued,
+            carried,
+            kinds,
+        },
+        &kind,
+    );
     census
 }
 
@@ -224,29 +263,51 @@ fn holds_nothing(node: &Node) -> bool {
 }
 
 impl Census {
-    fn members(&mut self, node: &Node, path: &str, tokens: &mut Vec<String>, kept: &Kept<'_>) {
+    fn members(
+        &mut self,
+        node: &Node,
+        path: &str,
+        tokens: &mut Vec<String>,
+        kept: &Kept<'_>,
+        kind: &Option<String>,
+    ) {
         let Value::Object(members) = &node.value else {
             return;
         };
         for (named, member) in members {
             let path = format!("{path}/{}", named.replace('~', "~0").replace('/', "~1"));
             tokens.push(named.clone());
-            self.stand(member, &path, tokens, kept);
+            self.stand(member, &path, tokens, kept, kind);
             tokens.pop();
         }
     }
 
-    fn stand(&mut self, node: &Node, path: &str, tokens: &mut Vec<String>, kept: &Kept<'_>) {
+    fn stand(
+        &mut self,
+        node: &Node,
+        path: &str,
+        tokens: &mut Vec<String>,
+        kept: &Kept<'_>,
+        kind: &Option<String>,
+    ) {
         match &node.value {
             Value::Null => {}
             Value::Array(items) => {
                 for (index, item) in items.iter().enumerate() {
                     tokens.push(index.to_string());
-                    self.stand(item, path, tokens, kept);
+                    self.stand(item, path, tokens, kept, kind);
                     tokens.pop();
                 }
             }
             _ => {
+                let contained;
+                let kind = match kept.kinds {
+                    Some(kinds) if kinds.contained.as_deref() == Some(path) => {
+                        contained = text_at(node, &kinds.kind);
+                        &contained
+                    }
+                    _ => kind,
+                };
                 let within = json::pointer(tokens);
                 if let Some(value) = node.scalar().filter(|_| kept.valued.contains(path)) {
                     self.hold(path, value, &within);
@@ -258,21 +319,26 @@ impl Census {
                         empty: holds_nothing(node),
                     });
                 }
-                self.add(path, within);
-                self.members(node, path, tokens, kept);
+                self.add(path, within, kind);
+                self.members(node, path, tokens, kept, kind);
             }
         }
     }
 
-    fn add(&mut self, path: &str, within: String) {
-        match self.seen.get(path) {
+    fn add(&mut self, path: &str, within: String, kind: &Option<String>) {
+        let key = match kind {
+            Some(kind) => Cow::Owned(format!("{kind}\0{path}")),
+            None => Cow::Borrowed(path),
+        };
+        match self.seen.get(&*key) {
             Some(&first) => self.occurrences[first].count += 1,
             None => {
-                self.seen.insert(path.to_owned(), self.occurrences.len());
+                self.seen.insert(key.into_owned(), self.occurrences.len());
                 self.occurrences.push(Occurrence {
                     path: path.to_owned(),
                     within: Some(within),
                     count: 1,
+                    kind: kind.clone(),
                 });
             }
         }

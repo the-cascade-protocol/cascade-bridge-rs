@@ -1,15 +1,28 @@
 // The cascade-bridge command on Node, over the package's Node entry, which
 // `sh package/build.sh` builds.
-import { closeSync, mkdirSync, openSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import {
+  closeSync,
+  mkdirSync,
+  openSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, dirname, join } from "node:path";
-import { Adapter, describe, test } from "../../package/dist/node.js";
-import { at, complete, fileIri, Folder, iriOf, KINDS, METADATA, Refusal } from "./host.mjs";
+import { Adapter, describe, Survey, test } from "../../package/dist/node.js";
+import { at, complete, fileIri, Folder, iriOf, KINDS, METADATA, reason, Refusal } from "./host.mjs";
 
 const USAGE = `usage: cascade-bridge test <adapter-dir> [--vocabularies <directory>] [--earl <out.ttl>] [--datasets] [--owed]
        cascade-bridge convert <adapter-dir> <document> [--envelope <iri>] [--facts <file>] [--vocabularies <directory>] [--out <file>] [--findings <file>] [--format turtle|ntriples] [--owed]
+       cascade-bridge survey <adapter-dir> <folder> [--envelope <iri>] [--tsv <file>] [--kind <kind>] [--under <path>]
        cascade-bridge library <calls file> <results directory>
 
---owed lists each occurrence of a path the accounting says is carried, or whose gap the adapter reports, that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.`;
+--owed lists each occurrence of a path the accounting says is carried, or whose gap the adapter reports, that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.
+survey converts nothing: it lifts each file directly in <folder> and reads each path of its records against the adapter's accounting, then prints the paths no entry covers, the paths whose entry says no Cascade term carries them, and the paths whose entry says they are left out on purpose, ranked by the documents that hold each, and lists each file it could not read. --tsv writes every path it saw to <file>; --kind keeps one record kind; --under keeps a path and the paths below it; --envelope reads every document in that envelope. It exits 0 once the adapter was read, and 2 where it was not.`;
+
+// What a survey leaves unloaded: it lifts and reads the accounting, and checks and maps nothing.
+const SURVEY_SKIPS = ["schema", "shapes", "findings"];
 
 const FAILING = ["failed", "inapplicable"];
 
@@ -62,6 +75,18 @@ function parse(argv) {
         parsed.format = next();
         if (!["turtle", "ntriples"].includes(parsed.format)) return undefined;
       } else return undefined;
+    }
+    return parsed;
+  }
+  if (command === "survey") {
+    const parsed = { command, directory: next(), folder: next() };
+    while (rest.length > 0) {
+      const flag = rest.shift();
+      if (flag === "--envelope") parsed.envelope = next();
+      else if (flag === "--tsv") parsed.tsv = next();
+      else if (flag === "--kind") parsed.kind = next();
+      else if (flag === "--under") parsed.under = next();
+      else return undefined;
     }
     return parsed;
   }
@@ -235,6 +260,52 @@ function runTest(parsed) {
   return report.entries.some(({ outcome }) => FAILING.includes(outcome)) ? 1 : 0;
 }
 
+function runSurvey(parsed) {
+  const [inputs, description] = opened(parsed.directory, undefined);
+  inputs.adapter.withEveryFile();
+  const adapter = complete(inputs, (named, vocabulary) =>
+    Adapter.loadForMeasurement(named, vocabulary, SURVEY_SKIPS),
+  );
+  const survey = new Survey();
+  try {
+    let envelope;
+    if (parsed.envelope !== undefined) {
+      try {
+        envelope = new URL(parsed.envelope, `${inputs.adapter.iri}${METADATA}`).href;
+      } catch (error) {
+        throw new Refusal(`--envelope ${parsed.envelope}: ${error.message}`);
+      }
+    }
+    const folder = at(parsed.folder, () => realpathSync.native(parsed.folder));
+    for (const entry of at(folder, () => readdirSync(folder, { withFileTypes: true }))) {
+      if (entry.isDirectory()) continue;
+      if (entry.isSymbolicLink()) {
+        survey.notRead(entry.name, "a symbolic link, which is not read");
+        continue;
+      }
+      const path = join(folder, entry.name);
+      let bytes;
+      let iri;
+      try {
+        bytes = new Uint8Array(readFileSync(path));
+        iri = iriOf(path);
+      } catch (error) {
+        survey.notRead(entry.name, reason(error));
+        continue;
+      }
+      adapter.survey(survey, entry.name, { iri, bytes, envelope });
+    }
+    const report = survey.report({ kind: parsed.kind, under: parsed.under });
+    if (parsed.tsv !== undefined) at(parsed.tsv, () => writeFileSync(parsed.tsv, report.tsv));
+    const tsv = parsed.tsv === undefined ? "" : `TSV      ${parsed.tsv}\n`;
+    process.stdout.write(`${adapterLine(description.identifier, description.iri)}\n${report.text}${tsv}`);
+    return 0;
+  } finally {
+    survey.free();
+    adapter.free();
+  }
+}
+
 function runConvert(parsed) {
   const [inputs, description] = opened(parsed.directory, parsed.vocabularies);
   inputs.adapter.withEveryFile();
@@ -335,7 +406,9 @@ if (parsed === undefined) {
         ? runTest(parsed)
         : parsed.command === "library"
           ? runLibrary(parsed)
-          : runConvert(parsed);
+          : parsed.command === "survey"
+            ? runSurvey(parsed)
+            : runConvert(parsed);
   } catch (error) {
     process.stderr.write(`cascade-bridge: ${said(error)}\n`);
     process.exitCode = 2;

@@ -139,6 +139,23 @@ export interface TestReport {
   entries: TestEntry[];
   bridge: { name: string; version: string; profiles: string[] };
 }
+
+export interface SurveyOptions {
+  /** Keeps the paths of one record kind. */
+  kind?: string;
+  /** Keeps a path and the paths below it. */
+  under?: string;
+}
+
+export interface SurveyReport {
+  read: number;
+  records: number;
+  notRead: number;
+  /** The report as `cascade-bridge survey` prints it, after its adapter line. */
+  text: string;
+  /** Every path the survey saw, as `cascade-bridge survey --tsv` writes it. */
+  tsv: string;
+}
 "#;
 
 #[wasm_bindgen]
@@ -159,6 +176,10 @@ extern "C" {
     pub type TestOptionsValue;
     #[wasm_bindgen(typescript_type = "TestReport")]
     pub type TestReportValue;
+    #[wasm_bindgen(typescript_type = "SurveyOptions")]
+    pub type SurveyOptionsValue;
+    #[wasm_bindgen(typescript_type = "SurveyReport")]
+    pub type SurveyReportValue;
     #[wasm_bindgen(typescript_type = "Skip[]")]
     pub type SkipsValue;
     #[wasm_bindgen(typescript_type = "StageTime[]")]
@@ -656,6 +677,23 @@ impl Adapter {
         Ok(value.unchecked_into())
     }
 
+    /// Adds what the records of the document hold at each path, read against the accounting, to
+    /// `into` under `name`; a document that cannot be read is listed there as not read. It throws
+    /// only where no survey can be made: the adapter names no accounting, or `document.envelope`
+    /// is none of its own.
+    pub fn survey(
+        &self,
+        into: &mut Survey,
+        name: &str,
+        document: &DocumentValue,
+    ) -> Result<(), JsValue> {
+        guarded()?;
+        let read = DocumentRead::of(document)?;
+        self.loaded
+            .survey(&mut into.inner, name, &read.document())
+            .map_err(thrown)
+    }
+
     /// Each occurrence of a path the accounting says is carried that a conversion of the
     /// document owes and neither writes nor reports, one line each: what `test` fails an entry
     /// for. Of `options`, only `executor` and the budgets are read.
@@ -677,6 +715,49 @@ impl Adapter {
         let document = read.document();
         let unmet = self.loaded.unmet(&document, options).map_err(thrown)?;
         Ok(strings(&unmet).unchecked_into())
+    }
+}
+
+/// What the documents of a folder, surveyed one by one with `Adapter.survey`, hold at each path.
+#[wasm_bindgen]
+#[derive(Default)]
+pub struct Survey {
+    inner: cascade_bridge::Survey,
+}
+
+#[wasm_bindgen]
+impl Survey {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Survey {
+        Self::default()
+    }
+
+    /// Lists a document the caller could not hand over, by the name it goes by, and why.
+    #[wasm_bindgen(js_name = notRead)]
+    pub fn not_read(&mut self, name: &str, reason: &str) {
+        self.inner.not_read(name, reason);
+    }
+
+    pub fn report(
+        &self,
+        options: Option<SurveyOptionsValue>,
+    ) -> Result<SurveyReportValue, JsValue> {
+        guarded()?;
+        let narrowing = match options.filter(|options| !absent(options)) {
+            Some(options) => cascade_bridge::Narrowing {
+                kind: optional_text(&options, "kind", "options")?,
+                under: optional_text(&options, "under", "options")?,
+            },
+            None => cascade_bridge::Narrowing::default(),
+        };
+        let report = self.inner.report(&narrowing);
+        let value = JsValue::from(Object::new());
+        set(&value, "read", &(report.read as f64).into());
+        set(&value, "records", &(report.records as f64).into());
+        set(&value, "notRead", &(report.not_read.len() as f64).into());
+        set(&value, "text", &report.text().as_str().into());
+        set(&value, "tsv", &report.tsv().as_str().into());
+        Ok(value.unchecked_into())
     }
 }
 
