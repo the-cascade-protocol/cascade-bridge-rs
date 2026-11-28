@@ -484,7 +484,7 @@ pub(crate) fn survey(
             name,
             match named {
                 Some(_) => "the envelope it was read in finds no record in it",
-                None => "no record of the adapter's was found in it",
+                None => "no record the adapter reads was found in it",
             },
         ),
         Ok((records, found)) => into.read(

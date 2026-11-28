@@ -836,6 +836,7 @@ mod running_the_commands_on_node {
                  export const describe = trap;\n\
                  export const test = trap;\n\
                  export class Adapter { static load() { trap(); } }\n\
+                 export class Survey {}\n\
                  export class BridgeError extends Error {}\n",
             )
             .expect("a package whose engine traps");
