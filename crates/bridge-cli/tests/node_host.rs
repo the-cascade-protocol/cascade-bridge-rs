@@ -5,8 +5,8 @@ mod common;
 use cascade_bridge::oxrdf::Quad;
 use cascade_bridge::oxrdfio::RdfFormat;
 use common::{
-    canonical, canonical_lines, copied_to, map_of, names, outcomes, owing_a_title,
-    read_at_its_own_iri, results, scratch, tiny, vocabularies, BASE, MAX_LENGTH,
+    a_folder_of_three_documents, canonical, canonical_lines, copied_to, map_of, names, outcomes,
+    owing_a_title, read_at_its_own_iri, results, scratch, tiny, vocabularies, BASE, MAX_LENGTH,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -467,6 +467,47 @@ mod running_the_commands_on_node {
                 );
                 assert_eq!(owed(&on_node), owed(&on_native), "{arguments:?}");
             }
+        }
+    }
+
+    /// given a folder of documents
+    mod given_a_folder_of_documents {
+        use super::*;
+
+        /// surveys it to the text and the TSV the native command writes
+        #[test]
+        fn surveys_it_to_the_text_and_the_tsv_the_native_command_writes() {
+            let folder = a_folder_of_three_documents();
+            let out = scratch();
+            let adapter = tiny().to_string_lossy().into_owned();
+            let folder = folder.path().to_string_lossy().into_owned();
+            let ran = |run: &dyn Fn(&[&str]) -> Output, tsv: &str| {
+                let arguments = ["survey", adapter.as_str(), folder.as_str(), "--tsv", tsv];
+                let output = run(&arguments);
+                assert_eq!(
+                    output.status.code(),
+                    Some(0),
+                    "{}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+                (
+                    String::from_utf8_lossy(&output.stdout)
+                        .replace(tsv, "<tsv>")
+                        .replace(&folder, "<folder>"),
+                    std::fs::read_to_string(tsv).expect("the written TSV"),
+                )
+            };
+            let native_tsv = out.path().join("native.tsv").to_string_lossy().into_owned();
+            let node_tsv = out.path().join("node.tsv").to_string_lossy().into_owned();
+            let on_native = ran(&native, &native_tsv);
+            let on_node = ran(&node, &node_tsv);
+            assert!(
+                on_native.0.contains("Never decided: 1 path(s)"),
+                "{}",
+                on_native.0
+            );
+            assert!(on_native.1.lines().count() > 1, "{}", on_native.1);
+            assert_eq!(on_node, on_native);
         }
     }
 

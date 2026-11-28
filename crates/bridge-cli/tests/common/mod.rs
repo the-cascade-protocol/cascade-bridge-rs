@@ -31,6 +31,29 @@ pub fn scratch() -> TempDir {
     tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).expect("a scratch directory")
 }
 
+const SURVEYED_ONE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+<catalog><item id="1"><title>One</title><novelty>a</novelty><novelty>b</novelty></item></catalog>"#;
+const SURVEYED_TWO: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+<catalog><item id="2" internal="x"><title>Two</title><note>n</note></item></catalog>"#;
+const SURVEYED_THREE: &str = r#"<?xml version="1.0" encoding="UTF-8"?>
+<catalog><item id="3"><title>Three</title><note>m</note><novelty>c</novelty></item></catalog>"#;
+
+/// Three documents for the tiny adapter, two holding a path no entry names (`novelty`, three
+/// times between them), two a path whose entry says `noHome` (`note`), one a path whose entry says
+/// `ignored` (`@internal`), and a file that is no document.
+pub fn a_folder_of_three_documents() -> TempDir {
+    let folder = scratch();
+    for (name, text) in [
+        ("one.xml", SURVEYED_ONE),
+        ("two.xml", SURVEYED_TWO),
+        ("three.xml", SURVEYED_THREE),
+        ("broken.xml", "not a document"),
+    ] {
+        std::fs::write(folder.path().join(name), text).expect("a document");
+    }
+    folder
+}
+
 pub fn quads(bytes: &[u8], format: RdfFormat, base: &str) -> Vec<Quad> {
     RdfParser::from_format(format)
         .with_base_iri(base)
