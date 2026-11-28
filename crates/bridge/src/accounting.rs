@@ -160,7 +160,9 @@ impl Forms {
                 .filter(|form| !form.content.is_empty() && form.contained == written.contained)
             {
                 let path = format!("{}{place}", form.prefix);
-                if standing.contains(&path) {
+                if standing.contains(&path)
+                    || self.of(&path).map(|read| &read.prefix) != Some(&form.prefix)
+                {
                     continue;
                 }
                 overridden.insert(path.clone());
