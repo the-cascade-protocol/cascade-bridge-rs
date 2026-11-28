@@ -268,12 +268,16 @@ mod tests {
                 assert!(said(&result).contains("extra row"), "{}", said(&result));
 
                 let mut twice = rows.to_vec();
-                twice.push(once);
+                twice.push(once + "\t");
                 let result = Case::of("order.xml", "order.ttl")
                     .counted_rows(&borrowed(&twice))
                     .judged();
                 assert_eq!(result.outcome, Outcome::Failed, "{}", said(&result));
-                assert!(said(&result).contains("missing row"), "{}", said(&result));
+                assert!(
+                    said(&result).contains("(the rows list it 2 time(s), the output writes it 1)"),
+                    "{}",
+                    said(&result)
+                );
             }
 
             #[test]

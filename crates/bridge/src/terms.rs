@@ -104,6 +104,8 @@ terms! {
     BRIDGE_INPUT = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "input";
     BRIDGE_EXPECTED_GRAPH = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "expectedGraph";
     BRIDGE_EXPECTED_FINDINGS = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "expectedFindings";
+    BRIDGE_EXPECTED_FINDING_ROWS = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "expectedFindingRows";
+    BRIDGE_TESTS_UNACCOUNTED_SOURCE_PATH = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "testsUnaccountedSourcePath";
     BRIDGE_SPARQL_1_1 = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "sparql-1.1";
     BRIDGE_ISOMORPHIC = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "IsomorphicConversionTest";
     BRIDGE_INPUT_ONLY = "https://ns.cascadeprotocol.org/bridge/v1-draft#", "InputOnlyTest";

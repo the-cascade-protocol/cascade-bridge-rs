@@ -38,6 +38,7 @@
 # the finding that says so.
 <#census> a bridge:IsomorphicConversionTest ;
   mf:name "census" ;
+  bridge:testsUnaccountedSourcePath "/item/novelty" ;
   mf:action [ bridge:input <in/unaccounted-child.xml> ; bridge:envelope <../ro-crate-metadata.json#envelope-catalog> ] ;
   mf:result [ bridge:expectedGraph <expected/unaccounted-child.ttl> ; bridge:expectedFindings <findings/unaccounted-child.ttl> ] .
 
