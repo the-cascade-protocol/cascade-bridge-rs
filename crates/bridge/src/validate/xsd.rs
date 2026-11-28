@@ -29,6 +29,10 @@ const SUPPLIED_BY_THE_BRIDGE: [&str; 2] = [
 const XMLSCHEMA_1: &str = "https://www.w3.org/TR/xmlschema-1/#";
 const XMLSCHEMA_2: &str = "https://www.w3.org/TR/xmlschema-2/#";
 
+pub(crate) fn names_a_rule(body: &str) -> bool {
+    body.starts_with(XMLSCHEMA_1) || body.starts_with(XMLSCHEMA_2)
+}
+
 const DEFINED_BY_STRUCTURES: [&str; 10] = [
     "cos-st-restricts",
     "cvc-assess-attr",

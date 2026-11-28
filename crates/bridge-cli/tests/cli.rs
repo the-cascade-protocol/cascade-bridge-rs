@@ -590,6 +590,82 @@ mod writing_findings {
         );
     }
 
+    fn rows_written_for(input: &str) -> String {
+        let scratch = scratch();
+        let document = tiny().join("fixtures/in").join(input);
+        let written = scratch.path().join("rows.tsv");
+        let run = cascade_bridge(&[
+            "convert",
+            &tiny().to_string_lossy(),
+            &document.to_string_lossy(),
+            "--vocabularies",
+            &vocabularies().to_string_lossy(),
+            "--finding-rows",
+            &written.to_string_lossy(),
+        ]);
+        succeeded(&run);
+        String::from_utf8(std::fs::read(&written).expect("the written rows")).expect("utf-8")
+    }
+
+    /// writes one sorted row for each finding with `--finding-rows <file>`, in the form a test names as its expected findings
+    #[test]
+    fn writes_one_sorted_row_for_each_finding_with_finding_rows() {
+        let body = "<urn:example:catalog#";
+        assert_eq!(
+            rows_written_for("two.xml"),
+            format!(
+                "?body\t?record\t?at\t?value\n{body}itemHasNoTitle>\t\"/catalog/item[2]\"\t\t\n{body}noteHasNoTerm>\t\"/catalog/item[1]\"\t\"note[1]\"\t\n{body}noteHasNoTerm>\t\"/catalog/item[1]\"\t\"note[1]\"\t\"/item/note\"\n"
+            )
+        );
+    }
+
+    /// adds the count column only where a finding carries a count
+    #[test]
+    fn adds_the_count_column_only_where_a_finding_carries_a_count() {
+        let rows = rows_written_for("order.xml");
+        assert!(
+            rows.starts_with("?body\t?record\t?at\t?value\t?count\n"),
+            "{rows}"
+        );
+        assert!(
+            rows.contains("\"note[1]\"\t\"/item/note\"\t2\n"),
+            "the finding that carries a count: {rows}"
+        );
+        assert!(!rows_written_for("two.xml").contains("?count"));
+    }
+
+    /// prints `Rows` and the file's path between `Findings` and `Graph`
+    #[test]
+    fn prints_rows_and_the_files_path_between_findings_and_graph() {
+        let scratch = scratch();
+        let document = tiny().join("fixtures/in/two.xml");
+        let findings = scratch.path().join("findings.ttl");
+        let rows = scratch.path().join("rows.tsv");
+        let graph = scratch.path().join("graph.ttl");
+        let mut arguments = tiny_with_vocabularies("convert");
+        arguments.insert(2, document.to_string_lossy().into_owned());
+        arguments.extend([
+            "--findings".to_owned(),
+            findings.to_string_lossy().into_owned(),
+            "--finding-rows".to_owned(),
+            rows.to_string_lossy().into_owned(),
+            "--out".to_owned(),
+            graph.to_string_lossy().into_owned(),
+        ]);
+        let run = run_in(scratch.path(), &arguments);
+        succeeded(&run);
+        let said = String::from_utf8_lossy(&run.stderr);
+        assert!(
+            said.ends_with(&format!(
+                "Findings {}\nRows     {}\nGraph    {}\n",
+                findings.display(),
+                rows.display(),
+                graph.display()
+            )),
+            "{said}"
+        );
+    }
+
     /// names the document relative to the file, so a checkout at another path reads the same findings
     #[test]
     fn names_the_document_relative_to_the_file_so_a_checkout_at_another_path_reads_the_same() {

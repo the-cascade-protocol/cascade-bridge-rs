@@ -17,6 +17,10 @@ const DRAFT_06: &str = "http://json-schema.org/draft-06/schema";
 const VALIDATION: &str =
     "https://datatracker.ietf.org/doc/html/draft-wright-json-schema-validation-01";
 
+pub(crate) fn names_a_rule(body: &str) -> bool {
+    body.starts_with(VALIDATION)
+}
+
 /// In the order of their sections, 6.1 onwards.
 const KEYWORDS: [&str; 29] = [
     "multipleOf",

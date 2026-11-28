@@ -10,6 +10,7 @@ mod compiled;
 mod decode;
 mod earl;
 mod error;
+mod finding_rows;
 #[cfg(test)]
 mod fixtures;
 mod harness;

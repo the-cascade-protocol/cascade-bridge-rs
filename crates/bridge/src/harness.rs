@@ -3,6 +3,7 @@ use crate::annotation;
 use crate::budget::Budgets;
 use crate::compiled::Executor;
 use crate::error::{Error, ErrorKind, Explained, Result};
+use crate::finding_rows;
 use crate::load::{
     as_subject, list, objects, one, parse_into, subject, term_value, values, Adapter,
 };
@@ -13,16 +14,18 @@ use crate::resolver::Resolver;
 use crate::run::{convert_with, prepare, Asked, Conversion, Prepared, Source};
 use crate::terms::{
     BRIDGE_ARRIVED_AS, BRIDGE_CONVERSION, BRIDGE_CONVERSION_WRITES_WHAT_THE_ACCOUNTING_CARRIES,
-    BRIDGE_DATASET, BRIDGE_ENVELOPE, BRIDGE_EXPECTED_FINDINGS, BRIDGE_EXPECTED_GRAPH, BRIDGE_FACTS,
-    BRIDGE_IDENTITY_RELATION_TEST, BRIDGE_INPUT, BRIDGE_INPUT_ONLY, BRIDGE_ISOMORPHIC,
-    BRIDGE_SAME_RECORD, BRIDGE_SELECTOR, BRIDGE_SPARQL_1_1, MF_ACTION, MF_ENTRIES, MF_NAME,
-    MF_RESULT, OA_HAS_SELECTOR, PROV_AGENT, PROV_HAD_PLAN, PROV_QUALIFIED_ASSOCIATION,
-    PROV_SPECIALIZATION_OF, RDF_TYPE, RDF_VALUE,
+    BRIDGE_DATASET, BRIDGE_ENVELOPE, BRIDGE_EXPECTED_FINDINGS, BRIDGE_EXPECTED_FINDING_ROWS,
+    BRIDGE_EXPECTED_GRAPH, BRIDGE_FACTS, BRIDGE_IDENTITY_RELATION_TEST, BRIDGE_INPUT,
+    BRIDGE_INPUT_ONLY, BRIDGE_ISOMORPHIC, BRIDGE_SAME_RECORD, BRIDGE_SELECTOR, BRIDGE_SPARQL_1_1,
+    BRIDGE_TESTS_UNACCOUNTED_SOURCE_PATH, MF_ACTION, MF_ENTRIES, MF_NAME, MF_RESULT,
+    OA_HAS_SELECTOR, PROV_AGENT, PROV_HAD_PLAN, PROV_QUALIFIED_ASSOCIATION, PROV_SPECIALIZATION_OF,
+    RDF_TYPE, RDF_VALUE,
 };
 use oxigraph::model::{Graph, NamedOrBlankNode, Quad, Term};
 use oxrdfio::{RdfFormat, RdfParser};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::time::Duration;
+mod standing;
 // std's clock panics on wasm32-unknown-unknown, where this one asks the host.
 use web_time::Instant;
 
@@ -228,6 +231,66 @@ impl Entry<'_> {
         }
     }
 
+    /// Whether the findings are the rows a file holds, and what the comparison says.
+    fn rows_compared(
+        &self,
+        iri: &str,
+        bytes: &[u8],
+        produced: Vec<Quad>,
+    ) -> Result<(bool, String)> {
+        let text = String::from_utf8(self.resolver.read(iri)?)
+            .map_err(|_| Error::adapter(format!("{iri}: the rows are not UTF-8")))?;
+        let wanted =
+            finding_rows::parse(&text).map_err(|why| Error::adapter(format!("{iri}: {why}")))?;
+        let source = self.setup.syntax.decode(bytes)?;
+        let spelled = self.setup.syntax.respelling(&source);
+        let want = spelled.respelled(finding_rows::as_findings(
+            &wanted,
+            self.setup.syntax.selector_type(),
+        )?);
+        let got = spelled.respelled(produced);
+        let missed: Vec<String> = want
+            .missed
+            .iter()
+            .map(|said| format!("expected {said}"))
+            .chain(got.missed.iter().map(|said| format!("produced {said}")))
+            .collect();
+        if !missed.is_empty() {
+            return Ok((
+                false,
+                format!(
+                    "findings not compared: {} address(es) select other than one node of bridge:input, which is what a finding is about ({})",
+                    missed.len(),
+                    sample(&missed, 4, LINE)
+                ),
+            ));
+        }
+        let rows = |findings: &[Quad]| finding_rows::rows_of(&finding_rows::read(findings));
+        let (wanted, got) = match (rows(&want.findings), rows(&got.findings)) {
+            (Ok(wanted), Ok(got)) => (wanted, got),
+            (Err(why), _) | (_, Err(why)) => {
+                return Ok((false, format!("findings not compared: {why}")))
+            }
+        };
+        let difference = finding_rows::difference(&wanted, &got);
+        Ok(if difference.is_empty() {
+            (
+                true,
+                format!("findings match the rows ({} row(s))", wanted.len()),
+            )
+        } else {
+            (
+                false,
+                format!(
+                    "findings differ from the rows: {} missing, {} extra ({})",
+                    difference.missing.len(),
+                    difference.extra.len(),
+                    difference.said(&wanted, &got)
+                ),
+            )
+        })
+    }
+
     fn related(&self, action: Option<&NamedOrBlankNode>) -> Result<Judged> {
         let graph = self.graph;
         let conversions: Vec<NamedOrBlankNode> = action
@@ -336,10 +399,32 @@ impl Entry<'_> {
             .map(|r| one(graph, r, BRIDGE_EXPECTED_FINDINGS))
             .transpose()?
             .flatten();
+        let rows_iri = result
+            .as_ref()
+            .map(|r| one(graph, r, BRIDGE_EXPECTED_FINDING_ROWS))
+            .transpose()?
+            .flatten();
+        if findings_iri.is_some() && rows_iri.is_some() {
+            return Err(Error::adapter(
+                "the entry's result names both bridge:expectedFindings and bridge:expectedFindingRows; a conversion test names at most one",
+            ));
+        }
+        let named_paths: BTreeSet<String> =
+            values(graph, &self.node, BRIDGE_TESTS_UNACCOUNTED_SOURCE_PATH)?
+                .into_iter()
+                .collect();
+        let problems = standing::problems(
+            &finding_rows::read(&run.findings),
+            &named_paths,
+            findings_iri.is_some() || rows_iri.is_some(),
+        );
         let mut findings_ok = true;
         let mut findings_text =
-            "findings not compared: the entry names no bridge:expectedFindings".to_owned();
-        if let Some(iri) = findings_iri {
+            "findings not compared: the entry names no bridge:expectedFindingRows or bridge:expectedFindings"
+                .to_owned();
+        if let Some(iri) = rows_iri {
+            (findings_ok, findings_text) = self.rows_compared(&iri, &bytes, run.findings)?;
+        } else if let Some(iri) = findings_iri {
             let want = graph_at(&self.resolver.read(&iri)?, &iri)?;
             let wanted = annotation::annotations(&want);
             // Two addresses that select one node are one address.
@@ -391,14 +476,15 @@ impl Entry<'_> {
                 sample(&graph_extra, 2, LINE)
             )
         };
-        let outcome = if graph_ok && findings_ok && unmet.is_empty() {
+        let outcome = if graph_ok && findings_ok && problems.is_empty() && unmet.is_empty() {
             Outcome::Passed
         } else {
             Outcome::Failed
         };
+        let standing = standing_said(&problems);
         Ok((
             outcome,
-            format!("{graph_text}; {findings_text}{not_met}{detect}"),
+            format!("{graph_text}; {findings_text}{standing}{not_met}{detect}"),
             unmet,
         ))
     }
@@ -442,6 +528,19 @@ fn not_met(unmet: &[Unmet]) -> String {
             these.len(),
             first.join("; ")
         ));
+    }
+    said
+}
+
+/// What fails an entry whatever it compares, as its description says it: the first few whole.
+fn standing_said(problems: &[String]) -> String {
+    const SAID: usize = 3;
+    let mut said = String::new();
+    for problem in problems.iter().take(SAID) {
+        said.push_str(&format!("; {problem}"));
+    }
+    if problems.len() > SAID {
+        said.push_str(&format!("; and {} more", problems.len() - SAID));
     }
     said
 }
@@ -605,6 +704,8 @@ mod identity;
 mod manifest;
 #[cfg(test)]
 mod owed;
+#[cfg(test)]
+mod rows;
 #[cfg(test)]
 mod tests {
     use super::{beyond, graph_at, without_the_release};

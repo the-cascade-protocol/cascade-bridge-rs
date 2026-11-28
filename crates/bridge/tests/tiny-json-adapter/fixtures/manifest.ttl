@@ -9,6 +9,7 @@
 
 <#list> a bridge:IsomorphicConversionTest ;
   mf:name "list" ;
+  bridge:testsUnaccountedSourcePath "/extra" , "/extra/a" ;
   mf:action [ bridge:input <in/list.json> ] ;
   mf:result [ bridge:expectedGraph <expected/list.ttl> ; bridge:expectedFindings <findings/list.ttl> ] .
 
