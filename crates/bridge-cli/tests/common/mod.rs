@@ -54,6 +54,18 @@ pub fn a_folder_of_three_documents() -> TempDir {
     folder
 }
 
+/// The tiny adapter copied to `to` with the accounting struck out of its crate.
+pub fn tiny_without_accounting(to: &Path) {
+    copied_to(&tiny(), to);
+    let crate_file = to.join("ro-crate-metadata.json");
+    let text = std::fs::read_to_string(&crate_file).expect("the crate");
+    let kept: Vec<&str> = text
+        .lines()
+        .filter(|line| !line.contains("bridge:sourceAccounting"))
+        .collect();
+    std::fs::write(&crate_file, kept.join("\n")).expect("the crate without its accounting");
+}
+
 pub fn quads(bytes: &[u8], format: RdfFormat, base: &str) -> Vec<Quad> {
     RdfParser::from_format(format)
         .with_base_iri(base)

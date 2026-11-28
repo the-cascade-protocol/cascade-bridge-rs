@@ -14,7 +14,7 @@ const LOOKUP_NAMES_GAP: &str = "bridge:lookupNamesGap ex:statusOutsideTheTable";
 
 /// A record written at the top, in a `resource` member, and in an item contained in that
 /// member; `novelty` is a member no entry names.
-const WRITTEN_IN_EVERY_FORM: &str = r#"{"kind": "item", "id": "9", "novelty": "x",
+pub(super) const WRITTEN_IN_EVERY_FORM: &str = r#"{"kind": "item", "id": "9", "novelty": "x",
   "resource": {"id": "9", "title": "nine", "novelty": "x",
     "contained": [{"id": "c", "title": "inner", "novelty": "x"}]}}"#;
 
@@ -40,7 +40,7 @@ fn carrying(paths: &[&str]) -> Vec<String> {
 }
 
 /// Each place once, as the bare path.
-fn written_once() -> Vec<String> {
+pub(super) fn written_once() -> Vec<String> {
     carrying(&["/kind", "/id", "/title", "/resource", "/contained"])
 }
 
@@ -63,7 +63,7 @@ fn written_for_each_form() -> Vec<String> {
 /// contained items below it, and whose list envelope writes content at the top and contained
 /// items below it: four forms, `""`, `/contained`, `/resource` and `/resource/contained`, with
 /// `entries` as its accounting and `record` as `forms.json`.
-fn declaring_forms(entries: &[String], record: &str) -> Variant {
+pub(super) fn declaring_forms(entries: &[String], record: &str) -> Variant {
     reading(entries, record)
         .replacing(
             CRATE,

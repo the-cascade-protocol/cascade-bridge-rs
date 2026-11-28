@@ -4,8 +4,8 @@ use cascade_bridge::oxrdf::Term;
 use cascade_bridge::oxrdfio::{self, RdfFormat};
 use common::{
     a_folder_of_three_documents, canonical, canonical_lines, copied_to, map_of, names, outcomes,
-    owing_a_title, quads, read_at_its_own_iri, results, scratch, tiny, vocabularies, BASE,
-    MAX_LENGTH,
+    owing_a_title, quads, read_at_its_own_iri, results, scratch, tiny, tiny_without_accounting,
+    vocabularies, BASE, MAX_LENGTH,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::process::{Command, Stdio};
@@ -1178,6 +1178,56 @@ mod surveying_a_folder {
         );
         assert_eq!(run.status.code(), Some(0));
         assert_eq!(tsv_lines(&tsv), [SURVEY_TSV_HEADER]);
+    }
+
+    #[test]
+    fn exits_2_for_an_adapter_with_no_accounting_though_no_document_is_read() {
+        let adapter = scratch();
+        tiny_without_accounting(adapter.path());
+        let folder = scratch();
+        let run = cascade_bridge(&[
+            "survey",
+            &adapter.path().to_string_lossy(),
+            &folder.path().to_string_lossy(),
+        ]);
+        assert_eq!(run.status.code(), Some(2));
+        assert!(run.stdout.is_empty());
+        assert!(
+            String::from_utf8_lossy(&run.stderr).contains("bridge:sourceAccounting"),
+            "{}",
+            String::from_utf8_lossy(&run.stderr)
+        );
+    }
+
+    #[test]
+    fn exits_2_for_an_envelope_the_adapter_does_not_declare_though_no_document_is_read() {
+        let folder = scratch();
+        let run = surveyed(folder.path(), &["--envelope", "#nope"]);
+        assert_eq!(run.status.code(), Some(2));
+        assert!(run.stdout.is_empty());
+        assert!(
+            String::from_utf8_lossy(&run.stderr).contains("declares no envelope"),
+            "{}",
+            String::from_utf8_lossy(&run.stderr)
+        );
+    }
+
+    #[test]
+    fn says_no_document_was_read_and_prints_each_section_empty_for_an_empty_folder() {
+        let folder = scratch();
+        let run = surveyed(folder.path(), &[]);
+        assert_eq!(run.status.code(), Some(0));
+        let stdout = String::from_utf8_lossy(&run.stdout);
+        let lines: Vec<&str> = stdout.lines().skip(1).collect();
+        assert_eq!(lines[0], "Documents  0 read, 0 not read, 0 record(s)");
+        assert!(lines.contains(&"No document was read."), "{stdout}");
+        for section in [
+            "Never decided: 0 path(s) no entry of the accounting covers",
+            "No term yet: 0 path(s) whose entry says no Cascade term carries them",
+            "Left out on purpose: 0 path(s) whose entry says they are not carried",
+        ] {
+            assert!(lines.contains(&section), "{stdout}");
+        }
     }
 
     #[test]

@@ -3,6 +3,7 @@ use crate::fixtures::{
     OA, PATH_NOT_ACCOUNTED, SH,
 };
 use crate::load::load_adapter;
+use crate::run::declared_forms::{declaring_forms, written_once, WRITTEN_IN_EVERY_FORM};
 use crate::resolver::Resolver;
 use crate::run::{prepare, survey, Source};
 use crate::survey::{Narrowing, Survey, SurveyReport, NEVER_DECIDED};
@@ -119,6 +120,11 @@ fn telling_kinds_apart() -> Variant {
                 {"kind": "Medication", "id": "c4", "novelty": "v"}]}}"#,
         )
         .with(
+            "fixtures/in/unnamed-contained.json",
+            r#"{"kind": "item", "resource": {"kind": "Observation", "id": "5",
+  "contained": [{"id": "c9", "novelty": "u"}]}}"#,
+        )
+        .with(
             "fixtures/in/no-kind.json",
             r#"{"kind": "item", "resource": {"id": "7", "novelty": "q"}}"#,
         )
@@ -157,12 +163,56 @@ mod tests {
         assert_eq!(
             rows(&report, NEVER_DECIDED),
             [
-                (Some("Medication"), "/resource/contained/novelty", 2, 3),
-                (Some("Observation"), "/resource/novelty", 1, 1),
-                (Some("Practitioner"), "/resource/contained/novelty", 1, 1),
-                (None, "/resource/novelty", 1, 1),
+                (Some("Medication"), "/novelty", 2, 3),
+                (Some("Observation"), "/novelty", 1, 1),
+                (Some("Practitioner"), "/novelty", 1, 1),
+                (None, "/novelty", 1, 1),
             ]
         );
+    }
+
+    #[test]
+    fn counts_a_path_in_a_contained_record_that_names_no_kind_in_the_kind_of_its_container() {
+        let report = surveyed(&telling_kinds_apart(), &["unnamed-contained.json"]);
+        assert_eq!(
+            rows(&report, NEVER_DECIDED),
+            [(Some("Observation"), "/novelty", 1, 1)]
+        );
+    }
+
+    #[test]
+    fn files_the_contained_member_itself_under_the_kind_of_its_container() {
+        let report = surveyed(&telling_kinds_apart(), &["observation.json"]);
+        let carried = rows(&report, "carried");
+        assert!(
+            carried.contains(&(Some("Observation"), "/contained", 1, 2)),
+            "{carried:?}"
+        );
+        assert!(
+            !carried.contains(&(Some("Medication"), "/contained", 1, 1)),
+            "{carried:?}"
+        );
+    }
+
+    #[test]
+    fn ranks_a_place_written_in_several_forms_as_one_row_of_the_documents_that_hold_it() {
+        let report = surveyed(
+            &declaring_forms(&written_once(), WRITTEN_IN_EVERY_FORM),
+            &["forms.json"],
+        );
+        assert_eq!(rows(&report, NEVER_DECIDED), [(None, "/novelty", 1, 3)]);
+    }
+
+    #[test]
+    fn keeps_apart_the_forms_of_a_place_whose_entries_say_different_things() {
+        let mut entries = written_once();
+        entries.push(entry("/resource/novelty", "ignored", &[]));
+        let report = surveyed(
+            &declaring_forms(&entries, WRITTEN_IN_EVERY_FORM),
+            &["forms.json"],
+        );
+        assert_eq!(rows(&report, NEVER_DECIDED), [(None, "/novelty", 1, 2)]);
+        assert_eq!(rows(&report, "ignored"), [(None, "/novelty", 1, 1)]);
     }
 
     #[test]

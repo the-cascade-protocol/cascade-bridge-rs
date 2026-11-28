@@ -6,7 +6,8 @@ use cascade_bridge::oxrdf::Quad;
 use cascade_bridge::oxrdfio::RdfFormat;
 use common::{
     a_folder_of_three_documents, canonical, canonical_lines, copied_to, map_of, names, outcomes,
-    owing_a_title, read_at_its_own_iri, results, scratch, tiny, vocabularies, BASE, MAX_LENGTH,
+    owing_a_title, read_at_its_own_iri, results, scratch, tiny, tiny_without_accounting,
+    vocabularies, BASE, MAX_LENGTH,
 };
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -508,6 +509,49 @@ mod running_the_commands_on_node {
             );
             assert!(on_native.1.lines().count() > 1, "{}", on_native.1);
             assert_eq!(on_node, on_native);
+        }
+
+        /// refuses an adapter with no accounting and an undeclared envelope as native does, though the folder holds no document
+        #[test]
+        fn refuses_an_adapter_with_no_accounting_and_an_undeclared_envelope_as_native_does_though_the_folder_holds_no_document(
+        ) {
+            let bare = scratch();
+            tiny_without_accounting(bare.path());
+            let folder = scratch();
+            let folder = folder.path().to_string_lossy().into_owned();
+            let unaccounted = bare.path().to_string_lossy().into_owned();
+            let adapter = tiny().to_string_lossy().into_owned();
+            for (arguments, said) in [
+                (
+                    vec!["survey", unaccounted.as_str(), folder.as_str()],
+                    "bridge:sourceAccounting",
+                ),
+                (
+                    vec![
+                        "survey",
+                        adapter.as_str(),
+                        folder.as_str(),
+                        "--envelope",
+                        "#nope",
+                    ],
+                    "declares no envelope",
+                ),
+            ] {
+                for run in [&native as &dyn Fn(&[&str]) -> Output, &node] {
+                    let output = run(&arguments);
+                    assert_eq!(output.status.code(), Some(2), "{arguments:?}");
+                    assert!(output.stdout.is_empty(), "{arguments:?}");
+                    assert!(
+                        String::from_utf8_lossy(&output.stderr).contains(said),
+                        "{arguments:?}: {}",
+                        String::from_utf8_lossy(&output.stderr)
+                    );
+                }
+            }
+            let arguments = ["survey", adapter.as_str(), folder.as_str()];
+            let on_native = native(&arguments);
+            assert_eq!(on_native.status.code(), Some(0));
+            assert_eq!(node(&arguments).stdout, on_native.stdout);
         }
     }
 
