@@ -23,6 +23,10 @@ const ACCOUNTED_IN_EVERY_FORM: &str = r#"{"kind": "item", "id": "9",
   "resource": {"id": "9", "title": "nine",
     "contained": [{"id": "c", "title": "inner"}]}}"#;
 
+/// A record whose contained item holds a member `x` that holds a member `y`.
+const INSIDE_ANOTHER_FORM: &str = r#"{"kind": "item",
+  "resource": {"contained": [{"x": {"y": "1"}}]}}"#;
+
 /// A `status` at the top, in the `resource` member and in the item contained in it.
 const STATUSES_IN_EVERY_FORM: &str = r#"{"kind": "item", "id": "9", "status": "Retired",
   "resource": {"id": "9", "status": "Retired",
@@ -302,6 +306,31 @@ mod tests {
             assert_eq!(
                 missed(&found),
                 paths(&["/status", "/resource/contained/0/status"])
+            );
+        }
+
+        /// copies an entry written with the contained prefix only where the copy reads as the
+        /// form it is copied to
+        #[test]
+        fn copies_an_entry_written_with_the_contained_prefix_only_where_the_copy_reads_as_the_form_it_is_copied_to(
+        ) {
+            let mut entries = written_once();
+            entries.extend(carrying(&["/contained/x/y"]));
+            let inside_another_form = declaring_forms(&entries, INSIDE_ANOTHER_FORM)
+                .replacing(
+                    CRATE,
+                    r#""@graph": ["#,
+                    r##""@graph": [{ "@id": "#envelope-nested", "@type": "bridge:Envelope", "name": "nested", "bridge:docRootMemberName": "kind", "bridge:docRootMemberValue": "nested", "bridge:jsonPathOfEachRecord": "$.nested[*]", "bridge:pathOfContentInRecord": "/resource/contained/x" },"##,
+                )
+                .replacing(
+                    CRATE,
+                    r##"{ "@id": "#envelope-list" }]"##,
+                    r##"{ "@id": "#envelope-list" }, { "@id": "#envelope-nested" }]"##,
+                );
+            let found = findings(&inside_another_form, "forms.json");
+            assert_eq!(
+                censuses(&found),
+                paths(&["/resource/contained/x", "/resource/contained/x/y"])
             );
         }
     }
