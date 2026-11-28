@@ -763,6 +763,8 @@ mod adapter_files;
 #[cfg(test)]
 mod address;
 #[cfg(test)]
+mod declared_forms;
+#[cfg(test)]
 mod entry_gaps;
 #[cfg(test)]
 mod fetching;
