@@ -56,13 +56,21 @@ fn written_for_each_form() -> Vec<String> {
 }
 
 /// The tiny JSON adapter whose item envelope writes content in a `resource` member and
-/// contained items below it, with `entries` as its accounting and `record` as `forms.json`.
+/// contained items below it, and whose list envelope writes content at the top and contained
+/// items below it: four forms, `""`, `/contained`, `/resource` and `/resource/contained`, with
+/// `entries` as its accounting and `record` as `forms.json`.
 fn declaring_forms(entries: &[String], record: &str) -> Variant {
-    reading(entries, record).replacing(
-        CRATE,
-        r#""bridge:jsonPathOfEachRecord": "$""#,
-        r#""bridge:jsonPathOfEachRecord": "$", "bridge:pathOfContentInRecord": "/resource", "bridge:pathOfContainedContentBelowContent": "/contained""#,
-    )
+    reading(entries, record)
+        .replacing(
+            CRATE,
+            r#""bridge:jsonPathOfEachRecord": "$""#,
+            r#""bridge:jsonPathOfEachRecord": "$", "bridge:pathOfContentInRecord": "/resource", "bridge:pathOfContainedContentBelowContent": "/contained""#,
+        )
+        .replacing(
+            CRATE,
+            r#""bridge:jsonPathOfEachRecord": "$.items[*]","#,
+            r#""bridge:jsonPathOfEachRecord": "$.items[*]", "bridge:pathOfContentInRecord": "", "bridge:pathOfContainedContentBelowContent": "/contained","#,
+        )
 }
 
 /// The tiny JSON adapter declaring no form.
@@ -172,26 +180,6 @@ mod tests {
             );
         }
 
-        /// reads a path in the form its longest prefix names, so an entry for a place that begins
-        /// like a longer prefix does not account for a place of that form
-        #[test]
-        fn reads_a_path_in_the_form_its_longest_prefix_names() {
-            let mut entries = written_once();
-            entries.extend(carrying(&["/contained/novelty"]));
-            let found = findings(
-                &declaring_forms(&entries, WRITTEN_IN_EVERY_FORM),
-                "forms.json",
-            );
-            assert_eq!(
-                censuses(&found),
-                paths(&[
-                    "/novelty",
-                    "/resource/novelty",
-                    "/resource/contained/novelty"
-                ])
-            );
-        }
-
         /// reads each path as its own place where the adapter declares no form
         #[test]
         fn reads_each_path_as_its_own_place_where_the_adapter_declares_no_form() {
@@ -234,6 +222,87 @@ mod tests {
                 "forms.json",
             );
             assert_eq!(missed(&found), paths(&["/status", "/resource/status"]));
+        }
+
+        /// lets an entry written with the contained prefix and no content prefix stand for the
+        /// contained form under every content prefix in place of the place's entry
+        #[test]
+        fn lets_an_entry_written_with_the_contained_prefix_stand_for_the_contained_form_under_every_content_prefix(
+        ) {
+            let overriding = entry("/contained/status", "consumed", &[]);
+            let found = findings(
+                &looking_statuses_up(&[looked_up(), overriding]),
+                "forms.json",
+            );
+            assert_eq!(missed(&found), paths(&["/status", "/resource/status"]));
+        }
+
+        /// copies the lookup of an entry written with the contained prefix and no content prefix
+        /// to the contained form under every content prefix
+        #[test]
+        fn copies_the_lookup_of_an_entry_written_with_the_contained_prefix_to_every_content_prefix()
+        {
+            let contained_lookup = entry(
+                "/contained/status",
+                "consumed",
+                &[LOOKUP_IN, LOOKUP_NAMES_GAP],
+            );
+            let found = findings(
+                &looking_statuses_up(&[carrying(&["/status"]).remove(0), contained_lookup]),
+                "forms.json",
+            );
+            assert_eq!(missed(&found), paths(&["/resource/contained/0/status"]));
+        }
+
+        /// accounts for a place of the contained form under every content prefix where an entry
+        /// is written with the contained prefix only
+        #[test]
+        fn accounts_for_a_place_of_the_contained_form_under_every_content_prefix() {
+            let mut entries = written_once();
+            entries.extend(carrying(&["/contained/novelty"]));
+            let found = findings(
+                &declaring_forms(&entries, WRITTEN_IN_EVERY_FORM),
+                "forms.json",
+            );
+            assert_eq!(censuses(&found), paths(&["/novelty", "/resource/novelty"]));
+        }
+
+        /// lets an entry that stands at the exact path win over the contained prefix's entry and
+        /// the place's entry
+        #[test]
+        fn lets_an_entry_at_the_exact_path_win_over_the_contained_prefix_s_entry_and_the_place_s() {
+            let nothing_looked_up = entry("/contained/status", "consumed", &[]);
+            let exact = entry(
+                "/resource/contained/status",
+                "consumed",
+                &[LOOKUP_IN, LOOKUP_NAMES_GAP],
+            );
+            let found = findings(
+                &looking_statuses_up(&[looked_up(), nothing_looked_up, exact]),
+                "forms.json",
+            );
+            assert_eq!(
+                missed(&found),
+                paths(&[
+                    "/status",
+                    "/resource/status",
+                    "/resource/contained/0/status"
+                ])
+            );
+        }
+
+        /// lets an entry written with a content prefix stand for itself only
+        #[test]
+        fn lets_an_entry_written_with_a_content_prefix_stand_for_itself_only() {
+            let overriding = entry("/resource/status", "consumed", &[]);
+            let found = findings(
+                &looking_statuses_up(&[looked_up(), overriding]),
+                "forms.json",
+            );
+            assert_eq!(
+                missed(&found),
+                paths(&["/status", "/resource/contained/0/status"])
+            );
         }
     }
 }
