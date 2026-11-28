@@ -1,4 +1,4 @@
-use crate::accounting::{gap_scheme, Accounting, Unmet};
+use crate::accounting::{gap_scheme, Accounting, Forms, Unmet};
 use crate::annotation::{self, Record};
 use crate::compiled::{Dataset, Shared};
 use crate::error::{Error, ErrorKind, Explained, Result};
@@ -274,7 +274,7 @@ fn prepared(
     let accounting = adapter
         .source_accounting
         .as_deref()
-        .map(|iri| Accounting::read(resolver, iri, &scheme))
+        .map(|iri| Accounting::read(resolver, iri, &scheme, &Forms::declared(&adapter.envelopes)))
         .transpose()?;
     let mut skipped = skipping.to_vec();
     skipped.sort();
@@ -762,6 +762,8 @@ fn detected(detect: &Query, lift: Box<dyn Lift + '_>, profile: &Profile) -> Resu
 mod adapter_files;
 #[cfg(test)]
 mod address;
+#[cfg(test)]
+mod declared_forms;
 #[cfg(test)]
 mod entry_gaps;
 #[cfg(test)]

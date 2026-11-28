@@ -797,6 +797,47 @@ WHERE {{ ?root a fx:root ; xyz:contained ?list . }}"
                         )
                 }
 
+                /// The accounting of `nesting`, with each place written once and `more` besides.
+                fn placed_once(more: &str) -> Variant {
+                    nesting("").with(
+                        "vocab/list-accounting.ttl",
+                        format!(
+                            "@prefix bridge: <https://ns.cascadeprotocol.org/bridge/v1-draft#> .
+@prefix ex:     <urn:example:list#> .
+[] a bridge:PathEntry ; bridge:sourcePath \"/kind\" ; bridge:verdict bridge:ignored .
+[] a bridge:PathEntry ; bridge:sourcePath \"/id\" ; bridge:verdict bridge:carried .
+[] a bridge:PathEntry ; bridge:sourcePath \"/contained\" ; bridge:verdict bridge:consumed .
+[] a bridge:PathEntry ; bridge:sourcePath \"/title\" ; bridge:verdict bridge:carried ;
+  bridge:carriedAs [ bridge:inRecordClass ex:Item ; bridge:asProperty ex:title ] .
+{more}
+"
+                        ),
+                    )
+                }
+
+                /// owes a path in a nested record by the entry written for its place
+                #[test]
+                fn owes_a_path_in_a_nested_record_by_the_entry_written_for_its_place() {
+                    let (outcome, description) = judged(&ran(&placed_once("")), "nested");
+                    assert_eq!(outcome, "failed", "{description}");
+                    assert!(
+                        description.contains("/contained/title: no urn:example:list#title on its"),
+                        "{description}"
+                    );
+                }
+
+                /// owes nothing for a path in a nested record whose entry written with the prefix
+                /// says it is not carried, whatever the entry for its place says
+                #[test]
+                fn owes_nothing_for_a_path_in_a_nested_record_whose_prefixed_entry_says_it_is_not_carried(
+                ) {
+                    let overriding =
+                        "[] a bridge:PathEntry ; bridge:sourcePath \"/contained/title\" ; \
+                                      bridge:verdict bridge:ignored .";
+                    let (outcome, description) = judged(&ran(&placed_once(overriding)), "nested");
+                    assert_eq!(outcome, "cantTell", "{description}");
+                }
+
                 /// owes a path in a nested record no record was written from to the record it
                 /// is nested in, as it owes any path by where it stands
                 #[test]

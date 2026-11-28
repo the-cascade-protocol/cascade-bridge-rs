@@ -2,7 +2,7 @@ use crate::annotation::{self, Record};
 use crate::decode::XML_SPACE;
 use crate::error::{Error, Result};
 use crate::lift::{Paths, Unit, Valued};
-use crate::load::{as_subject, instances, objects, subjects, turtle, Prefixes};
+use crate::load::{as_subject, instances, objects, subjects, turtle, Envelope, Prefixes};
 use crate::resolver::Resolver;
 use crate::run::Asked;
 use crate::terms::{
@@ -21,6 +21,7 @@ mod owed;
 
 pub(crate) use owed::{same_place, Unmet};
 
+#[derive(Clone)]
 struct Entry {
     path: String,
     verdict: Option<String>,
@@ -80,8 +81,112 @@ fn key(value: &str) -> String {
     value.trim_matches(XML_SPACE).to_lowercase()
 }
 
+/// A form an envelope writes a place in: a content prefix, possibly empty, followed or not by
+/// the contained prefix. Its `prefix` is never empty.
+struct Form {
+    prefix: String,
+    content: String,
+    contained: Option<String>,
+}
+
+/// The non-empty forms an adapter's envelopes write a place in, longest first.
+pub(crate) struct Forms(Vec<Form>);
+
+impl Forms {
+    pub(crate) fn declared(envelopes: &[Envelope]) -> Self {
+        let mut forms: Vec<Form> = Vec::new();
+        for envelope in envelopes {
+            let content = envelope.path_of_content_in_record.as_deref().unwrap_or("");
+            let contained = envelope.path_of_contained_content_below_content.as_deref();
+            let wholes = [(content.to_owned(), None)]
+                .into_iter()
+                .chain(contained.map(|c| (format!("{content}{c}"), Some(c.to_owned()))));
+            for (prefix, contained) in wholes {
+                if !prefix.is_empty() && !forms.iter().any(|form| form.prefix == prefix) {
+                    forms.push(Form {
+                        prefix,
+                        content: content.to_owned(),
+                        contained,
+                    });
+                }
+            }
+        }
+        forms.sort_by(|one, other| {
+            (other.prefix.len(), &one.prefix).cmp(&(one.prefix.len(), &other.prefix))
+        });
+        Self(forms)
+    }
+
+    /// The form a path is written in: the longest prefix a `/` follows.
+    fn of(&self, path: &str) -> Option<&Form> {
+        self.0.iter().find(|form| {
+            path.strip_prefix(form.prefix.as_str())
+                .is_some_and(|rest| rest.starts_with('/'))
+        })
+    }
+
+    /// Each entry copied to the forms it stands for, and the path of the entry each copy was
+    /// made from. The most specific entry wins at a path: one standing there; then one
+    /// written with the contained prefix and no content prefix, which stands for its place in
+    /// the contained form under every content prefix; then the place's own entry, which stands
+    /// for it in every form. An entry written with a content prefix stands for itself only.
+    fn copied(&self, entries: Vec<Entry>) -> (Vec<Entry>, HashMap<String, String>) {
+        let standing: HashSet<String> = entries.iter().map(|entry| entry.path.clone()).collect();
+        let mut made = Vec::new();
+        let mut from: HashMap<String, String> = HashMap::new();
+        let mut overridden: HashSet<String> = HashSet::new();
+        for entry in &entries {
+            let Some(written) = self.of(&entry.path).filter(|form| form.content.is_empty()) else {
+                continue;
+            };
+            let place = &entry.path[written.prefix.len()..];
+            for form in self
+                .0
+                .iter()
+                .filter(|form| !form.content.is_empty() && form.contained == written.contained)
+            {
+                let path = format!("{}{place}", form.prefix);
+                if standing.contains(&path)
+                    || self.of(&path).map(|read| &read.prefix) != Some(&form.prefix)
+                {
+                    continue;
+                }
+                overridden.insert(path.clone());
+                from.insert(path.clone(), entry.path.clone());
+                made.push(Entry {
+                    path,
+                    ..entry.clone()
+                });
+            }
+        }
+        for entry in entries
+            .iter()
+            .filter(|entry| self.of(&entry.path).is_none())
+        {
+            for form in &self.0 {
+                let path = format!("{}{}", form.prefix, entry.path);
+                if standing.contains(&path)
+                    || overridden.contains(&path)
+                    || self.of(&path).map(|read| &read.prefix) != Some(&form.prefix)
+                {
+                    continue;
+                }
+                from.insert(path.clone(), entry.path.clone());
+                made.push(Entry {
+                    path,
+                    ..entry.clone()
+                });
+            }
+        }
+        let mut entries = entries;
+        entries.extend(made);
+        (entries, from)
+    }
+}
+
 pub(crate) struct Accounting {
-    paths: HashSet<String>,
+    /// Each path an entry accounts for, with the path of the entry that says so.
+    accounted_by: HashMap<String, String>,
     reported: HashMap<String, Vec<Reported>>,
     lookups: HashMap<String, Vec<Lookup>>,
     owed: HashMap<String, Owed>,
@@ -96,8 +201,16 @@ impl Accounting {
         resolver: &dyn Resolver,
         iri: &str,
         scheme: &HashMap<String, Gap>,
+        forms: &Forms,
     ) -> Result<Self> {
-        Self::of(entries(resolver, iri)?, scheme, iri, resolver)
+        let (entries, copied_from) = forms.copied(entries(resolver, iri)?);
+        Self::of(entries, copied_from, scheme, iri, resolver)
+    }
+
+    /// The path of the entry that accounts for `path` as a record writes it: its own, or
+    /// the entry written for its place.
+    pub(crate) fn entry_for(&self, path: &str) -> Option<&str> {
+        self.accounted_by.get(path).map(String::as_str)
     }
 
     /// `owing` keeps where each occurrence of a carried path stands, which only
@@ -114,11 +227,12 @@ impl Accounting {
 
     fn of(
         entries: Vec<Entry>,
+        copied_from: HashMap<String, String>,
         scheme: &HashMap<String, Gap>,
         iri: &str,
         resolver: &dyn Resolver,
     ) -> Result<Self> {
-        let mut paths = HashSet::new();
+        let mut accounted_by = HashMap::new();
         let mut reported: HashMap<String, Vec<Reported>> = HashMap::new();
         let mut lookups: HashMap<String, Vec<Lookup>> = HashMap::new();
         let mut maps: HashMap<String, Arc<HashSet<String>>> = HashMap::new();
@@ -218,7 +332,8 @@ impl Accounting {
                     });
                 }
             }
-            paths.insert(entry.path);
+            let written_for = copied_from.get(&entry.path).unwrap_or(&entry.path).clone();
+            accounted_by.insert(entry.path, written_for);
         }
         // Sorted, so a run's output does not depend on which way a hash fell.
         for gaps in reported.values_mut() {
@@ -233,7 +348,7 @@ impl Accounting {
         }
         let owes_where_nothing_is_written = owed.values().any(|owing| !owing.reported.is_empty());
         Ok(Self {
-            paths,
+            accounted_by,
             reported,
             lookups,
             owed,
@@ -254,7 +369,7 @@ impl Accounting {
     ) -> Result<Vec<Quad>> {
         let mut findings = Vec::new();
         for occurrence in unit.occurrences() {
-            if asked.census && !self.paths.contains(&occurrence.path) {
+            if asked.census && self.entry_for(&occurrence.path).is_none() {
                 findings.extend(annotation::unaccounted(
                     record,
                     &occurrence.path,
