@@ -1,6 +1,7 @@
 use crate::budget::Budgets;
 use crate::earl::{earl_report, ReportSubject};
 use crate::error::{Error, Result};
+use crate::finding_rows;
 use crate::harness::{run_manifest_noting_fallbacks, RunOptions, OFFERED_PROFILES};
 use crate::load::{self, adapter_of, instances, load_adapter, CRATE};
 use crate::measure::{Skip, Stage, StageTime};
@@ -394,6 +395,16 @@ impl Conversion {
                 serialise_at(findings, format, &self.findings_prefixes, relative_to)?.into_bytes(),
             ))
         })
+    }
+
+    /// The findings the convert asked for as the rows a conversion test names as its expected
+    /// findings, one sorted row for each; `None` where `findings` is.
+    pub fn finding_rows(&self) -> Result<Option<Vec<u8>>> {
+        let Some(findings) = &self.findings else {
+            return Ok(None);
+        };
+        let rows = finding_rows::rows_of(&finding_rows::read(findings)).map_err(Error::bridge)?;
+        Ok(Some(finding_rows::write(&rows).into_bytes()))
     }
 
     /// Where the convert was profiled: the time in each stage, serialising as far as

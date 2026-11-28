@@ -9,12 +9,13 @@ use std::io::Write as _;
 use std::time::{Duration, Instant};
 
 const USAGE: &str = "usage: cascade-bridge test <adapter-dir> [--vocabularies <directory>] [--earl <out.ttl>] [--fallbacks <out.json>] [--datasets] [--executor compiled|spareval|both] [--memory-budget-mib <1-3072>] [--time-budget-seconds <n>] [--owed]
-       cascade-bridge convert <adapter-dir> <document> [--envelope <iri>] [--facts <file>] [--vocabularies <directory>] [--out <file>] [--findings <file>] [--format turtle|ntriples] [--executor compiled|spareval|both] [--memory-budget-mib <1-3072>] [--time-budget-seconds <n>] [--profile] [--skip schema|shapes|findings] [--owed]
+       cascade-bridge convert <adapter-dir> <document> [--envelope <iri>] [--facts <file>] [--vocabularies <directory>] [--out <file>] [--findings <file>] [--finding-rows <file>] [--format turtle|ntriples] [--executor compiled|spareval|both] [--memory-budget-mib <1-3072>] [--time-budget-seconds <n>] [--profile] [--skip schema|shapes|findings] [--owed]
        cascade-bridge explain <adapter-dir> [--vocabularies <directory>]
        cascade-bridge survey <adapter-dir> <folder> [--envelope <iri>] [--tsv <file>] [--kind <kind>] [--under <path>]
        cascade-bridge library <calls file> <results directory>
 
 --skip is for measuring only: the run leaves out the source schema check, the output shapes check or the findings queries, and its conversion is not a validated one.
+--finding-rows writes the findings --findings writes as the rows a conversion test names as its expected findings: one sorted line each, the count column only where a finding carries a count.
 --owed lists each occurrence of a path the accounting says is carried, or whose gap the adapter reports, that a conversion owes and neither writes nor reports, one per line: after test's entries, every one an entry failed for; in place of convert's graph, the document's.
 survey converts nothing: it lifts each file directly in <folder> and reads each path of its records against the adapter's accounting, then prints the paths no entry covers, the paths whose entry says no Cascade term carries them, and the paths whose entry says they are left out on purpose, ranked by the documents that hold each, and lists each file it could not read. A path is a place: one written in a bare record and in an envelope's content member is one row, saying the forms it was written in. --tsv writes every place it saw to <file>, the forms as its last column; --kind keeps one record kind; --under keeps a place and the places below it; --envelope reads every document in that envelope. It exits 0 once the adapter was read, and 2 where it was not, an empty folder included.";
 
@@ -51,6 +52,7 @@ struct Convert {
     vocabularies: Option<String>,
     out: Option<String>,
     findings: Option<String>,
+    finding_rows: Option<String>,
     format: Format,
     executor: Executor,
     budgets: Budgets,
@@ -64,8 +66,8 @@ impl Convert {
         ConvertOptions {
             executor: self.executor,
             budgets: self.budgets,
-            findings: self.findings.is_some(),
-            census: self.findings.is_some(),
+            findings: self.findings.is_some() || self.finding_rows.is_some(),
+            census: self.findings.is_some() || self.finding_rows.is_some(),
         }
     }
 }
@@ -134,6 +136,7 @@ fn parse(argv: impl IntoIterator<Item = String>) -> Option<Command> {
                 vocabularies: None,
                 out: None,
                 findings: None,
+                finding_rows: None,
                 format: Format::Turtle,
                 executor: Executor::default(),
                 budgets: Budgets::default(),
@@ -148,6 +151,7 @@ fn parse(argv: impl IntoIterator<Item = String>) -> Option<Command> {
                     "--vocabularies" => arguments.vocabularies = Some(argv.next()?),
                     "--out" => arguments.out = Some(argv.next()?),
                     "--findings" => arguments.findings = Some(argv.next()?),
+                    "--finding-rows" => arguments.finding_rows = Some(argv.next()?),
                     "--format" => arguments.format = Format::named(&argv.next()?)?,
                     "--executor" => arguments.executor = Executor::named(&argv.next()?)?,
                     "--memory-budget-mib" => {
@@ -485,10 +489,19 @@ fn survey(arguments: &Surveying) -> Result<u8, String> {
     Ok(0)
 }
 
+/// The flag that asks for the findings, where one does.
+fn findings_flag(arguments: &Convert) -> Option<&'static str> {
+    match (&arguments.findings, &arguments.finding_rows) {
+        (Some(_), _) => Some("--findings"),
+        (None, Some(_)) => Some("--finding-rows"),
+        (None, None) => None,
+    }
+}
+
 fn convert(arguments: &Convert) -> Result<u8, String> {
-    if arguments.findings.is_some() && !arguments.skip.is_empty() {
+    if let Some(flag) = findings_flag(arguments).filter(|_| !arguments.skip.is_empty()) {
         return Err(format!(
-            "--findings is not written by a run that skips {}: its findings are missing, and would pass for those of a validated conversion",
+            "{flag} is not written by a run that skips {}: its findings are missing, and would pass for those of a validated conversion",
             skipped(&arguments.skip)
         ));
     }
@@ -565,7 +578,7 @@ fn convert(arguments: &Convert) -> Result<u8, String> {
             .map_err(|e| e.to_string())?
     };
     let converted_in = converting.elapsed();
-    if let (Some(_), Some(unvalidated)) = (&arguments.findings, &conversion.unvalidated) {
+    if let (Some(_), Some(unvalidated)) = (findings_flag(arguments), &conversion.unvalidated) {
         return Err(unvalidated.clone());
     }
     let graph = conversion
@@ -610,6 +623,14 @@ fn convert(arguments: &Convert) -> Result<u8, String> {
             .unwrap_or_default();
         written(path, &findings)?;
         eprintln!("Findings {path}");
+    }
+    if let Some(path) = &arguments.finding_rows {
+        let rows = conversion
+            .finding_rows()
+            .map_err(|e| e.to_string())?
+            .unwrap_or_default();
+        written(path, &rows)?;
+        eprintln!("Rows     {path}");
     }
 
     if let Some(stages) = conversion.stages() {
